@@ -99,7 +99,7 @@ jobs:
           EXPECTED=$(keytool -exportcert -keystore "$HOME/.android/debug.keystore" -alias androiddebugkey -storepass android | openssl dgst -sha256 | awk '{print $NF}')
           echo "=== Certificados identificados pelo apksigner ==="
           grep -iE "signer.*certificate|verified using" "$RUNNER_TEMP/cinevault-cert.txt" || true
-          ACTUAL=$(awk 'tolower($0) ~ /signer #1 certificate sha-256 digest:/ {print $NF; exit}' "$RUNNER_TEMP/cinevault-cert.txt" | tr -d "\r" | tr "[:upper:]" "[:lower:]")
+          ACTUAL=$(awk 'tolower($0) ~ /certificate sha-256 digest:/ {print $NF; exit}' "$RUNNER_TEMP/cinevault-cert.txt" | tr -d "\r" | tr "[:upper:]" "[:lower:]")
           if ! [[ "$ACTUAL" =~ ^[0-9a-f]{64}$ ]]; then
             echo "ERRO: formato do certificado nao reconhecido"
             sed -n '1,40p' "$RUNNER_TEMP/cinevault-cert.txt"
