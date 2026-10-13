@@ -134,3 +134,47 @@ html { background:#090a0d; -webkit-text-size-adjust:100%; }
 .cv-offline-actions button.cv-stop {background:#603a2c;color:#fff0de;}
 .cv-offline .cv-auto-status {margin-top:12px;}
 .cv-offline-info {display:flex;align-items:start;gap:8px;background:#171a21;border-radius:9px;padding:11px;margin-top:15px;color:#d2b890!important;}
+
+/* CineVault 0.7 — refinamento visual, filtros e ficha cinematográfica */
+.cv-v021 .top{padding-top:calc(25px + env(safe-area-inset-top));}
+.cv-v021 .hero{background:#12141a;box-shadow:0 18px 55px rgba(0,0,0,.46)}
+.cv-v021 .hero-shade{background:linear-gradient(180deg,rgba(9,10,13,.03) 12%,rgba(9,10,13,.3) 35%,rgba(9,10,13,.92) 76%,#090a0d 100%)}
+.cv-v021 .hero-content{bottom:24px}
+.cv-v021 .hero-content h2{font-size:clamp(27px,7vw,35px);line-height:1.14;letter-spacing:-.5px;text-wrap:balance}
+.cv-v021 .hero-content p{max-width:96%;color:#e1ded9;line-height:1.55}
+.cv-v021 .film-card{transition:transform .17s ease}
+.cv-v021 .film-card:active{transform:scale(.975)}
+.cv-v021 .film-info strong{line-height:1.42}
+.cv-v021 .bottom{padding-bottom:calc(9px + env(safe-area-inset-bottom));box-shadow:0 -14px 30px rgba(0,0,0,.28)}
+.cv-home-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:19px 18px 2px}
+.cv-home-summary>div{padding:12px 8px 13px;border:1px solid #38332d;background:linear-gradient(140deg,#202029,#15161c);border-radius:13px;text-align:center}
+.cv-home-summary strong{font-size:21px;font-weight:850;display:block;line-height:1.25;color:#e5be7c}
+.cv-home-summary span{display:block;font-size:10px;color:#b1adb2;margin-top:4px}
+.cv-library-tools{margin:8px 18px 16px;display:grid;grid-template-columns:1fr;gap:12px}
+.cv-fav-filter{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid #43404a;border-radius:11px;background:#1b1d24;color:#e5c185;font-size:12px;font-weight:650}
+.cv-fav-filter input{width:17px;height:17px;accent-color:#daba83}
+.cv-sort-label{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#c4b8a6}
+.cv-sort-label select{max-width:75%;min-width:0;min-height:44px;padding:10px;border:1px solid #50463d;border-radius:11px;background:#202027;color:#f2eee8;font-size:12px}
+.cv-filter-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:5px 18px 15px;font-size:11px;color:#adadb5}
+.cv-filter-footer button{display:flex;align-items:center;gap:4px;color:#ebc48a;background:transparent;padding:8px}
+.cv-v021 .detail{padding-top:0;isolation:isolate;background:#15171d;max-height:94dvh;box-shadow:0 -14px 56px #0008}
+.cv-detail-banner{height:145px;margin:0 -20px 17px;position:relative;background:radial-gradient(ellipse at 50% 12%,#493a2a,#15171d 76%);border-radius:21px 21px 0 0;overflow:hidden}
+.cv-detail-banner img{width:100%;height:100%;object-fit:cover;object-position:center 35%;opacity:.83}
+.cv-detail-banner-shade{position:absolute;inset:0;background:linear-gradient(0deg,#15171d,rgba(21,23,29,.13) 85%)}
+.cv-v021 .detail .close{z-index:5;right:15px;top:12px;background:rgba(13,14,18,.83);min-width:40px;min-height:40px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(9px)}
+.cv-v021 .detail-top{position:relative;z-index:2;margin-top:-49px;align-items:flex-end;padding-right:0;gap:14px}
+.cv-v021 .detail-top .cv-art{width:107px;min-width:107px;height:162px;min-height:162px;border:2px solid #665439;box-shadow:0 9px 28px #0009}
+.cv-v021 .detail-top>div:last-child{padding-bottom:8px}
+.cv-v021 .detail-top h2{font-size:clamp(19px,5.3vw,25px);margin:8px 0 4px;line-height:1.17}
+.cv-v021 .detail-top .pill{font-size:9px}
+.cv-related{margin:22px 0 10px;padding-top:18px;border-top:1px solid #3e3831}
+.cv-related h3{margin:0 0 5px;padding:0;font-size:16px;color:#e8c895}
+.cv-related p{font-size:11px;color:#adaab2;line-height:1.5;margin:0 0 14px}
+.cv-related-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cv-related-list button{display:flex;flex-direction:column;gap:5px;min-width:0;text-align:left;background:none;color:#eee7dc;padding:0}
+.cv-related-list .cv-art{min-height:0;height:auto;aspect-ratio:2/3;border-radius:8px;padding:6px}
+.cv-related-list .cv-art-title{font-size:10px}
+.cv-related-list span{font-size:10px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cv-related-list small{font-size:9px;color:#d9b679}
+@media(min-width:520px){.cv-library-tools{grid-template-columns:1fr 1.15fr;align-items:center}.cv-v021 .detail-top .cv-art{width:125px;min-width:125px;height:182px;min-height:182px}}
+@media(prefers-reduced-motion:reduce){.cv-v021 .film-card{transition:none}}

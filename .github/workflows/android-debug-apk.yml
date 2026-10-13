@@ -46,6 +46,21 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
+      - name: Restaurar assinatura permanente
+        env:
+          KEYSTORE_B64: ${{ secrets.CINEVAULT_DEBUG_KEYSTORE_B64 }}
+        run: |
+          test -n "$KEYSTORE_B64"
+          mkdir -p "$HOME/.android"
+          printf %s "$KEYSTORE_B64" | base64 --decode > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+          keytool -list -keystore "$HOME/.android/debug.keystore" -alias androiddebugkey -storepass android >/dev/null
+      - name: Definir versao Android 0.7
+        run: |
+          sed -i -E 's/versionCode[[:space:]]+[0-9]+/versionCode 7/' android/app/build.gradle
+          sed -i -E 's/versionName[[:space:]]+"[^"]+"/versionName "0.7.0"/' android/app/build.gradle
+          grep -Eq 'versionCode[[:space:]]+7' android/app/build.gradle
+          grep -Eq 'versionName[[:space:]]+"0.7.0"' android/app/build.gradle
       - name: Gerar APK debug
         run: |
           chmod +x android/gradlew
