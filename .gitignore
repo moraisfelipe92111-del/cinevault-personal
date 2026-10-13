@@ -1,0 +1,53 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# CineVault private files / Android builds
+android/
+*.keystore
+*.jks
+cinevault-backup*.json
+cinevault_codigo_atual*.zip
+cinevault_codigo_atual*.tar.gz
+.env
+.env.*
+!.env.example
+public/offline-posters/*.jpg
+public/offline-posters/*.jpeg
+public/offline-posters/*.webp
+public/offline-posters/*.png
+!public/offline-posters/index.json
+
+# CineVault - backups e atualizacoes locais
+backup_*/
+patch_*/
+etapa5/
+*.zip
+*.tar.gz
+
+# Credenciais e arquivos pessoais
+*.keystore
+*.jks
+*.key
+cinevault-backup*

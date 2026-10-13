@@ -1,0 +1,56 @@
+name: CineVault Android APK (teste)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'capacitor.config.ts'
+      - 'vite.config.ts'
+      - 'index.html'
+      - '.github/workflows/android-debug-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android-debug:
+    name: Compilar APK de teste
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Instalar dependências JavaScript
+        run: npm install --no-audit --no-fund
+      - name: Compilar catálogo e aplicativo web
+        run: npm run build
+      - name: Criar projeto Android com Capacitor
+        run: |
+          npx cap add android
+          npx cap sync android
+      - name: Gerar APK debug
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew :app:assembleDebug --no-daemon
+      - name: Publicar APK para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: CineVault-debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
