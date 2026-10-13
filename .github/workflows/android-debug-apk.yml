@@ -80,23 +80,37 @@ jobs:
           chmod +x android/gradlew
           cd android
           ./gradlew :app:assembleDebug --no-daemon
-      - name: Conferir assinatura final
+      - name: Assinar e validar APK com chave permanente
         run: |
           set -euo pipefail
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
-          EXPECTED=$(keytool -exportcert -keystore "$HOME/.android/debug.keystore" -alias androiddebugkey -storepass android | openssl dgst -sha256 | awk '{print $NF}')
-          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -1)
-          test -n "$APKSIGNER"
-          ACTUAL=$("$APKSIGNER" verify --print-certs "$APK" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
-          test -n "$EXPECTED"
-          test -n "$ACTUAL"
-          echo "Certificado esperado: $EXPECTED"
-          echo "Certificado do APK: $ACTUAL"
-          if [ "$EXPECTED" != "$ACTUAL" ]; then
-            echo "ERRO: assinatura diferente da chave permanente."
+          SIGNED="$RUNNER_TEMP/cinevault-assinado.apk"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -name apksigner -print | sort -V | tail -n 1)
+
+          if [ -z "$APKSIGNER" ] || [ ! -x "$APKSIGNER" ]; then
+            echo "ERRO: apksigner indisponivel"
             exit 1
           fi
-          echo "OK: APK assinado com a chave permanente."
+
+          "$APKSIGNER" sign --ks "$HOME/.android/debug.keystore" --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out "$SIGNED" "$APK"
+
+          "$APKSIGNER" verify --verbose --print-certs "$SIGNED" > "$RUNNER_TEMP/cinevault-cert.txt"
+
+          EXPECTED=$(keytool -exportcert -keystore "$HOME/.android/debug.keystore" -alias androiddebugkey -storepass android | openssl dgst -sha256 | awk '{print $NF}')
+          ACTUAL=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/cinevault-cert.txt" | head -n 1)
+
+          echo "Certificado esperado: $EXPECTED"
+          echo "Certificado do APK: $ACTUAL"
+
+          test -n "$EXPECTED"
+          test -n "$ACTUAL"
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "ERRO: certificado diferente"
+            exit 1
+          fi
+
+          mv "$SIGNED" "$APK"
+          echo "ASSINATURA PERMANENTE CONFIRMADA"
       - name: Publicar APK para download
         uses: actions/upload-artifact@v4
         with:
