@@ -21,7 +21,7 @@ permissions:
 jobs:
   android-debug:
     name: Compilar APK de teste
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +33,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - uses: android-actions/setup-android@v3
+      - name: Verificar Android SDK instalado
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms"
       - name: Instalar dependências JavaScript
         run: npm install --no-audit --no-fund
       - name: Compilar catálogo e aplicativo web
