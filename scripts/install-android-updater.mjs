@@ -44,3 +44,12 @@ if(!m.includes('cinevault-updater')){
 if(!m.includes('cinevault_update_paths'))throw Error('FileProvider não configurado.')
 fs.writeFileSync(manifest,m)
 console.log('Updater Android: plugin Java, FileProvider e permissão sideload preparados.')
+
+// CineVault: verify cryptographic APK signer before requesting system installation.
+const gradle=path.join(root,'android/app/build.gradle')
+if(!fs.existsSync(gradle))throw Error('Gradle nao localizado: '+gradle)
+let gradleText=fs.readFileSync(gradle,'utf8')
+const apksig='implementation "com.android.tools.build:apksig:8.13.0"'
+if(!gradleText.includes(apksig)){
+ fs.appendFileSync(gradle,'\n// CineVault authenticated sideload updater\ndependencies { '+apksig+' }\n')
+}

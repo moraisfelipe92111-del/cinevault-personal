@@ -39,6 +39,6 @@ test('audio playback failure is nonblocking in Node',async()=>{assert.equal(awai
 test('startup has a React crash boundary',()=>assert.match(readFileSync(join(root,'src/main.tsx'),'utf8'),/AppErrorBoundary/))
 test('TMDb request has abort deadline',()=>assert.match(readFileSync(join(root,'src/tmdbAuto.ts'),'utf8'),/controller\.abort\(\)/))
 test('Android updater and app ID are preserved',()=>{
- const java=readFileSync(join(root,'assets/android/CineVaultUpdaterPlugin.java'),'utf8');assert.match(java,/getPackageArchiveInfo/);assert.match(java,/getSigningCertificateHistory/);
+ const java=readFileSync(join(root,'assets/android/CineVaultUpdaterPlugin.java'),'utf8');assert.match(java,/getPackageArchiveInfo/);assert.match(java,/ApkVerifier/);
  const config=readFileSync(join(root,'capacitor.config.ts'),'utf8');assert.match(config,/com\.cinevault\.pessoal/)
 })

@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import androidx.core.content.FileProvider;
+import com.android.apksig.ApkVerifier;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -20,8 +21,10 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Optional sideload updater. Installed app must be signed with the same key as the next APK. */
@@ -155,7 +158,7 @@ public class CineVaultUpdaterPlugin extends Plugin {
   private Signature[] signers(PackageInfo i) {
     if (Build.VERSION.SDK_INT>=28) {
       if (i.signingInfo==null)return null;
-      return i.signingInfo.hasMultipleSigners()?i.signingInfo.getApkContentsSigners():i.signingInfo.getSigningCertificateHistory();
+      return i.signingInfo.getApkContentsSigners();
     }
     return i.signatures;
   }
@@ -163,15 +166,28 @@ public class CineVaultUpdaterPlugin extends Plugin {
     PackageManager pm=getContext().getPackageManager();
     int flags=Build.VERSION.SDK_INT>=28?PackageManager.GET_SIGNING_CERTIFICATES:PackageManager.GET_SIGNATURES;
     PackageInfo installed=pm.getPackageInfo(getContext().getPackageName(),flags);
-    PackageInfo candidate=pm.getPackageArchiveInfo(apk.getAbsolutePath(),flags);
+    // PackageManager.getPackageArchiveInfo may omit signingInfo for non-installed APKs
+    // on some Android builds. It is used here only for package/version metadata.
+    PackageInfo candidate=pm.getPackageArchiveInfo(apk.getAbsolutePath(),0);
     if(candidate==null || !getContext().getPackageName().equals(candidate.packageName))throw new Exception("Pacote Android diferente.");
     if(versionCode(candidate)!=requestedVersion||versionCode(candidate)<=versionCode(installed))throw new Exception("VersionCode inválido.");
-    Signature[] a=signers(installed),b=signers(candidate);
-    if(a==null||b==null||a.length==0||b.length==0)throw new Exception("Assinaturas não identificadas.");
-    if(a.length!=b.length)throw new Exception("Quantidade de assinantes diferente.");
-    for(Signature installedSigner:a){
+
+    // Verify the cryptographic APK signature independently of PackageManager.
+    // Fail closed on malformed, tampered or unsigned archives.
+    ApkVerifier.Result verified=new ApkVerifier.Builder(apk)
+      .setMinCheckedPlatformVersion(Build.VERSION.SDK_INT)
+      .setMaxCheckedPlatformVersion(Build.VERSION.SDK_INT)
+      .build().verify();
+    if(!verified.isVerified())throw new Exception("Assinatura criptográfica do APK inválida.");
+    List<X509Certificate> certs=verified.getSignerCertificates();
+    Signature[] current=signers(installed);
+    if(current==null||current.length==0||certs==null||certs.isEmpty())throw new Exception("Certificados não identificados.");
+    if(current.length!=certs.size())throw new Exception("Quantidade de assinantes diferente.");
+    for(Signature installedSigner:current){
       boolean match=false;
-      for(Signature updateSigner:b){if(Arrays.equals(installedSigner.toByteArray(),updateSigner.toByteArray()))match=true;}
+      for(X509Certificate cert:certs){
+        if(Arrays.equals(installedSigner.toByteArray(),cert.getEncoded()))match=true;
+      }
       if(!match)throw new Exception("APK não assinado pela chave instalada.");
     }
   }
