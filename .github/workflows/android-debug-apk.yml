@@ -40,12 +40,18 @@ jobs:
           ls "$ANDROID_HOME/platforms"
       - name: Instalar dependências JavaScript
         run: npm install --no-audit --no-fund
+      - name: Testar integridade do CineVault
+        run: npm run test:unit
       - name: Compilar catálogo e aplicativo web
         run: npm run build
       - name: Criar projeto Android com Capacitor
         run: |
           npx cap add android
           npx cap sync android
+      - name: Preparar ícone e atualizador nativo do CineVault
+        run: |
+          node scripts/apply-android-icons.mjs
+          node scripts/install-android-updater.mjs
       - name: Restaurar assinatura permanente
         env:
           KEYSTORE_B64: ${{ secrets.CINEVAULT_DEBUG_KEYSTORE_B64 }}
@@ -55,12 +61,12 @@ jobs:
           printf %s "$KEYSTORE_B64" | base64 --decode > "$HOME/.android/debug.keystore"
           chmod 600 "$HOME/.android/debug.keystore"
           keytool -list -keystore "$HOME/.android/debug.keystore" -alias androiddebugkey -storepass android >/dev/null
-      - name: Definir versao Android 0.7
+      - name: Definir versao Android 1.2
         run: |
-          sed -i -E 's/versionCode[[:space:]]+[0-9]+/versionCode 7/' android/app/build.gradle
-          sed -i -E 's/versionName[[:space:]]+"[^"]+"/versionName "0.7.0"/' android/app/build.gradle
-          grep -Eq 'versionCode[[:space:]]+7' android/app/build.gradle
-          grep -Eq 'versionName[[:space:]]+"0.7.0"' android/app/build.gradle
+          sed -i -E 's/versionCode[[:space:]]+[0-9]+/versionCode 12/' android/app/build.gradle
+          sed -i -E 's/versionName[[:space:]]+"[^"]+"/versionName "1.2.0"/' android/app/build.gradle
+          grep -Eq 'versionCode[[:space:]]+12' android/app/build.gradle
+          grep -Eq 'versionName[[:space:]]+"1.2.0"' android/app/build.gradle
       - name: Fixar assinatura no Gradle
         run: |
           cat >> android/app/build.gradle <<'GRADLE'
@@ -80,6 +86,16 @@ jobs:
           chmod +x android/gradlew
           cd android
           ./gradlew :app:assembleDebug --no-daemon
+      - name: Verificar pacote e versionCode da release
+        run: |
+          set -euo pipefail
+          AAPT=$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name aapt | sort -V | tail -n 1)
+          test -x "$AAPT"
+          INFO=$("$AAPT" dump badging android/app/build/outputs/apk/debug/app-debug.apk | head -n 1)
+          echo "$INFO"
+          echo "$INFO" | grep -F "name='com.cinevault.pessoal'"
+          echo "$INFO" | grep -F "versionCode='12'"
+          echo "$INFO" | grep -F "versionName='1.2.0'"
       - name: Assinar e validar APK com chave permanente
         run: |
           set -euo pipefail

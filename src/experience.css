@@ -1,0 +1,88 @@
+.cv10-header-tools{display:flex;gap:9px;align-items:center;flex-shrink:0}
+/* CineVault Living Cinema — isolated UX shell; never styles film data. */
+.cv10-settings-trigger{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:43px;height:43px;min-width:43px;border-radius:50%;border:1px solid rgba(221,181,111,.42);background:rgba(24,22,23,.78);color:#e7c185;cursor:pointer;box-shadow:0 1px 14px rgba(0,0,0,.18)}
+.cv10-settings-trigger:focus-visible,.cv10-panel button:focus-visible,.cv10-splash-skip:focus-visible{outline:2px solid #eac98b;outline-offset:3px}
+.cv10-overlay{position:fixed;inset:0;z-index:1200;background:rgba(3,5,9,.84);display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:18px 12px 28px;backdrop-filter:blur(13px)}
+.cv10-panel{background:linear-gradient(145deg,#252225 0%,#121318 58%,#0d1015 100%);color:#f2e5d5;border:1px solid rgba(226,184,113,.36);border-radius:23px;width:min(100%,480px);max-height:min(88dvh,820px);overflow-y:auto;padding:24px 21px 22px;box-shadow:0 20px 70px rgba(0,0,0,.58);margin:auto;font-size:15px}
+.cv10-panel header{display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.cv10-panel h2{margin:7px 0 4px;color:#f6eee3;font-size:26px;line-height:1.2;font-family:inherit}
+.cv10-kicker{font-size:10px;line-height:1.5;letter-spacing:.16em;text-transform:uppercase;display:inline-flex;align-items:center;gap:7px;color:#d7b176;font-weight:800}
+.cv10-x{background:#24262b;color:#f4e5ce;border:1px solid #535058;border-radius:50%;width:36px;height:36px;display:grid;place-items:center;flex-shrink:0}
+.cv10-x svg{width:19px}
+.cv10-pref{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 2px;border-bottom:1px solid rgba(224,196,155,.15)}
+.cv10-pref>span{display:grid;grid-template-columns:22px 1fr;gap:2px 11px;align-items:center;min-width:0}
+.cv10-pref>span svg{grid-row:span 2;width:19px;color:#d7b176}
+.cv10-pref b{font-size:14px;font-weight:700;color:#f9f2e9}
+.cv10-pref small{font-size:12px;color:#b2acac;line-height:1.5}
+.cv10-pref input{accent-color:#d3a96e;width:23px;height:23px;flex-shrink:0}
+.cv10-actions{display:flex;gap:9px;margin:19px 0 9px;flex-wrap:wrap}
+.cv10-actions button,.cv10-check,.cv10-demo,.cv10-secondary{background:#29272c;border:1px solid rgba(225,186,117,.34);color:#e7d2b7;border-radius:12px;padding:13px 12px;display:inline-flex;justify-content:center;align-items:center;gap:9px;font-size:13px;font-weight:750;cursor:pointer;min-height:44px}
+.cv10-actions button{flex:1;min-width:120px}
+.cv10-release{background:#15171d;border:1px solid #343039;border-radius:16px;padding:17px;margin-top:20px;display:flex;flex-direction:column;gap:12px}
+.cv10-release p{margin:0;color:#c5c1bd;font-size:13px}
+.cv10-release strong{color:#f2dcaf}
+.cv10-check{background:#cda870;color:#1c1612;border-color:#d7bb83;width:100%;font-size:14px}
+.cv10-check:disabled{opacity:.62;cursor:wait}
+.cv10-demo{background:transparent;border:0;color:#d6b480;padding:9px 0;justify-content:space-between}
+.cv10-release small,.cv10-message{color:#a9b0b5;font-size:12px}
+.cv10-disclaimer{font-size:11px;line-height:1.6;color:#a2a0a4;margin:14px 0 0}
+.cv10-update{text-align:center;max-width:420px}
+.cv10-update-icon{width:86px;height:86px;margin:0 auto 14px;border-radius:21px;display:block;box-shadow:0 6px 25px rgba(0,0,0,.3)}
+.cv10-update h2{font-size:25px;margin-top:15px}
+.cv10-update p{color:#cbc5be;line-height:1.6;font-size:14px}
+.cv10-update ul{text-align:left;list-style:none;padding:0;margin:18px 0 24px}
+.cv10-update li{display:flex;align-items:start;gap:10px;color:#e9dacf;border-bottom:1px solid rgba(255,255,255,.07);font-size:14px;padding:10px 0;line-height:1.45}
+.cv10-update li svg{flex-shrink:0;color:#dfbd82}
+.cv10-primary,.cv10-update .cv10-secondary{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;min-height:51px;margin-top:9px;font-weight:800;font-size:15px;cursor:pointer}
+.cv10-primary{background:#dbb77d;color:#1e1612;border:1px solid #e2c38d}
+.cv10-update .cv10-secondary{background:transparent;color:#e0d2bf;border:1px solid #4c4545}
+.cv10-splash{position:fixed;inset:0;z-index:1300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:radial-gradient(ellipse at center 22%,#2d251e 0%,#111118 36%,#090a0f 70%);color:#eee4d6;overflow:hidden}
+.cv10-splash-halo{position:absolute;width:min(95vw,460px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(219,169,92,.2),transparent 67%);filter:blur(11px);animation:cv10Breath 2s ease-in-out both}
+.cv10-splash-icon{width:min(39vw,174px);border-radius:29%;z-index:1;animation:cv10Reveal 1s cubic-bezier(.15,.7,.3,1) both;filter:drop-shadow(0 0 30px rgba(221,171,87,.18))}
+.cv10-splash-word{font-size:clamp(27px,7vw,40px);font-weight:800;letter-spacing:.15em;z-index:1}
+.cv10-splash-word span{color:#d4ad70}
+.cv10-splash-tag{font-size:10px;letter-spacing:.24em;color:#b8a994;z-index:1}
+.cv10-splash-line{width:115px;height:2px;background:linear-gradient(90deg,transparent,#e9bd73,transparent);margin-top:14px;animation:cv10Line 1.8s ease-out both}
+.cv10-splash-skip{background:transparent;border:0;color:#afaaab;position:absolute;bottom:max(32px,env(safe-area-inset-bottom));font-size:13px;text-decoration:underline;padding:13px;cursor:pointer}
+@keyframes cv10Reveal{from{opacity:0;transform:translateY(22px) scale(.84)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes cv10Breath{from{opacity:.25;transform:scale(.8)}to{opacity:1;transform:scale(1.13)}}
+@keyframes cv10Line{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.cv10-splash *{animation:none!important}.cv10-overlay{backdrop-filter:none}}
+@media(max-width:360px){.cv10-panel{padding:18px 15px}.cv10-panel h2{font-size:22px}.cv10-pref b{font-size:13px}}
+
+@media(max-width:390px){.cv-v10 .top{padding-left:15px;padding-right:15px;gap:7px}.cv-v10 .top h1{font-size:22px;letter-spacing:1.15px}.cv10-header-tools{gap:7px}.cv10-settings-trigger{height:38px;width:38px;min-width:38px}.cv-v10 .avatar{width:38px;height:38px}}
+
+/* Signature Experience 1.1 — true filmic reveal, with restrained transitions */
+.cv10-splash{background:radial-gradient(ellipse 80% 45% at center 45%,#352417 0%,#171117 45%,#07080e 93%);isolation:isolate}
+.cv10-splash-icon{width:min(44vw,186px);border-radius:24%;animation:cv11Mark 1.45s cubic-bezier(.12,.88,.19,1) both;filter:drop-shadow(0 0 22px rgba(225,162,73,.33));box-shadow:0 0 0 1px rgba(253,214,142,.28)}
+.cv10-splash-halo{background:radial-gradient(circle,rgba(230,175,89,.22) 0%,rgba(219,169,92,.08) 34%,transparent 67%);width:min(120vw,590px);animation:cv11Pulse 2.5s ease-in-out both}
+.cv11-reel{width:min(80vw,380px);aspect-ratio:1;border:1px solid rgba(231,174,80,.23);border-radius:50%;position:absolute;box-shadow:0 0 1px 1px rgba(243,214,164,.13),inset 0 0 37px rgba(221,180,106,.08);animation:cv11Reel 2.5s cubic-bezier(.2,.8,.3,1) both}
+.cv11-film-beam{position:absolute;inset:-25%;z-index:0;pointer-events:none;background:conic-gradient(from 190deg at 50% 52%,transparent 0deg,transparent 119deg,rgba(235,175,76,.15) 134deg,transparent 153deg,transparent 360deg);animation:cv11Beam 2.4s ease-out both}
+.cv11-frame-top{position:absolute;inset:max(16px,env(safe-area-inset-top)) 18px max(16px,env(safe-area-inset-bottom));border:1px solid rgba(232,182,100,.12);border-radius:24px;pointer-events:none}
+.cv10-splash-word{font-family:Georgia,'Times New Roman',serif;font-weight:700;letter-spacing:.20em;font-size:clamp(26px,6.9vw,40px);text-shadow:0 3px 13px rgba(0,0,0,.43);animation:cv11Word 1.2s .65s both}
+.cv10-splash-tag{max-width:85vw;text-align:center;letter-spacing:.12em;font-size:9px;line-height:1.6;animation:cv11Word 1.2s 1s both}
+.cv11-splash-caption{font-size:10px;letter-spacing:.35em;color:#af8f5d;animation:cv11Word .9s 1.25s both}
+.cv10-splash-line{width:min(42vw,172px);height:2px;margin-top:3px;animation:cv11Line 1.9s .35s both}
+.cv11-unlock-audio{position:absolute;bottom:max(90px,calc(env(safe-area-inset-bottom) + 75px));border:1px solid rgba(230,187,123,.6);border-radius:22px;background:rgba(19,18,21,.9);color:#e6c18b;display:flex;gap:8px;align-items:center;padding:12px 17px;font-size:12px;cursor:pointer}
+.cv11-sound-controls{background:#16171c;border:1px solid rgba(225,186,117,.24);padding:13px 14px;border-radius:15px;margin:14px 0 2px;display:flex;flex-direction:column;gap:12px}
+.cv11-modes{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.cv11-modes button{border-radius:11px;background:#28252a;border:1px solid #494043;color:#d9c5ac;padding:12px 6px;min-height:44px;font-size:12px;cursor:pointer}
+.cv11-modes button[aria-pressed="true"]{background:linear-gradient(130deg,#e9c790,#c3995b);color:#161312;border-color:#e9cb96;font-weight:850;box-shadow:0 0 20px rgba(225,174,94,.13)}
+.cv11-sound-controls label{display:flex;justify-content:space-between;font-size:12px;color:#dfd5c5}
+.cv11-sound-controls input{accent-color:#d3a96e;width:100%;height:24px}
+.cv-v10 button{transition:transform .19s cubic-bezier(.2,.7,.18,1),box-shadow .2s ease,border-color .2s ease}
+.cv-v10 button:active{transform:scale(.977)}
+.cv-v10 .film-card,.cv-v10 .cv-pulse-daily__card{transition:transform .3s cubic-bezier(.2,.7,.25,1),box-shadow .3s ease}
+@media(hover:hover) and (pointer:fine){.cv-v10 .film-card:hover,.cv-v10 .cv-pulse-daily__card:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.32)}}
+@keyframes cv11Mark{0%{opacity:0;transform:scale(.78) translateY(20px);filter:blur(10px)}58%{opacity:1;filter:blur(0)}100%{opacity:1;transform:scale(1);filter:drop-shadow(0 0 22px rgba(225,162,73,.33))}}
+@keyframes cv11Pulse{0%{opacity:0;transform:scale(.58)}56%{opacity:.9}100%{opacity:.53;transform:scale(1.14)}}
+@keyframes cv11Beam{0%{opacity:0;transform:rotate(-20deg)}48%{opacity:.85}100%{opacity:0;transform:rotate(28deg)}}
+@keyframes cv11Reel{0%{opacity:0;transform:scale(.72) rotate(-20deg)}55%{opacity:.65}100%{opacity:0;transform:scale(1.12) rotate(20deg)}}
+@keyframes cv11Word{from{opacity:0;transform:translateY(11px);letter-spacing:.32em}to{opacity:1;transform:translateY(0)}}
+@keyframes cv11Line{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){.cv10-splash *{animation:none!important}.cv-v10 button,.cv-v10 .film-card,.cv-v10 .cv-pulse-daily__card{transition:none!important}}
+/* v1.2 — in-app package download and verification status */
+.cv12-progress{height:7px;width:100%;border-radius:20px;overflow:hidden;background:#2a2c30;margin:13px 0 8px;border:1px solid rgba(219,183,125,.32)}
+.cv12-progress>span{height:100%;display:block;background:linear-gradient(90deg,#ad8951,#ffe4a9);transition:width .2s ease}
+.cv12-install-status{display:block;color:#e9d7b3;text-align:left;line-height:1.6;padding:10px 4px}
+.cv10-primary:disabled,.cv10-secondary:disabled{opacity:.65;cursor:wait}

@@ -1,6 +1,6 @@
 /* CineVault Service Worker: application shell in production; TMDb posters offline everywhere. */
 /* The build script replaces __CV_ASSETS__ below with hashed Vite filenames. */
-const SHELL_VERSION = 'cinevault-shell-v05-1';
+const SHELL_VERSION = 'cinevault-shell-v11-1';
 const IMAGE_CACHE = 'cinevault-posters-w342-v1';
 const SHELL_ASSETS = /* __CV_ASSETS__ */ [];
 
