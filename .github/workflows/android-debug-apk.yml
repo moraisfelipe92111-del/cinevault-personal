@@ -8,6 +8,7 @@ on:
       - 'src/**'
       - 'public/**'
       - 'scripts/**'
+      - 'assets/**'
       - 'package.json'
       - 'package-lock.json'
       - 'capacitor.config.ts'
