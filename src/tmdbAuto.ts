@@ -101,10 +101,15 @@ async function fetchTmdb<T>(path: string, params: URLSearchParams, token: string
   for (let attempt = 0; attempt < 4; attempt++) {
     let res: Response
     try {
-      res = await fetch(`${API}${path}?${params}`, {
-        headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
-        cache: 'no-store',
-      })
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 12000)
+      try {
+        res = await fetch(`${API}${path}?${params}`, {
+          headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
+          cache: 'no-store',
+          signal: controller.signal,
+        })
+      } finally { clearTimeout(timeout) }
     } catch {
       if (attempt === 3) throw Error('Sem conexão com o TMDb. Verifique sua internet e retome depois.')
       await pause((attempt + 1) * 1500)

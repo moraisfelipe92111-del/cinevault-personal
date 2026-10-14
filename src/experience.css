@@ -86,3 +86,8 @@
 .cv12-progress>span{height:100%;display:block;background:linear-gradient(90deg,#ad8951,#ffe4a9);transition:width .2s ease}
 .cv12-install-status{display:block;color:#e9d7b3;text-align:left;line-height:1.6;padding:10px 4px}
 .cv10-primary:disabled,.cv10-secondary:disabled{opacity:.65;cursor:wait}
+
+/* 1.3: three original sound profiles, device-safe contrast and thumb targets */
+.cv11-modes{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cv11-modes button{font-size:12px;min-width:0;overflow-wrap:anywhere}
+@media(max-width:360px){.cv11-modes{gap:5px}.cv11-modes button{padding:10px 3px;font-size:11px}}

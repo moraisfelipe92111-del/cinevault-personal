@@ -6,8 +6,8 @@ import {join,dirname} from 'node:path'
 import {playBrandAudio,stopBrandAudio,SONIC_FILES} from '../src/sonic.ts'
 import {LOCAL_RELEASE,parseRelease,newerThanInstalled} from '../src/release.ts'
 const base=join(dirname(fileURLToPath(import.meta.url)),'..')
-const valid={version:'1.3.0',build:13,title:'Nova versão',notes:['Novidades'],url:'https://github.com/moraisfelipe92111-del/cinevault-personal/releases/download/v1.3.0/CineVault-1.3.0.apk',sha256:'a'.repeat(64),required:false}
-test('Signature 1.2 increments Android build to 12',()=>{assert.equal(LOCAL_RELEASE.build,12);assert.equal(LOCAL_RELEASE.version,'1.2.0')})
+const valid={version:'1.4.0',build:14,title:'Nova versão',notes:['Novidades'],url:'https://github.com/moraisfelipe92111-del/cinevault-personal/releases/download/v1.4.0/CineVault-1.4.0.apk',sha256:'a'.repeat(64),required:false}
+test('Signature 1.3 increments Android build to 13',()=>{assert.equal(LOCAL_RELEASE.build,13);assert.equal(LOCAL_RELEASE.version,'1.3.0')})
 test('offers only valid new official signed APKs',()=>{assert.equal(newerThanInstalled(parseRelease(valid)),true);assert.equal(newerThanInstalled(parseRelease({...valid,build:12})),false)})
 test('two original sounds remain intact',()=>{for(const filename of Object.values(SONIC_FILES)){const buf=readFileSync(join(base,'public',filename));assert.ok(buf.length>30000);assert.ok(buf[0]===0x49||buf[0]===0xff)}})
 test('audio preview gracefully degrades on browserless runtime',async()=>{assert.equal(await playBrandAudio('cinema',.65),false);stopBrandAudio()})

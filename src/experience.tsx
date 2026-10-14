@@ -8,13 +8,13 @@ import './experience.css'
 
 const PREF_KEY='cinevault.experience.v1'
 type Preferences={intro:boolean,sound:boolean,updates:boolean,sonic:SonicStyle,volume:number}
-const defaults:Preferences={intro:true,sound:true,updates:true,sonic:'cinema',volume:.65}
+const defaults:Preferences={intro:true,sound:true,updates:true,sonic:'signature',volume:.60}
 function preferences():Preferences {
  try {const parsed:unknown=JSON.parse(localStorage.getItem(PREF_KEY)||'null');return parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?{
  intro:(parsed as Partial<Preferences>).intro!==false,
  sound:(parsed as Partial<Preferences>).sound!==false,
  updates:(parsed as Partial<Preferences>).updates!==false,
- sonic:(parsed as Partial<Preferences>).sonic==='aura'?'aura':'cinema',
+ sonic:(['signature','noir','impacto'] as string[]).includes(String((parsed as Partial<Preferences>).sonic)) ? (parsed as Preferences).sonic : (parsed as Preferences).sonic==='aura'?'noir':'signature',
  volume:typeof (parsed as Partial<Preferences>).volume==='number' && Number.isFinite((parsed as Preferences).volume)?Math.min(1,Math.max(.15,(parsed as Preferences).volume)):.65
  }:defaults}catch{return defaults}
 }
@@ -36,10 +36,11 @@ export function ExperienceLayer(){
  const lastCheckedAt=useRef(0)
  const dismissedForSession=useRef<number|null>(null)
  const introPlayed = useRef(false)
+ const openingTimer = useRef<number|null>(null)
  const reduced=typeof window!=='undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
  function save(p:Preferences){setPrefs(p);try{localStorage.setItem(PREF_KEY,JSON.stringify(p))}catch{/* Persistence is best-effort; never block app */}}
- function closeSplash(){stopBrandAudio();setSplash(false)}
- function replaySplash(){stopBrandAudio();setSettings(false);setAutoSoundBlocked(false);setSplash(true);if(prefs.sound)void playBrandTone(prefs.sonic,prefs.volume).then(ok=>{if(!ok)setAutoSoundBlocked(true)});window.setTimeout(()=>closeSplash(),reduced?380:2570)}
+ function closeSplash(){if(openingTimer.current!==null){window.clearTimeout(openingTimer.current);openingTimer.current=null}stopBrandAudio();setSplash(false)}
+ function replaySplash(){stopBrandAudio();setSettings(false);setAutoSoundBlocked(false);setSplash(true);if(prefs.sound)void playBrandTone(prefs.sonic,prefs.volume).then(ok=>{if(!ok)setAutoSoundBlocked(true)});if(openingTimer.current!==null)window.clearTimeout(openingTimer.current);openingTimer.current=window.setTimeout(()=>{openingTimer.current=null;setSplash(false)},reduced?380:2570)}
  async function check(manual:boolean){
   if(!manual&&Date.now()-lastCheckedAt.current<180000)return
   lastCheckedAt.current=Date.now()
@@ -57,8 +58,8 @@ export function ExperienceLayer(){
    introPlayed.current=true
    void playBrandTone(prefs.sonic,prefs.volume).then(ok=>{if(!ok)setAutoSoundBlocked(true)})
   }
-  const timer=window.setTimeout(()=>setSplash(false),reduced?380:2570)
-  return ()=>{window.clearTimeout(timer);stopBrandAudio();introPlayed.current=false}
+  openingTimer.current=window.setTimeout(()=>{openingTimer.current=null;setSplash(false)},reduced?380:2570)
+  return ()=>{if(openingTimer.current!==null)window.clearTimeout(openingTimer.current);openingTimer.current=null;stopBrandAudio();introPlayed.current=false}
   // Initial launch only: settings changes should not re-trigger the intro.
   // eslint-disable-next-line react-hooks/exhaustive-deps
  },[])
@@ -107,10 +108,10 @@ export function ExperienceLayer(){
   </div>}
   {settings&&<div className="cv10-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setSettings(false)}}>
    <section role="dialog" aria-modal="true" aria-label="Configurações da experiência" className="cv10-panel">
-    <header><div><span className="cv10-kicker"><Sparkles size={14}/> SIGNATURE EXPERIENCE · 1.2</span><h2>Uma experiência sua.</h2></div><button className="cv10-x" onClick={()=>setSettings(false)} aria-label="Fechar configurações"><X/></button></header>
+    <header><div><span className="cv10-kicker"><Sparkles size={14}/> SIGNATURE EXPERIENCE · 1.3</span><h2>Uma experiência sua.</h2></div><button className="cv10-x" onClick={()=>setSettings(false)} aria-label="Fechar configurações"><X/></button></header>
     <div className="cv10-pref"><span><Film/><b>Abertura cinematográfica</b><small>Exibir o símbolo ao iniciar</small></span><input type="checkbox" aria-label="Ativar abertura cinematográfica" checked={prefs.intro} onChange={e=>save({...prefs,intro:e.target.checked})}/></div>
     <div className="cv10-pref"><span>{prefs.sound?<Volume2/>:<VolumeX/>}<b>Assinatura sonora</b><small>Escolha o timbre e o volume; o aparelho pode bloquear reprodução automática</small></span><input type="checkbox" aria-label="Ativar som de abertura" checked={prefs.sound} onChange={e=>save({...prefs,sound:e.target.checked})}/></div>
-    <div className="cv11-sound-controls" aria-label="Estilo do som de abertura"><div className="cv11-modes"><button aria-pressed={prefs.sonic==='cinema'} onClick={()=>save({...prefs,sonic:'cinema',sound:true})}>Cinema · Impacto</button><button aria-pressed={prefs.sonic==='aura'} onClick={()=>save({...prefs,sonic:'aura',sound:true})}>Aura · Suave</button></div><label htmlFor="cv11-volume">Volume <strong>{Math.round(prefs.volume*100)}%</strong></label><input id="cv11-volume" type="range" min="15" max="100" step="5" value={Math.round(prefs.volume*100)} onChange={e=>save({...prefs,volume:Number(e.target.value)/100})}/></div>
+    <div className="cv11-sound-controls" aria-label="Estilo do som de abertura"><div className="cv11-modes">{([{key:'signature',name:'Signature'},{key:'noir',name:'Noir'},{key:'impacto',name:'Impacto'}] as const).map(choice=><button key={choice.key} aria-pressed={prefs.sonic===choice.key} onClick={()=>save({...prefs,sonic:choice.key,sound:true})}>{choice.name}</button>)}</div><label htmlFor="cv11-volume">Volume <strong>{Math.round(prefs.volume*100)}%</strong></label><input id="cv11-volume" type="range" min="15" max="100" step="5" value={Math.round(prefs.volume*100)} onChange={e=>save({...prefs,volume:Number(e.target.value)/100})}/></div>
     <div className="cv10-pref"><span><BellRing/><b>Verificar atualizações</b><small>Avisos automáticos no APK ao abrir e quando voltar ao aplicativo</small></span><input type="checkbox" aria-label="Verificar atualizações ao abrir" checked={prefs.updates} onChange={e=>save({...prefs,updates:e.target.checked})}/></div>
     <div className="cv10-actions"><button onClick={replaySplash}><Eye size={17}/> Rever abertura</button><button onClick={()=>void playBrandTone(prefs.sonic,prefs.volume).then(ok=>setSoundMsg(ok?'Assinatura sonora reproduzida.':'O áudio foi bloqueado pelo sistema.'))}><Headphones size={17}/> Ouvir som</button></div>
     {soundMsg&&<small className="cv10-message" role="status">{soundMsg}</small>}
