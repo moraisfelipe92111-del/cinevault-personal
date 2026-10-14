@@ -1,1 +1,90 @@
-{}
+{
+  "6": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:57:53.268Z"
+  },
+  "7": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:57:53.873Z"
+  },
+  "63": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:58:25.320Z"
+  },
+  "73": {
+    "reason": "trailer_unavailable",
+    "checkedAt": "2026-10-14T13:58:31.150Z"
+  },
+  "78": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:58:34.007Z"
+  },
+  "92": {
+    "reason": "trailer_unavailable",
+    "checkedAt": "2026-10-14T13:58:41.755Z"
+  },
+  "100": {
+    "reason": "trailer_unavailable",
+    "checkedAt": "2026-10-14T13:58:45.856Z"
+  },
+  "108": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:58:50.435Z"
+  },
+  "112": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:58:52.843Z"
+  },
+  "113": {
+    "reason": "trailer_unavailable",
+    "checkedAt": "2026-10-14T13:58:53.317Z"
+  },
+  "117": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:58:55.886Z"
+  },
+  "122": {
+    "reason": "trailer_unavailable",
+    "checkedAt": "2026-10-14T13:58:58.264Z"
+  },
+  "134": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:59:04.457Z"
+  },
+  "136": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:59:05.252Z"
+  },
+  "137": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:59:05.539Z"
+  },
+  "225": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:59:50.947Z"
+  },
+  "234": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T13:59:55.399Z"
+  },
+  "249": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T14:00:04.163Z"
+  },
+  "255": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T14:00:07.617Z"
+  },
+  "264": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T14:00:12.438Z"
+  },
+  "281": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T14:00:20.532Z"
+  },
+  "290": {
+    "reason": "tmdb_unresolved",
+    "checkedAt": "2026-10-14T14:00:24.969Z"
+  }
+}
