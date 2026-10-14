@@ -1,0 +1,12 @@
+{
+  "version": "1.3.0",
+  "build": 13,
+  "title": "CineVault 1.3.0 disponível",
+  "notes": [
+    "Atualização segura pelo próprio aplicativo",
+    "Correções e melhorias da experiência"
+  ],
+  "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/releases/download/v1.3.0/CineVault-1.3.0.apk",
+  "sha256": "977433325c28e688987a7525f2c08436fa7d97a4c740875daf4eebec45a2f794",
+  "required": false
+}
