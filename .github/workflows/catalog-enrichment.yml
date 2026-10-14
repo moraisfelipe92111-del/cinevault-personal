@@ -1,0 +1,41 @@
+name: CineVault 2.0 - Enriquecimento para Revisao
+on:
+  workflow_dispatch:
+    inputs:
+      max_films:
+        description: 'Quantidade a consultar: 10 para teste, 683 para lote completo'
+        required: true
+        type: choice
+        options: ['10', '100', '683']
+        default: '10'
+permissions:
+  contents: read
+jobs:
+  review-metadata:
+    name: Consultar metadados sem alterar catalogo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validar algoritmo offline
+        run: python -m unittest discover -s tests -p 'test_movie_enrichment.py' -v
+      - name: Enriquecer candidatos no TMDb
+        env:
+          TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
+          BATCH_SIZE: ${{ inputs.max_films }}
+        run: |
+          test -n "$TMDB_READ_ACCESS_TOKEN"
+          python scripts/enrich-curated-films.py --root . \
+            --selected planning/cinevault2-selected-683.json \
+            --output planning/enrichment-results \
+            --limit "$BATCH_SIZE"
+      - name: Exportar relatorio de enriquecimento
+        uses: actions/upload-artifact@v4
+        with:
+          name: CineVault-2-Metadados-Para-Revisao
+          path: planning/enrichment-results/*.json
+          if-no-files-found: error
+          retention-days: 30
