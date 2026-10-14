@@ -64,6 +64,16 @@ jobs:
           else
             echo 'TMDb secret ainda nao configurado. Conservando indice de trailers existente.'
           fi
+      - name: Exportar indice automatico de trailers
+        uses: actions/upload-artifact@v4
+        with:
+          name: CineVault-Trailer-Index
+          path: |
+            src/trailerCatalog.json
+            src/movieTmdbIds.json
+            src/trailerSyncStatus.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Compilar catálogo e aplicativo web
         run: npm run build
       - name: Criar projeto Android com Capacitor
