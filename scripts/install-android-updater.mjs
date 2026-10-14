@@ -31,7 +31,7 @@ let m=fs.readFileSync(manifest,'utf8')
 if(!m.includes('android.permission.REQUEST_INSTALL_PACKAGES')){
  m=m.replace(/<application\b/,`<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application`)
 }
-if(!m.includes('androidx.core.content.FileProvider')){
+if(!m.includes('cinevault-updater')){
  const provider=`<provider android:name="androidx.core.content.FileProvider"
     android:authorities="\${applicationId}.cinevault-updater"
     android:exported="false"
