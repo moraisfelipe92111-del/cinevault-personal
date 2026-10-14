@@ -43,6 +43,27 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Testar integridade do CineVault
         run: npm run test:unit
+      # Cache generated trailer IDs across Android builds. No secret is cached.
+      - name: Restaurar indice automatico de trailers
+        uses: actions/cache@v4
+        continue-on-error: true
+        with:
+          path: |
+            src/trailerCatalog.json
+            src/movieTmdbIds.json
+            src/trailerSyncStatus.json
+          key: cinevault-tmdb-trailers-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            cinevault-tmdb-trailers-${{ runner.os }}-
+      - name: Encontrar trailers automaticamente no TMDb
+        env:
+          TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
+        run: |
+          if [ -n "$TMDB_READ_ACCESS_TOKEN" ]; then
+            npm run trailers:sync
+          else
+            echo 'TMDb secret ainda nao configurado. Conservando indice de trailers existente.'
+          fi
       - name: Compilar catálogo e aplicativo web
         run: npm run build
       - name: Criar projeto Android com Capacitor

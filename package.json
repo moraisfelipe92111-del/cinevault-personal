@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "posters:pack": "node scripts/pack-posters.mjs",
     "android:sync": "npm run build && npx cap sync android",
-    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs"
+    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
+    "trailers:sync": "node scripts/sync-trailers.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

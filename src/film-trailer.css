@@ -1,0 +1,10 @@
+.cv-trailer { padding: 18px 0; margin: 12px 0; border-top: 1px solid rgba(216,180,111,.23); border-bottom: 1px solid rgba(216,180,111,.18); }
+.cv-trailer-heading { display:flex; align-items:center; gap:9px; color:#e6c38e; margin-bottom:14px; }
+.cv-trailer-heading h3 { font-size:17px; font-weight:700; margin:0; }
+.cv-trailer-watch { border:1px solid rgba(217,174,107,.65); background:linear-gradient(115deg,#dcb87f,#bd955d); color:#17140f; width:100%; border-radius:12px; min-height:49px; display:flex; justify-content:center; align-items:center; gap:9px; font-weight:800; font-size:14px; }
+.cv-trailer-metadata {display:flex; flex-wrap:wrap;gap:6px;margin:12px 0;}
+.cv-trailer-metadata span {border:1px solid rgba(217,174,107,.25);border-radius:999px;color:#d5c3a5;padding:5px 9px;font-size:11px;}
+.cv-trailer-ratio { position:relative; width:100%; aspect-ratio:16/9; min-height:200px; background:#050507; border-radius:10px; overflow:hidden; }
+.cv-trailer-ratio iframe { border:0; position:absolute;inset:0;width:100%;height:100%;}
+.cv-trailer-close { display:flex;align-items:center;gap:6px;margin-top:12px; background:#242328;color:#f0ddc3;border:1px solid rgba(217,174,107,.25); padding:10px 12px; border-radius:9px; }
+.cv-trailer-note,.cv-trailer-source {color:#adadaf;font-size:12px;line-height:1.5;margin:10px 0 0;}

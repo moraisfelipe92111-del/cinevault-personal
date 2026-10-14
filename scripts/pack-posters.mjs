@@ -14,6 +14,8 @@ if (!backupPath) {
 }
 const root = resolve(import.meta.dirname, '..')
 const directory = join(root, 'public', 'offline-posters')
+const catalog = JSON.parse(await readFile(join(root, 'src', 'films.json'), 'utf8'))
+const knownIds = new Set(catalog.map(f => f.id))
 const data = JSON.parse(await readFile(resolve(backupPath), 'utf8'))
 const posters = data?.posters
 if (!posters || typeof posters !== 'object' || Array.isArray(posters)) {
@@ -21,7 +23,7 @@ if (!posters || typeof posters !== 'object' || Array.isArray(posters)) {
 }
 await mkdir(directory, { recursive: true })
 const entries = Object.entries(posters).filter(([id, url]) =>
-  /^\d{1,4}$/.test(id) && Number(id) >= 1 && Number(id) <= 317 &&
+  /^\d{1,8}$/.test(id) && knownIds.has(Number(id)) &&
   typeof url === 'string' && /^https:\/\/image\.tmdb\.org\/t\/p\/(?:w342|w500)\/[a-zA-Z0-9_./-]+\.(?:jpg|jpeg|png|webp)$/i.test(url)
 )
 const map = {}

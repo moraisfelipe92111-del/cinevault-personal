@@ -35,7 +35,7 @@ export function parsePulse(raw:unknown,allowedIds:ReadonlySet<number>):PulseStat
     if(typeof value!=='string' || value.length>600)throw new Error('Anotação de filme inválida')
     if(value.trim())notes[id]=value.trim().slice(0,500)
   }
-  return {queue:uniqueIds(raw.queue,allowedIds,317),history,notes,recent:uniqueIds(raw.recent,allowedIds,12),dailyOffset:raw.dailyOffset as number}
+  return {queue:uniqueIds(raw.queue,allowedIds,allowedIds.size),history,notes,recent:uniqueIds(raw.recent,allowedIds,12),dailyOffset:raw.dailyOffset as number}
 }
 export function safeLoadPulse(raw:unknown,allowedIds:ReadonlySet<number>):PulseState {
   try{return parsePulse(raw,allowedIds)}catch{return {...EMPTY_PULSE}}
