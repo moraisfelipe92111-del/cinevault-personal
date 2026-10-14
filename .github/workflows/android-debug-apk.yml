@@ -95,8 +95,8 @@ jobs:
           INFO=$("$AAPT" dump badging android/app/build/outputs/apk/debug/app-debug.apk | head -n 1)
           echo "$INFO"
           echo "$INFO" | grep -F "name='com.cinevault.pessoal'"
-          echo "$INFO" | grep -F "versionCode='12'"
-          echo "$INFO" | grep -F "versionName='1.2.0'"
+          echo "$INFO" | grep -F "versionCode='13'"
+          echo "$INFO" | grep -F "versionName='1.3.0'"
       - name: Assinar e validar APK com chave permanente
         run: |
           set -euo pipefail
