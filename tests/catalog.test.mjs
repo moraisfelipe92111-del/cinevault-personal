@@ -7,9 +7,9 @@ import {selectSession,durationMinutes,matchesMood} from '../src/session.ts'
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const catalog=JSON.parse(fs.readFileSync(path.join(root,'src/films.json'),'utf8'))
 const blank={watched:[],favorites:[],ratings:{}}
-test('integrity: 317 curated films with unique stable IDs',()=>{
-  assert.equal(catalog.length,317)
-  assert.equal(new Set(catalog.map(f=>f.id)).size,317)
+test('integrity: 1000 films with 317 unchanged personal selections',()=>{
+  assert.equal(catalog.length,1000)
+  assert.equal(new Set(catalog.map(f=>f.id)).size,1000)
   assert.ok(catalog.every(f=>Number.isInteger(f.id)&&typeof f.title==='string'&&f.title.trim().length>0))
 })
 test('live catalogue: recommendations respect all runtime filters',()=>{

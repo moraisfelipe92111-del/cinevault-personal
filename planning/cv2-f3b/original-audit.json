@@ -1,0 +1,2551 @@
+{
+  "stats": {
+    "catalogCount": 317,
+    "posterLinks": 302,
+    "existingMappedIds": 300,
+    "proposedNewTmdbIds": 3,
+    "unresolved": 15,
+    "catalogChanged": false,
+    "previewOnly": true,
+    "source": "TMDb",
+    "generatedAt": "2026-10-15T03:26:09.681052+00:00"
+  },
+  "movies": [
+    {
+      "id": 1,
+      "title": "Garota Exemplar (Gone Girl)",
+      "year": 2014,
+      "tmdbId": 210577,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 2,
+      "title": "Os Suspeitos (Prisoners)",
+      "year": 2013,
+      "tmdbId": 146233,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 3,
+      "title": "Seven: Os Sete Crimes Capitais (Se7en)",
+      "year": 1995,
+      "tmdbId": 807,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 4,
+      "title": "Ilha do Medo (Shutter Island)",
+      "year": 2010,
+      "tmdbId": 11324,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 5,
+      "title": "O Homem Invisível (The Invisible Man)",
+      "year": 2020,
+      "tmdbId": 570670,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 6,
+      "title": "Buscando... (Searching)",
+      "year": 2018,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "ambiguous_identity"
+    },
+    {
+      "id": 7,
+      "title": "Contratempo (Contratiempo / The Invisible Guest)",
+      "year": 2016,
+      "tmdbId": 411088,
+      "result": "linked",
+      "reason": "unmapped_exact_title_year"
+    },
+    {
+      "id": 8,
+      "title": "O Corpo (El cuerpo / The Body)",
+      "year": 2012,
+      "tmdbId": 111083,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 9,
+      "title": "O Segredo dos Seus Olhos (El secreto de sus ojos)",
+      "year": 2009,
+      "tmdbId": 25376,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 10,
+      "title": "Oldboy",
+      "year": 2003,
+      "tmdbId": 670,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 11,
+      "title": "Memórias de um Assassino (Memories of Murder)",
+      "year": 2003,
+      "tmdbId": 11423,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 12,
+      "title": "O Caçador (The Chaser)",
+      "year": 2008,
+      "tmdbId": 13855,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 13,
+      "title": "O Abutre (Nightcrawler)",
+      "year": 2014,
+      "tmdbId": 242582,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 14,
+      "title": "Sicario: Terra de Ninguém (Sicario)",
+      "year": 2015,
+      "tmdbId": 273481,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 15,
+      "title": "Os Infiltrados (The Departed)",
+      "year": 2006,
+      "tmdbId": 1422,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 16,
+      "title": "Sobre Meninos e Lobos (Mystic River)",
+      "year": 2003,
+      "tmdbId": 322,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 17,
+      "title": "O Jogo (The Game)",
+      "year": 1997,
+      "tmdbId": 2649,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 18,
+      "title": "Identidade (Identity)",
+      "year": 2003,
+      "tmdbId": 2832,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 19,
+      "title": "Primal Fear",
+      "year": 1996,
+      "tmdbId": 1592,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 20,
+      "title": "Não Conte a Ninguém (Ne le dis à personne / Tell No One)",
+      "year": 2006,
+      "tmdbId": 10795,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 21,
+      "title": "Um Plano Simples (A Simple Plan)",
+      "year": 1998,
+      "tmdbId": 10223,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 22,
+      "title": "Calibre",
+      "year": 2018,
+      "tmdbId": 474051,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 23,
+      "title": "O Presente (The Gift)",
+      "year": 2015,
+      "tmdbId": 328425,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 24,
+      "title": "Desaparecida (Missing)",
+      "year": 2023,
+      "tmdbId": 768362,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 25,
+      "title": "Zodíaco (Zodiac)",
+      "year": 2007,
+      "tmdbId": 1949,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 26,
+      "title": "O Grande Truque (The Prestige)",
+      "year": 2006,
+      "tmdbId": 1124,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 27,
+      "title": "Amnésia (Memento)",
+      "year": 2000,
+      "tmdbId": 77,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 28,
+      "title": "Onde os Fracos Não Têm Vez (No Country for Old Men)",
+      "year": 2007,
+      "tmdbId": 6977,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 29,
+      "title": "Colateral (Collateral)",
+      "year": 2004,
+      "tmdbId": 1538,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 30,
+      "title": "Fogo Contra Fogo (Heat)",
+      "year": 1995,
+      "tmdbId": 949,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 31,
+      "title": "Plano Perfeito (Inside Man)",
+      "year": 2006,
+      "tmdbId": 388,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 32,
+      "title": "Atração Perigosa (The Town)",
+      "year": 2010,
+      "tmdbId": 23168,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 33,
+      "title": "A Qualquer Custo (Hell or High Water)",
+      "year": 2016,
+      "tmdbId": 338766,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 34,
+      "title": "Wind River: Terra Selvagem (Wind River)",
+      "year": 2017,
+      "tmdbId": 395834,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 35,
+      "title": "O Homem nas Trevas (Don't Breathe)",
+      "year": 2016,
+      "tmdbId": 300669,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 36,
+      "title": "Pânico a Bordo (Flightplan)",
+      "year": 2005,
+      "tmdbId": 9315,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 37,
+      "title": "Celular: Um Grito de Socorro (Cellular)",
+      "year": 2004,
+      "tmdbId": 9759,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 38,
+      "title": "Voo Noturno (Red Eye)",
+      "year": 2005,
+      "tmdbId": 11460,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 39,
+      "title": "Perseguição: A Estrada da Morte (Joy Ride)",
+      "year": 2001,
+      "tmdbId": 10866,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 40,
+      "title": "Quarto do Pânico (Panic Room)",
+      "year": 2002,
+      "tmdbId": 4547,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 41,
+      "title": "O Fugitivo (The Fugitive)",
+      "year": 1993,
+      "tmdbId": 5503,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 42,
+      "title": "Inimigo do Estado (Enemy of the State)",
+      "year": 1998,
+      "tmdbId": 9798,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 43,
+      "title": "O Negociador (The Negotiator)",
+      "year": 1998,
+      "tmdbId": 9631,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 44,
+      "title": "Arlington Road",
+      "year": 1999,
+      "tmdbId": 1073,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 45,
+      "title": "Cabo do Medo (Cape Fear)",
+      "year": 1991,
+      "tmdbId": 1598,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 46,
+      "title": "Insônia (Insomnia)",
+      "year": 2002,
+      "tmdbId": 320,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 47,
+      "title": "Los Cronocrímenes (Timecrimes)",
+      "year": 2007,
+      "tmdbId": 14139,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 48,
+      "title": "Contra o Tempo (Source Code)",
+      "year": 2011,
+      "tmdbId": 45612,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 49,
+      "title": "Coerência (Coherence)",
+      "year": 2013,
+      "tmdbId": 220289,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 50,
+      "title": "Predestinado (Predestination)",
+      "year": 2014,
+      "tmdbId": 206487,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 51,
+      "title": "Upgrade: Atualização",
+      "year": 2018,
+      "tmdbId": 500664,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 52,
+      "title": "Ex Machina: Instinto Artificial",
+      "year": 2014,
+      "tmdbId": 264660,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 53,
+      "title": "A Chegada (Arrival)",
+      "year": 2016,
+      "tmdbId": 329865,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 54,
+      "title": "Interestelar (Interstellar)",
+      "year": 2014,
+      "tmdbId": 157336,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 55,
+      "title": "A Origem (Inception)",
+      "year": 2010,
+      "tmdbId": 27205,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 56,
+      "title": "No Limite do Amanhã (Edge of Tomorrow)",
+      "year": 2014,
+      "tmdbId": 137113,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 57,
+      "title": "Minority Report: A Nova Lei",
+      "year": 2002,
+      "tmdbId": 180,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 58,
+      "title": "Filhos da Esperança (Children of Men)",
+      "year": 2006,
+      "tmdbId": 9693,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 59,
+      "title": "Expresso do Amanhã (Snowpiercer)",
+      "year": 2013,
+      "tmdbId": 110415,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 60,
+      "title": "Rua Cloverfield, 10 (10 Cloverfield Lane)",
+      "year": 2016,
+      "tmdbId": 333371,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 61,
+      "title": "Um Lugar Silencioso (A Quiet Place)",
+      "year": 2018,
+      "tmdbId": 447332,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 62,
+      "title": "Um Lugar Silencioso - Parte II",
+      "year": 2020,
+      "tmdbId": 520763,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 63,
+      "title": "O Poço (El hoyo / The Platform)",
+      "year": 2019,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "ambiguous_identity"
+    },
+    {
+      "id": 64,
+      "title": "O Hospedeiro (The Host)",
+      "year": 2006,
+      "tmdbId": 1255,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 65,
+      "title": "Os Outros (The Others)",
+      "year": 2001,
+      "tmdbId": 1933,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 66,
+      "title": "O Orfanato (El orfanato)",
+      "year": 2007,
+      "tmdbId": 6537,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 67,
+      "title": "A Autópsia de Jane Doe (The Autopsy of Jane Doe)",
+      "year": 2016,
+      "tmdbId": 397243,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 68,
+      "title": "Invocação do Mal (The Conjuring)",
+      "year": 2013,
+      "tmdbId": 138843,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 69,
+      "title": "Sobrenatural (Insidious)",
+      "year": 2010,
+      "tmdbId": 49018,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 70,
+      "title": "O Exorcista (The Exorcist)",
+      "year": 1973,
+      "tmdbId": 9552,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 71,
+      "title": "O Chamado (The Ring)",
+      "year": 2002,
+      "tmdbId": 565,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 72,
+      "title": "Sinistro (Sinister)",
+      "year": 2012,
+      "tmdbId": 82507,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 73,
+      "title": "O Espelho (Oculus)",
+      "year": 2013,
+      "tmdbId": 385938,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 74,
+      "title": "Hereditário (Hereditary)",
+      "year": 2018,
+      "tmdbId": 493922,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 75,
+      "title": "Fale Comigo (Talk to Me)",
+      "year": 2022,
+      "tmdbId": 1008042,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 76,
+      "title": "O Telefone Preto (The Black Phone)",
+      "year": 2021,
+      "tmdbId": 756999,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 77,
+      "title": "Hush: A Morte Ouve",
+      "year": 2016,
+      "tmdbId": 376570,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 78,
+      "title": "Você é o Próximo (You're Next)",
+      "year": 2011,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "no_safe_identity"
+    },
+    {
+      "id": 79,
+      "title": "Casamento Sangrento (Ready or Not)",
+      "year": 2019,
+      "tmdbId": 567609,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 80,
+      "title": "Bárbaro (Barbarian)",
+      "year": 2022,
+      "tmdbId": 913290,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 81,
+      "title": "Sorria (Smile)",
+      "year": 2022,
+      "tmdbId": 882598,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 82,
+      "title": "A Entidade 2 (Sinister 2)",
+      "year": 2015,
+      "tmdbId": 283445,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 83,
+      "title": "Espíritos: A Morte Está ao Seu Lado (Shutter)",
+      "year": 2004,
+      "tmdbId": 17111,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 84,
+      "title": "A Tale of Two Sisters",
+      "year": 2003,
+      "tmdbId": 4552,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 85,
+      "title": "O Lamento (The Wailing)",
+      "year": 2016,
+      "tmdbId": 293670,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 86,
+      "title": "Invasão Zumbi (Train to Busan)",
+      "year": 2016,
+      "tmdbId": 396535,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 87,
+      "title": "Eu Vi o Diabo (I Saw the Devil)",
+      "year": 2010,
+      "tmdbId": 49797,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 88,
+      "title": "O Homem de Lugar Nenhum (The Man from Nowhere)",
+      "year": 2010,
+      "tmdbId": 51608,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 89,
+      "title": "A Bittersweet Life",
+      "year": 2005,
+      "tmdbId": 11344,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 90,
+      "title": "Novo Mundo (New World)",
+      "year": 2013,
+      "tmdbId": 165213,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 91,
+      "title": "A Hard Day",
+      "year": 2014,
+      "tmdbId": 269494,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 92,
+      "title": "Forgotten",
+      "year": 2017,
+      "tmdbId": 1619462,
+      "result": "pending",
+      "reason": "no_safe_poster_path"
+    },
+    {
+      "id": 93,
+      "title": "Memoir of a Murderer",
+      "year": 2017,
+      "tmdbId": 432836,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 94,
+      "title": "O Gângster, o Policial e o Diabo",
+      "year": 2019,
+      "tmdbId": 581528,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 95,
+      "title": "Confissões (Confessions)",
+      "year": 2010,
+      "tmdbId": 54186,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 96,
+      "title": "Cure",
+      "year": 1997,
+      "tmdbId": 36095,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 97,
+      "title": "Battle Royale",
+      "year": 2000,
+      "tmdbId": 3176,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 98,
+      "title": "Nove Rainhas (Nueve reinas)",
+      "year": 2000,
+      "tmdbId": 18079,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 99,
+      "title": "Relatos Selvagens (Relatos salvajes)",
+      "year": 2014,
+      "tmdbId": 265195,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 100,
+      "title": "O Clã (El Clan)",
+      "year": 2015,
+      "tmdbId": 352161,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 101,
+      "title": "O Roubo do Século (El robo del siglo)",
+      "year": 2020,
+      "tmdbId": 609242,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 102,
+      "title": "A Aura (El aura)",
+      "year": 2005,
+      "tmdbId": 13653,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 103,
+      "title": "Argentina, 1985",
+      "year": 2022,
+      "tmdbId": 714888,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 104,
+      "title": "Tese Sobre um Homicídio",
+      "year": 2013,
+      "tmdbId": 167963,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 105,
+      "title": "O Cidadão Ilustre (El ciudadano ilustre)",
+      "year": 2016,
+      "tmdbId": 408537,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 106,
+      "title": "Cela 211 (Celda 211)",
+      "year": 2009,
+      "tmdbId": 33273,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 107,
+      "title": "Enquanto Você Dorme (Mientras duermes)",
+      "year": 2011,
+      "tmdbId": 77495,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 108,
+      "title": "Pântano (La isla mínima / Marshland)",
+      "year": 2014,
+      "tmdbId": 236735,
+      "result": "linked",
+      "reason": "unmapped_exact_title_year"
+    },
+    {
+      "id": 109,
+      "title": "O Bar (El bar)",
+      "year": 2017,
+      "tmdbId": 420648,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 110,
+      "title": "Durante a Tormenta (Durante la tormenta / Mirage)",
+      "year": 2018,
+      "tmdbId": 529216,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 111,
+      "title": "Abaixo de Zero (Bajocero / Below Zero)",
+      "year": 2021,
+      "tmdbId": 587996,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 112,
+      "title": "O Ocupante (Hogar / The Occupant)",
+      "year": 2020,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "ambiguous_identity"
+    },
+    {
+      "id": 113,
+      "title": "Que Deus Nos Perdoe (Que Dios nos perdone)",
+      "year": 2016,
+      "tmdbId": 394684,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 114,
+      "title": "Sequestro (Secuestro)",
+      "year": 2016,
+      "tmdbId": 403509,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 115,
+      "title": "Kidnapped (Secuestrados)",
+      "year": 2010,
+      "tmdbId": 48393,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 116,
+      "title": "Headhunters (Hodejegerne)",
+      "year": 2011,
+      "tmdbId": 70670,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 117,
+      "title": "O Culpado (Den skyldige / The Guilty)",
+      "year": 2018,
+      "tmdbId": 486947,
+      "result": "linked",
+      "reason": "unmapped_exact_title_year"
+    },
+    {
+      "id": 118,
+      "title": "A Caça (Jagten / The Hunt)",
+      "year": 2012,
+      "tmdbId": 103663,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 119,
+      "title": "Riders of Justice",
+      "year": 2020,
+      "tmdbId": 663870,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 120,
+      "title": "The Keeper of Lost Causes",
+      "year": 2013,
+      "tmdbId": 196024,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 121,
+      "title": "The Absent One",
+      "year": 2014,
+      "tmdbId": 254201,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 122,
+      "title": "A Conspiracy of Faith",
+      "year": 2016,
+      "tmdbId": 348668,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 123,
+      "title": "The Purity of Vengeance",
+      "year": 2018,
+      "tmdbId": 479226,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 124,
+      "title": "A Hijacking (Kapringen)",
+      "year": 2012,
+      "tmdbId": 127846,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 125,
+      "title": "The Treatment (De Behandeling)",
+      "year": 2014,
+      "tmdbId": 251577,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 126,
+      "title": "Loft",
+      "year": 2008,
+      "tmdbId": 17845,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 127,
+      "title": "Bullhead",
+      "year": 2011,
+      "tmdbId": 63310,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 128,
+      "title": "A Prophet (Un prophète)",
+      "year": 2009,
+      "tmdbId": 21575,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 129,
+      "title": "À Queima-Roupa (À bout portant / Point Blank)",
+      "year": 2010,
+      "tmdbId": 61404,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 130,
+      "title": "36 Quai des Orfèvres",
+      "year": 2004,
+      "tmdbId": 7291,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 131,
+      "title": "Caché",
+      "year": 2005,
+      "tmdbId": 445,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 132,
+      "title": "Custódia (Jusqu'à la garde / Custody)",
+      "year": 2017,
+      "tmdbId": 451657,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 133,
+      "title": "A Noite do Dia 12 (La nuit du 12)",
+      "year": 2022,
+      "tmdbId": 925102,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 134,
+      "title": "Elle",
+      "year": 2016,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "ambiguous_identity"
+    },
+    {
+      "id": 135,
+      "title": "Mesrine: Killer Instinct",
+      "year": 2008,
+      "tmdbId": 13635,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 136,
+      "title": "Mesrine: Public Enemy No. 1",
+      "year": 2008,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "no_safe_identity"
+    },
+    {
+      "id": 137,
+      "title": "Layer Cake: Crime Organizado",
+      "year": 2004,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "no_safe_identity"
+    },
+    {
+      "id": 138,
+      "title": "The Bank Job",
+      "year": 2008,
+      "tmdbId": 8848,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 139,
+      "title": "Sexy Beast",
+      "year": 2000,
+      "tmdbId": 11826,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 140,
+      "title": "Harry Brown",
+      "year": 2009,
+      "tmdbId": 25941,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 141,
+      "title": "Dead Man's Shoes",
+      "year": 2004,
+      "tmdbId": 12877,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 142,
+      "title": "Eden Lake",
+      "year": 2008,
+      "tmdbId": 13510,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 143,
+      "title": "The Disappearance of Alice Creed",
+      "year": 2009,
+      "tmdbId": 38542,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 144,
+      "title": "O Escapista (The Escapist)",
+      "year": 2008,
+      "tmdbId": 14851,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 145,
+      "title": "Locke",
+      "year": 2013,
+      "tmdbId": 210479,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 146,
+      "title": "Cidade de Deus",
+      "year": 2002,
+      "tmdbId": 598,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 147,
+      "title": "Tropa de Elite",
+      "year": 2007,
+      "tmdbId": 7347,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 148,
+      "title": "Tropa de Elite 2: O Inimigo Agora é Outro",
+      "year": 2010,
+      "tmdbId": 47931,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 149,
+      "title": "Carandiru",
+      "year": 2003,
+      "tmdbId": 8440,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 150,
+      "title": "O Lobo Atrás da Porta",
+      "year": 2013,
+      "tmdbId": 214135,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 151,
+      "title": "Central do Brasil",
+      "year": 1998,
+      "tmdbId": 666,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 152,
+      "title": "Que Horas Ela Volta?",
+      "year": 2015,
+      "tmdbId": 310569,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 153,
+      "title": "O Homem que Copiava",
+      "year": 2003,
+      "tmdbId": 40823,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 154,
+      "title": "Bacurau",
+      "year": 2019,
+      "tmdbId": 446159,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 155,
+      "title": "O Som ao Redor",
+      "year": 2012,
+      "tmdbId": 97989,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 156,
+      "title": "O Auto da Compadecida",
+      "year": 2000,
+      "tmdbId": 40096,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 157,
+      "title": "Os Intocáveis (The Untouchables)",
+      "year": 1987,
+      "tmdbId": 117,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 158,
+      "title": "Os Bons Companheiros (Goodfellas)",
+      "year": 1990,
+      "tmdbId": 769,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 159,
+      "title": "O Poderoso Chefão (The Godfather)",
+      "year": 1972,
+      "tmdbId": 238,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 160,
+      "title": "O Poderoso Chefão: Parte II",
+      "year": 1974,
+      "tmdbId": 240,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 161,
+      "title": "Cassino (Casino)",
+      "year": 1995,
+      "tmdbId": 524,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 162,
+      "title": "Donnie Brasco",
+      "year": 1997,
+      "tmdbId": 9366,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 163,
+      "title": "O Pagamento Final (Carlito's Way)",
+      "year": 1993,
+      "tmdbId": 6075,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 164,
+      "title": "O Gangster (American Gangster)",
+      "year": 2007,
+      "tmdbId": 4982,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 165,
+      "title": "Estrada para Perdição (Road to Perdition)",
+      "year": 2002,
+      "tmdbId": 4147,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 166,
+      "title": "Senhores do Crime (Eastern Promises)",
+      "year": 2007,
+      "tmdbId": 2252,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 167,
+      "title": "Marcas da Violência (A History of Violence)",
+      "year": 2005,
+      "tmdbId": 59,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 168,
+      "title": "A Entrega (The Drop)",
+      "year": 2014,
+      "tmdbId": 154400,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 169,
+      "title": "Los Angeles: Cidade Proibida (L.A. Confidential)",
+      "year": 1997,
+      "tmdbId": 2118,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 170,
+      "title": "Dia de Treinamento (Training Day)",
+      "year": 2001,
+      "tmdbId": 2034,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 171,
+      "title": "Marcados para Morrer (End of Watch)",
+      "year": 2012,
+      "tmdbId": 77016,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 172,
+      "title": "Os Donos da Noite (We Own the Night)",
+      "year": 2007,
+      "tmdbId": 2001,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 173,
+      "title": "O Irlandês (The Irishman)",
+      "year": 2019,
+      "tmdbId": 398978,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 174,
+      "title": "Scarface",
+      "year": 1983,
+      "tmdbId": 111,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 175,
+      "title": "Era Uma Vez na América (Once Upon a Time in America)",
+      "year": 1984,
+      "tmdbId": 311,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 176,
+      "title": "O Poder e a Lei (The Lincoln Lawyer)",
+      "year": 2011,
+      "tmdbId": 50348,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 177,
+      "title": "Questão de Honra (A Few Good Men)",
+      "year": 1992,
+      "tmdbId": 881,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 178,
+      "title": "Tempo de Matar (A Time to Kill)",
+      "year": 1996,
+      "tmdbId": 1645,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 179,
+      "title": "O Juiz (The Judge)",
+      "year": 2014,
+      "tmdbId": 205587,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 180,
+      "title": "Spotlight: Segredos Revelados",
+      "year": 2015,
+      "tmdbId": 314365,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 181,
+      "title": "O Preço da Verdade (Dark Waters)",
+      "year": 2019,
+      "tmdbId": 552178,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 182,
+      "title": "O Informante (The Insider)",
+      "year": 1999,
+      "tmdbId": 9008,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 183,
+      "title": "Segredos Oficiais (Official Secrets)",
+      "year": 2019,
+      "tmdbId": 393624,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 184,
+      "title": "Richard Jewell",
+      "year": 2019,
+      "tmdbId": 292011,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 185,
+      "title": "O Mauritano (The Mauritanian)",
+      "year": 2021,
+      "tmdbId": 644583,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 186,
+      "title": "Luta por Justiça (Just Mercy)",
+      "year": 2019,
+      "tmdbId": 522212,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 187,
+      "title": "Argo",
+      "year": 2012,
+      "tmdbId": 68734,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 188,
+      "title": "Capitão Phillips (Captain Phillips)",
+      "year": 2013,
+      "tmdbId": 109424,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 189,
+      "title": "Sully: O Herói do Rio Hudson",
+      "year": 2016,
+      "tmdbId": 363676,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 190,
+      "title": "O Dia do Atentado (Patriots Day)",
+      "year": 2016,
+      "tmdbId": 388399,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 191,
+      "title": "Hotel Mumbai",
+      "year": 2018,
+      "tmdbId": 416144,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 192,
+      "title": "Voo United 93 (United 93)",
+      "year": 2006,
+      "tmdbId": 9829,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 193,
+      "title": "13 Horas: Os Soldados Secretos de Benghazi",
+      "year": 2016,
+      "tmdbId": 300671,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 194,
+      "title": "O Grande Herói (Lone Survivor)",
+      "year": 2013,
+      "tmdbId": 193756,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 195,
+      "title": "Falcão Negro em Perigo (Black Hawk Down)",
+      "year": 2001,
+      "tmdbId": 855,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 196,
+      "title": "A Hora Mais Escura (Zero Dark Thirty)",
+      "year": 2012,
+      "tmdbId": 97630,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 197,
+      "title": "Até o Último Homem (Hacksaw Ridge)",
+      "year": 2016,
+      "tmdbId": 324786,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 198,
+      "title": "1917",
+      "year": 2019,
+      "tmdbId": 530915,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 199,
+      "title": "Nada de Novo no Front (All Quiet on the Western Front)",
+      "year": 2022,
+      "tmdbId": 49046,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 200,
+      "title": "O Pianista (The Pianist)",
+      "year": 2002,
+      "tmdbId": 423,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 201,
+      "title": "A Lista de Schindler (Schindler's List)",
+      "year": 1993,
+      "tmdbId": 424,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 202,
+      "title": "A Vida é Bela (La vita è bella)",
+      "year": 1997,
+      "tmdbId": 637,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 203,
+      "title": "À Espera de um Milagre (The Green Mile)",
+      "year": 1999,
+      "tmdbId": 497,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 204,
+      "title": "Um Sonho de Liberdade (The Shawshank Redemption)",
+      "year": 1994,
+      "tmdbId": 278,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 205,
+      "title": "Sempre ao Seu Lado (Hachi: A Dog's Tale)",
+      "year": 2009,
+      "tmdbId": 28178,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 206,
+      "title": "Lion: Uma Jornada para Casa",
+      "year": 2016,
+      "tmdbId": 334543,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 207,
+      "title": "O Quarto de Jack (Room)",
+      "year": 2015,
+      "tmdbId": 264644,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 208,
+      "title": "O Pai (The Father)",
+      "year": 2020,
+      "tmdbId": 600354,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 209,
+      "title": "A Baleia (The Whale)",
+      "year": 2022,
+      "tmdbId": 785084,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 210,
+      "title": "Um Homem Chamado Otto (A Man Called Otto)",
+      "year": 2022,
+      "tmdbId": 937278,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 211,
+      "title": "Manchester à Beira-Mar (Manchester by the Sea)",
+      "year": 2016,
+      "tmdbId": 334541,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 212,
+      "title": "Cafarnaum (Capernaum)",
+      "year": 2018,
+      "tmdbId": 517814,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 213,
+      "title": "Milagre na Cela 7 (7. Koğuştaki Mucize)",
+      "year": 2019,
+      "tmdbId": 637920,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 214,
+      "title": "O Menino do Pijama Listrado",
+      "year": 2008,
+      "tmdbId": 14574,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 215,
+      "title": "Sete Vidas (Seven Pounds)",
+      "year": 2008,
+      "tmdbId": 11321,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 216,
+      "title": "Em Busca da Felicidade (The Pursuit of Happyness)",
+      "year": 2006,
+      "tmdbId": 1402,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 217,
+      "title": "Uma Prova de Amor (My Sister's Keeper)",
+      "year": 2009,
+      "tmdbId": 10024,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 218,
+      "title": "Marley & Eu (Marley & Me)",
+      "year": 2008,
+      "tmdbId": 14306,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 219,
+      "title": "Intocáveis (The Intouchables)",
+      "year": 2011,
+      "tmdbId": 77338,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 220,
+      "title": "A Teoria de Tudo (The Theory of Everything)",
+      "year": 2014,
+      "tmdbId": 266856,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 221,
+      "title": "Questão de Tempo (About Time)",
+      "year": 2013,
+      "tmdbId": 122906,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 222,
+      "title": "Diário de uma Paixão (The Notebook)",
+      "year": 2004,
+      "tmdbId": 11036,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 223,
+      "title": "Como Eu Era Antes de Você (Me Before You)",
+      "year": 2016,
+      "tmdbId": 296096,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 224,
+      "title": "Um Dia (One Day)",
+      "year": 2011,
+      "tmdbId": 51828,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 225,
+      "title": "Brilho Eterno de uma Mente sem Lembranças",
+      "year": 2004,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "no_safe_identity"
+    },
+    {
+      "id": 226,
+      "title": "Titanic",
+      "year": 1997,
+      "tmdbId": 597,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 227,
+      "title": "Apocalypto",
+      "year": 2006,
+      "tmdbId": 1579,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 228,
+      "title": "O Regresso (The Revenant)",
+      "year": 2015,
+      "tmdbId": 281957,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 229,
+      "title": "Everest",
+      "year": 2015,
+      "tmdbId": 253412,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 230,
+      "title": "O Impossível (The Impossible)",
+      "year": 2012,
+      "tmdbId": 80278,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 231,
+      "title": "127 Horas (127 Hours)",
+      "year": 2010,
+      "tmdbId": 44115,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 232,
+      "title": "Na Natureza Selvagem (Into the Wild)",
+      "year": 2007,
+      "tmdbId": 5915,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 233,
+      "title": "Águas Rasas (The Shallows)",
+      "year": 2016,
+      "tmdbId": 332567,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 234,
+      "title": "Adrift: Vidas à Deriva",
+      "year": 2018,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "no_safe_identity"
+    },
+    {
+      "id": 235,
+      "title": "Treze Vidas: O Resgate (Thirteen Lives)",
+      "year": 2022,
+      "tmdbId": 698948,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 236,
+      "title": "Horizonte Profundo: Desastre no Golfo (Deepwater Horizon)",
+      "year": 2016,
+      "tmdbId": 296524,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 237,
+      "title": "Homens de Coragem (Only the Brave)",
+      "year": 2017,
+      "tmdbId": 395991,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 238,
+      "title": "A Perseguição (The Grey)",
+      "year": 2011,
+      "tmdbId": 75174,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 239,
+      "title": "Náufrago (Cast Away)",
+      "year": 2000,
+      "tmdbId": 8358,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 240,
+      "title": "Perdido em Marte (The Martian)",
+      "year": 2015,
+      "tmdbId": 286217,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 241,
+      "title": "Gravidade (Gravity)",
+      "year": 2013,
+      "tmdbId": 49047,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 242,
+      "title": "O Nevoeiro (The Mist)",
+      "year": 2007,
+      "tmdbId": 5876,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 243,
+      "title": "Abismo do Medo (The Descent)",
+      "year": 2005,
+      "tmdbId": 9392,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 244,
+      "title": "Guerra Mundial Z (World War Z)",
+      "year": 2013,
+      "tmdbId": 72190,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 245,
+      "title": "Extermínio (28 Days Later)",
+      "year": 2002,
+      "tmdbId": 170,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 246,
+      "title": "Extermínio 2 (28 Weeks Later)",
+      "year": 2007,
+      "tmdbId": 1562,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 247,
+      "title": "Mad Max: Estrada da Fúria",
+      "year": 2015,
+      "tmdbId": 76341,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 248,
+      "title": "Gladiador (Gladiator)",
+      "year": 2000,
+      "tmdbId": 98,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 249,
+      "title": "O Último Duelo (The Last Duel)",
+      "year": 2021,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "ambiguous_identity"
+    },
+    {
+      "id": 250,
+      "title": "O Homem do Norte (The Northman)",
+      "year": 2022,
+      "tmdbId": 639933,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 251,
+      "title": "John Wick: De Volta ao Jogo",
+      "year": 2014,
+      "tmdbId": 245891,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 252,
+      "title": "Busca Implacável (Taken)",
+      "year": 2008,
+      "tmdbId": 8681,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 253,
+      "title": "Chamas da Vingança (Man on Fire)",
+      "year": 2004,
+      "tmdbId": 9509,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 254,
+      "title": "O Protetor (The Equalizer)",
+      "year": 2014,
+      "tmdbId": 156022,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 255,
+      "title": "Anônimo (Nobody)",
+      "year": 2021,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "ambiguous_identity"
+    },
+    {
+      "id": 256,
+      "title": "Operação Invasão (The Raid: Redemption)",
+      "year": 2011,
+      "tmdbId": 94329,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 257,
+      "title": "Missão: Impossível - Efeito Fallout",
+      "year": 2018,
+      "tmdbId": 353081,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 258,
+      "title": "A Identidade Bourne (The Bourne Identity)",
+      "year": 2002,
+      "tmdbId": 2501,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 259,
+      "title": "007 - Cassino Royale (Casino Royale)",
+      "year": 2006,
+      "tmdbId": 36557,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 260,
+      "title": "Duro de Matar (Die Hard)",
+      "year": 1988,
+      "tmdbId": 562,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 261,
+      "title": "Velocidade Máxima (Speed)",
+      "year": 1994,
+      "tmdbId": 1637,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 262,
+      "title": "O Sobrevivente (The Running Man)",
+      "year": 1987,
+      "tmdbId": 865,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 263,
+      "title": "Rebel Ridge",
+      "year": 2024,
+      "tmdbId": 646097,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 264,
+      "title": "Guerra Civil (Civil War)",
+      "year": 2024,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "ambiguous_identity"
+    },
+    {
+      "id": 265,
+      "title": "O Assassino (The Killer)",
+      "year": 2023,
+      "tmdbId": 800158,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 266,
+      "title": "Reptile",
+      "year": 2023,
+      "tmdbId": 866463,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 267,
+      "title": "Bela Vingança (Promising Young Woman)",
+      "year": 2020,
+      "tmdbId": 582014,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 268,
+      "title": "O Menu (The Menu)",
+      "year": 2022,
+      "tmdbId": 593643,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 269,
+      "title": "Fresh",
+      "year": 2022,
+      "tmdbId": 787752,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 270,
+      "title": "Não Se Preocupe, Querida (Don't Worry Darling)",
+      "year": 2022,
+      "tmdbId": 619730,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 271,
+      "title": "Saltburn",
+      "year": 2023,
+      "tmdbId": 930564,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 272,
+      "title": "Fair Play",
+      "year": 2023,
+      "tmdbId": 910571,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 273,
+      "title": "Deixe o Mundo para Trás (Leave the World Behind)",
+      "year": 2023,
+      "tmdbId": 726209,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 274,
+      "title": "The Last Stop in Yuma County",
+      "year": 2023,
+      "tmdbId": 1047020,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 275,
+      "title": "Strange Darling",
+      "year": 2023,
+      "tmdbId": 1029281,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 276,
+      "title": "Jurado Nº 2 (Juror #2)",
+      "year": 2024,
+      "tmdbId": 1106739,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 277,
+      "title": "Conclave",
+      "year": 2024,
+      "tmdbId": 974576,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 278,
+      "title": "A Substância (The Substance)",
+      "year": 2024,
+      "tmdbId": 933260,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 279,
+      "title": "Sinners",
+      "year": 2025,
+      "tmdbId": 1233413,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 280,
+      "title": "Weapons",
+      "year": 2025,
+      "tmdbId": 1078605,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 281,
+      "title": "Companion",
+      "year": 2025,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "ambiguous_identity"
+    },
+    {
+      "id": 282,
+      "title": "Socorro! (Send Help)",
+      "year": 2026,
+      "tmdbId": 1198994,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 283,
+      "title": "Verity",
+      "year": 2026,
+      "tmdbId": 1283515,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 284,
+      "title": "Máquina de Guerra (War Machine)",
+      "year": 2026,
+      "tmdbId": 1265609,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 285,
+      "title": "Extermínio: O Templo dos Ossos (28 Years Later: The Bone Temple)",
+      "year": 2026,
+      "tmdbId": 1272837,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 286,
+      "title": "O Senhor dos Anéis: A Sociedade do Anel",
+      "year": 2001,
+      "tmdbId": 120,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 287,
+      "title": "O Senhor dos Anéis: As Duas Torres",
+      "year": 2002,
+      "tmdbId": 121,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 288,
+      "title": "O Senhor dos Anéis: O Retorno do Rei",
+      "year": 2003,
+      "tmdbId": 122,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 289,
+      "title": "O Labirinto do Fauno (Pan's Labyrinth)",
+      "year": 2006,
+      "tmdbId": 1417,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 290,
+      "title": "Duna (Dune)",
+      "year": 2021,
+      "tmdbId": null,
+      "result": "pending",
+      "reason": "ambiguous_identity"
+    },
+    {
+      "id": 291,
+      "title": "Duna: Parte Dois",
+      "year": 2024,
+      "tmdbId": 693134,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 292,
+      "title": "Cruzada (Kingdom of Heaven)",
+      "year": 2005,
+      "tmdbId": 1495,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 293,
+      "title": "O Último Samurai (The Last Samurai)",
+      "year": 2003,
+      "tmdbId": 616,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 294,
+      "title": "Coração Valente (Braveheart)",
+      "year": 1995,
+      "tmdbId": 197,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 295,
+      "title": "O Conde de Monte Cristo (The Count of Monte Cristo)",
+      "year": 2002,
+      "tmdbId": 11362,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 296,
+      "title": "V de Vingança (V for Vendetta)",
+      "year": 2005,
+      "tmdbId": 752,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 297,
+      "title": "O Show de Truman (The Truman Show)",
+      "year": 1998,
+      "tmdbId": 37165,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 298,
+      "title": "Gattaca: A Experiência Genética",
+      "year": 1997,
+      "tmdbId": 782,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 299,
+      "title": "Distrito 9 (District 9)",
+      "year": 2009,
+      "tmdbId": 17654,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 300,
+      "title": "Planeta dos Macacos: A Origem",
+      "year": 2011,
+      "tmdbId": 61791,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 301,
+      "title": "Planeta dos Macacos: O Confronto",
+      "year": 2014,
+      "tmdbId": 119450,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 302,
+      "title": "Planeta dos Macacos: A Guerra",
+      "year": 2017,
+      "tmdbId": 281338,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 303,
+      "title": "O Homem Duplicado (Enemy)",
+      "year": 2013,
+      "tmdbId": 181886,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 304,
+      "title": "Animais Noturnos (Nocturnal Animals)",
+      "year": 2016,
+      "tmdbId": 340666,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 305,
+      "title": "O Operário (The Machinist)",
+      "year": 2004,
+      "tmdbId": 4553,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 306,
+      "title": "Cisne Negro (Black Swan)",
+      "year": 2010,
+      "tmdbId": 44214,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 307,
+      "title": "Clube da Luta (Fight Club)",
+      "year": 1999,
+      "tmdbId": 550,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 308,
+      "title": "Donnie Darko",
+      "year": 2001,
+      "tmdbId": 141,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 309,
+      "title": "A Pele que Habito (La piel que habito)",
+      "year": 2011,
+      "tmdbId": 63311,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 310,
+      "title": "A Criada (The Handmaiden)",
+      "year": 2016,
+      "tmdbId": 290098,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 311,
+      "title": "Anatomia de uma Queda (Anatomy of a Fall)",
+      "year": 2023,
+      "tmdbId": 915935,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 312,
+      "title": "Triângulo da Tristeza (Triangle of Sadness)",
+      "year": 2022,
+      "tmdbId": 497828,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 313,
+      "title": "O Farol (The Lighthouse)",
+      "year": 2019,
+      "tmdbId": 503919,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 314,
+      "title": "Corrente do Mal (It Follows)",
+      "year": 2014,
+      "tmdbId": 270303,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 315,
+      "title": "O Babadook",
+      "year": 2014,
+      "tmdbId": 242224,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 316,
+      "title": "Midsommar: O Mal Não Espera a Noite",
+      "year": 2019,
+      "tmdbId": 530385,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    },
+    {
+      "id": 317,
+      "title": "Audition",
+      "year": 1999,
+      "tmdbId": 11075,
+      "result": "linked",
+      "reason": "existing_verified_tmdb_id"
+    }
+  ]
+}

@@ -98,7 +98,34 @@ export function ExperienceLayer(){
  return <>
   <button className="cv10-settings-trigger" aria-label="Abrir configurações do CineVault" onClick={()=>{setSettings(true);setCheckState('idle')}} title="Experiência e atualizações"><Settings2 size={20}/></button>
   {splash&&<div className="cv10-splash" aria-label="Iniciando CineVault" role="status">
-   <div className="cv11-film-beam" aria-hidden="true"/><div className="cv11-frame-top" aria-hidden="true"/><div className="cv10-splash-halo"/><div className="cv11-reel" aria-hidden="true"/><img className="cv10-splash-icon" src="/icon-512.png" alt="CineVault"/>
+   <div className="cv11-film-beam" aria-hidden="true"/><div className="cv11-frame-top" aria-hidden="true"/><div className="cv10-splash-halo"/><div className="cv11-reel" aria-hidden="true"/><svg className="cv10-splash-icon"
+viewBox="0 0 1024 1024"
+role="img"
+aria-label="CineVault"
+xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="cvF3Dark" x1="0" y1="0" x2="1" y2="1">
+<stop stopColor="#1B1A1E"/>
+<stop offset="1" stopColor="#07080C"/>
+</linearGradient>
+<linearGradient id="cvF3Gold" x1="0" y1="0" x2="1" y2="1">
+<stop stopColor="#F6DCA4"/>
+<stop offset=".48" stopColor="#E0B976"/>
+<stop offset="1" stopColor="#B58B53"/>
+</linearGradient>
+</defs>
+<rect width="1024" height="1024" rx="212"
+fill="url(#cvF3Dark)"/>
+<rect x="29" y="29" width="966" height="966" rx="187"
+fill="none" stroke="#C29B62" strokeWidth="5"
+opacity=".35"/>
+<path d="M685 298 A293 293 0 1 0 685 727"
+fill="none" stroke="url(#cvF3Gold)"
+strokeWidth="104" strokeLinecap="round"/>
+<path d="M470 406 L470 619 Q470 633 485 625 L672 519
+Q685 511 670 503 L486 398 Q470 389 470 406Z"
+fill="url(#cvF3Gold)"/>
+</svg>
    <span className="cv10-splash-word">CINE<span>VAULT</span></span>
    <span className="cv10-splash-tag">SEU CINEMA. SUAS ESCOLHAS. SUA HISTÓRIA.</span>
    <span className="cv11-splash-caption">SIGNATURE EXPERIENCE</span>
@@ -108,7 +135,7 @@ export function ExperienceLayer(){
   </div>}
   {settings&&<div className="cv10-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setSettings(false)}}>
    <section role="dialog" aria-modal="true" aria-label="Configurações da experiência" className="cv10-panel">
-    <header><div><span className="cv10-kicker"><Sparkles size={14}/> SIGNATURE EXPERIENCE · 1.3.1</span><h2>Uma experiência sua.</h2></div><button className="cv10-x" onClick={()=>setSettings(false)} aria-label="Fechar configurações"><X/></button></header>
+    <header><div><span className="cv10-kicker"><Sparkles size={14}/> SIGNATURE EXPERIENCE · 1.3.2</span><h2>Uma experiência sua.</h2></div><button className="cv10-x" onClick={()=>setSettings(false)} aria-label="Fechar configurações"><X/></button></header>
     <div className="cv10-pref"><span><Film/><b>Abertura cinematográfica</b><small>Exibir o símbolo ao iniciar</small></span><input type="checkbox" aria-label="Ativar abertura cinematográfica" checked={prefs.intro} onChange={e=>save({...prefs,intro:e.target.checked})}/></div>
     <div className="cv10-pref"><span>{prefs.sound?<Volume2/>:<VolumeX/>}<b>Assinatura sonora</b><small>Escolha o timbre e o volume; o aparelho pode bloquear reprodução automática</small></span><input type="checkbox" aria-label="Ativar som de abertura" checked={prefs.sound} onChange={e=>save({...prefs,sound:e.target.checked})}/></div>
     <div className="cv11-sound-controls" aria-label="Estilo do som de abertura"><div className="cv11-modes">{([{key:'signature',name:'Signature'},{key:'noir',name:'Noir'},{key:'impacto',name:'Impacto'}] as const).map(choice=><button key={choice.key} aria-pressed={prefs.sonic===choice.key} onClick={()=>save({...prefs,sonic:choice.key,sound:true})}>{choice.name}</button>)}</div><label htmlFor="cv11-volume">Volume <strong>{Math.round(prefs.volume*100)}%</strong></label><input id="cv11-volume" type="range" min="15" max="100" step="5" value={Math.round(prefs.volume*100)} onChange={e=>save({...prefs,volume:Number(e.target.value)/100})}/></div>

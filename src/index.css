@@ -314,3 +314,12 @@ html { background:#090a0d; -webkit-text-size-adjust:100%; }
 .cv-v09 .cv-pulse-btn-main:active,.cv-v09 .cv-pulse-daily__buttons button:active{transform:scale(.985)}
 @media(max-width:355px){.cv-v09 .cv-pulse-welcome{padding:18px 14px}.cv-v09 .cv-pulse-actions button{font-size:11px}.cv-v09 .cv-pulse-queue__controls button{width:25px}.cv-v09 .cv-pulse-queue__film .cv-art{width:37px;min-width:37px;height:57px;min-height:57px}}
 @media(prefers-reduced-motion:reduce){.cv-v09 .cv-pulse-btn-main:active,.cv-v09 .cv-pulse-daily__buttons button:active{transform:none}}
+
+/* CineVault F2: lightweight compositor-only transitions (replaces motion/react). */
+@keyframes cv-f2-hero-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes cv-f2-detail-enter { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+.cv-f2-hero-enter { animation: cv-f2-hero-enter 270ms cubic-bezier(.2,.7,.2,1) both; }
+.cv-f2-detail-enter { animation: cv-f2-detail-enter 260ms cubic-bezier(.2,.7,.2,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .cv-f2-hero-enter, .cv-f2-detail-enter { animation: none !important; }
+}
