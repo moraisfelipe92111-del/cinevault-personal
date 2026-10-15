@@ -1,0 +1,33 @@
+name: CineVault 2.0 - Capas dos 317 originais (auditoria)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-original-posters:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validar resolver de pôsteres (sem consultas externas)
+        run: python -m unittest discover -s tests -p 'test_original_posters_audit.py' -v
+      - name: Consultar TMDb e preparar auditoria dos 317 originais
+        env:
+          TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
+        run: python scripts/audit-original-posters.py --project . --output planning/cv2-posters-review
+      - name: Exportar pôsteres e pendências para revisão
+        uses: actions/upload-artifact@v4
+        with:
+          name: CineVault-2-Capas-Originais-Auditoria
+          path: |
+            planning/cv2-posters-review/cinevault2-original-posters.json
+            planning/cv2-posters-review/cinevault2-original-posters-audit.json
+            planning/cv2-posters-review/cinevault2-original-tmdb-id-proposals.json
+          if-no-files-found: error
+          retention-days: 30
