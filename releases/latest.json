@@ -1,12 +1,14 @@
 {
-  "version": "1.3.0",
-  "build": 13,
-  "title": "CineVault 1.3.0 disponível",
+  "version": "1.3.2",
+  "build": 15,
+  "title": "CineVault 1.3.2 disponível",
   "notes": [
-    "Atualização segura pelo próprio aplicativo",
-    "Correções e melhorias da experiência"
+    "Biblioteca com 1.000 filmes e 1.000 capas vinculadas",
+    "Recuperação dos 15 pôsteres pendentes",
+    "Correções no gerenciamento das capas offline",
+    "Novo logotipo vetorial e melhorias de estabilidade"
   ],
-  "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/releases/download/v1.3.0/CineVault-1.3.0.apk",
-  "sha256": "977433325c28e688987a7525f2c08436fa7d97a4c740875daf4eebec45a2f794",
+  "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/releases/download/v1.3.2/CineVault-1.3.2.apk",
+  "sha256": "e39e6c44a1f1f82c00f65660d94516d75d89d666a57fabbff58064173f577db7",
   "required": false
 }
