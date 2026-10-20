@@ -1,0 +1,35 @@
+name: CineVault audit checks
+
+on:
+  push:
+    branches: [cv2-auditoria-00]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cinevault-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Testes e compilacao web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Instalar dependencias do lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Executar testes
+        run: npm run test:unit
+      - name: Verificar TypeScript e compilar aplicativo web
+        run: npm run build
+      - name: Confirmar que os arquivos versionados foram preservados
+        run: git diff --exit-code

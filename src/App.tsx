@@ -13,7 +13,7 @@ import { parseBackup } from './backupValidation'
 import { ExperienceLayer } from './experience'
 import { Cv2FilmDetails } from './Cv2FilmDetails'
 import { PULSE_KEY, EMPTY_PULSE, parsePulse, toggleQueue, moveQueue, markWatched, visitFilm, saveNote, pickDaily, localDay, watchStats, type PulseState } from './pulse'
-import { commitJsonBatch } from './storageSafety'
+import { createJsonMapStorage } from './jsonMapStorage'
 const FilmTrailer = lazy(() => import('./FilmTrailer').then(module => ({default: module.FilmTrailer})))
 
 type Film = typeof filmsData[number]
@@ -54,11 +54,6 @@ const moods=[['Suspense intenso',(f:Film)=>f.tension>=8],['Emocional',(f:Film)=>
 const POSTER_KEY='cinevault.posters.v1'
 const META_KEY='cinevault.posterMeta.v2'
 const UNRESOLVED_KEY='cinevault.posterUnresolved.v1'
-function readJsonMap<T>(key:string):Record<string,T>{
-  try { const value=JSON.parse(localStorage.getItem(key)||'{}');
-    return value && typeof value==='object' && !Array.isArray(value) ? value : {} }
-  catch { return {} }
-}
 function FilmArt({film,large=false,poster,fallbackPoster}:{film:Film,large?:boolean,poster?:string,fallbackPoster?:string}){
  const [failed,setFailed]=useState(false)
  const [fallback,setFallback]=useState(false)
@@ -70,6 +65,7 @@ function FilmArt({film,large=false,poster,fallbackPoster}:{film:Film,large?:bool
 
 export default function App(){
  const blockedStorage=useRef({saved:false,pulse:false})
+ const [posterStorage]=useState(()=>createJsonMapStorage(()=>localStorage))
   const [saved,setSaved]=useState<Saved>(()=>load(()=>{blockedStorage.current.saved=true}))
   const [pulse,setPulse]=useState<PulseState>(()=>{
    try{
@@ -79,10 +75,10 @@ export default function App(){
    catch{blockedStorage.current.pulse=true;return {...EMPTY_PULSE}}
   })
  const [noteDraft,setNoteDraft]=useState('')
- const [posters,setPosters]=useState<Record<string,string>>(()=>readJsonMap<string>(POSTER_KEY))
+ const [posters,setPosters]=useState<Record<string,string>>(()=>posterStorage.read<string>(POSTER_KEY))
  const [catalogPosters,setCatalogPosters]=useState<Record<string,string>>({})
- const [posterMeta,setPosterMeta]=useState<Record<string,PosterMeta>>(()=>readJsonMap<PosterMeta>(META_KEY))
- const [unresolved,setUnresolved]=useState<Record<string,string>>(()=>readJsonMap<string>(UNRESOLVED_KEY))
+ const [posterMeta,setPosterMeta]=useState<Record<string,PosterMeta>>(()=>posterStorage.read<PosterMeta>(META_KEY))
+ const [unresolved,setUnresolved]=useState<Record<string,string>>(()=>posterStorage.read<string>(UNRESOLVED_KEY))
  const [tmdbToken,setTmdbToken]=useState('')
  // Browsers keep these files under the local origin, without storing an API token.
  // URLs oficiais para os novos filmes; imagens realmente empacotadas tem precedencia.
@@ -119,11 +115,24 @@ export default function App(){
  const [autoProgress,setAutoProgress]=useState({running:false, done:0,total:0,matched:0,missed:0,current:''})
  const stopPosterRun=useRef(false)
  const runningPosters=useRef(false)
- useEffect(()=>{try{localStorage.setItem(POSTER_KEY,JSON.stringify(posters))}catch{setNotice('Não foi possível salvar os vínculos dos pôsteres.')}},[posters])
- useEffect(()=>{try{localStorage.setItem(META_KEY,JSON.stringify(posterMeta))}catch{setNotice('Não foi possível salvar os metadados TMDb.')}},[posterMeta])
- useEffect(()=>{try{localStorage.setItem(UNRESOLVED_KEY,JSON.stringify(unresolved))}catch{setNotice('Não foi possível salvar os itens pendentes.')}},[unresolved])
+ useEffect(()=>{
+  try {
+   if(!posterStorage.write(POSTER_KEY,posters))setNotice('Não foi possível ler os dados locais das capas. Gravação suspensa; importe um backup válido para recuperar.')
+  } catch {setNotice('Não foi possível salvar os vínculos dos pôsteres.')}
+ },[posters,posterStorage])
+ useEffect(()=>{
+  try {
+   if(!posterStorage.write(META_KEY,posterMeta))setNotice('Não foi possível ler os dados locais das capas. Gravação suspensa; importe um backup válido para recuperar.')
+  } catch {setNotice('Não foi possível salvar os metadados TMDb.')}
+ },[posterMeta,posterStorage])
+ useEffect(()=>{
+  try {
+   if(!posterStorage.write(UNRESOLVED_KEY,unresolved))setNotice('Não foi possível ler os dados locais das capas. Gravação suspensa; importe um backup válido para recuperar.')
+  } catch {setNotice('Não foi possível salvar os itens pendentes.')}
+ },[unresolved,posterStorage])
  const autoPosters=async(retryPending=false)=>{
   if(runningPosters.current)return
+  if(posterStorage.hasBlocked()){setNotice('Não foi possível ler os dados locais das capas. Importe um backup válido antes de identificar novos pôsteres.');return}
   if(!tmdbToken.trim()){setNotice('Cole seu API Read Access Token do TMDb nas configurações das capas.');return}
   const pending=films.filter(f=>!posters[f.id] && (retryPending || !unresolved[f.id]))
   if(!pending.length){setNotice('Não há filmes novos a identificar. Use "Reprocessar pendentes" para revisar os não encontrados.');return}
@@ -234,6 +243,10 @@ export default function App(){
  const choose=()=>{setSessionRound(n=>sessionReady?n+1:0);setSessionReady(true)}
  const exportPending=()=>{const pendingFilms=films.filter(f=>!posters[f.id]);const report={generatedAt:new Date().toISOString(),total:pendingFilms.length,films:pendingFilms.map(f=>({id:f.id,title:f.title,year:f.year,reason:unresolved[f.id]||'Ainda não processado'}))};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cinevault-filmes-pendentes.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setNotice('Relatório de pendentes preparado para download.')}
  const exportBackup=async()=>{
+  if(blockedStorage.current.saved||blockedStorage.current.pulse||posterStorage.hasBlocked()){
+   setNotice('Há dados locais que não puderam ser lidos. A exportação foi interrompida para evitar um backup incompleto.')
+   return
+  }
   try {
    await exportJsonBackup({version:4,exportedAt:new Date().toISOString(),...saved,posters,posterMeta,unresolved,pulse})
    setNotice(Capacitor.isNativePlatform()?'Escolha um destino no compartilhamento para guardar seu backup.':'Backup preparado para download.')
@@ -249,7 +262,7 @@ const importBackup=async(file?:File)=>{
    const result=parseBackup(raw,new Set(films.map(f=>f.id)))
     // Validate, then persist the import as a rollback-protected batch.
     // No silent overwrite of malformed personal state on startup.
-    commitJsonBatch(localStorage,[
+    posterStorage.restore([
       {key:KEY,value:result.saved},
       ...(result.pulse?[{key:PULSE_KEY,value:result.pulse}]:[]),
       ...(result.posters?[{key:POSTER_KEY,value:result.posters}]:[]),
