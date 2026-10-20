@@ -43,6 +43,7 @@ class HostSQLite {
       async beginTransaction() { this.db.exec('BEGIN') },
       async commitTransaction() { this.db.exec('COMMIT') },
       async rollbackTransaction() { this.db.exec(owner.broken === 'rollback' ? 'COMMIT' : 'ROLLBACK') },
+      async isTransactionActive() { return {result: this.db.isTransaction} },
       async executeSet(items) {
         const atomic = owner.broken !== 'batch'
         if (atomic) this.db.exec('BEGIN')
@@ -89,9 +90,50 @@ test('host SQLite: CRUD, Unicode, commits, rollbacks and upgrade preserve exact 
 test('host SQLite: a fresh connection manager reopens the same persisted database', async t => {
   const root = rootFor(t)
   const previous = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
-  const result = await runNativeSqliteAudit({sqlite: new HostSQLite(root), previous, ...context})
-  assert.equal(result.status, 'passed')
+  const reopened = new HostSQLite(root)
+  const result = await runNativeSqliteAudit({sqlite: reopened, previous, ...context})
+  try {
+    assert.equal(result.status, 'ready_for_interruption')
+    validateAuditReport(result, context, 'ready_for_interruption')
+    assert.equal(reopened.connections.size, 1)
+    assert.equal(reopened.connections.get(result.database).db.isTransaction, true)
+  } finally { await reopened.closeConnection(result.database) }
+})
+
+test('host SQLite: interrupted schema and record writes roll back, then migration retry commits', async t => {
+  const root = rootFor(t)
+  const first = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
+  const manager = new HostSQLite(root)
+  const pending = await runNativeSqliteAudit({sqlite: manager, previous: first, ...context})
+  // Host-side close rolls back the open transaction. Native CI uses process kill.
+  await manager.closeConnection(pending.database)
+  const result = await runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context})
   validateAuditReport(result, context, 'passed')
+  assert.equal(result.databaseVersion, 3)
+  assert.ok(result.checks.includes('interrupted_migration_rollback'))
+  assert.ok(result.checks.includes('migration_retry_committed'))
+})
+
+test('audit refuses an interrupted migration that actually committed the changed records', async t => {
+  const root = rootFor(t)
+  const first = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
+  const manager = new HostSQLite(root)
+  const pending = await runNativeSqliteAudit({sqlite: manager, previous: first, ...context})
+  await manager.connections.get(pending.database).commitTransaction()
+  await manager.closeConnection(pending.database)
+  await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context}), /records changed|schema version mismatch/)
+})
+
+test('audit detects a schema object that survived the interrupted migration', async t => {
+  const root = rootFor(t)
+  const first = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
+  const manager = new HostSQLite(root)
+  const pending = await runNativeSqliteAudit({sqlite: manager, previous: first, ...context})
+  await manager.closeConnection(pending.database)
+  const db = new DatabaseSync(path.join(root, pending.database + '.sqlite'))
+  db.exec('CREATE TABLE audit_recovery_schema (id INTEGER PRIMARY KEY, state TEXT NOT NULL)')
+  db.close()
+  await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context}), /interrupted schema change survived/)
 })
 
 test('audit detects a rollback implementation that commits instead', async t => {
@@ -114,7 +156,7 @@ test('audit detects records changed between launches', async t => {
 test('audit rejects stale identity and incomplete markers before opening any database', async t => {
   const previous = await runNativeSqliteAudit({sqlite: new HostSQLite(rootFor(t)), ...context})
   const sqlite = { createConnection() { throw Error('database must not be opened') } }
-  for (const changed of [{runId: '999'}, {database: 'personal'}, {checks: []}, {databaseVersion: 1}, {status: 'passed'}])
+  for (const changed of [{runId: '999'}, {database: 'personal'}, {checks: []}, {databaseVersion: 1}, {status: 'passed'}, {schemaVersion: 1}])
     await assert.rejects(runNativeSqliteAudit({sqlite, previous: {...previous, ...changed}, ...context}), /SQLite audit:/)
 })
 
@@ -128,6 +170,8 @@ test('a success report requires every check and process restart evidence', async
   const root = rootFor(t)
   const previous = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
   assert.throws(() => validateAuditReport({...previous, status: 'passed'}, context, 'passed'), /incomplete checks/)
+  previous.checks.pop()
+  assert.throws(() => validateAuditReport(previous, context, 'ready_for_restart'), /incomplete checks/)
 })
 
 test('generated HTML retains the real CineVault entry and allows only one probe injection', () => {
@@ -145,4 +189,14 @@ test('audit bundle preparation refuses to run outside CI before loading Vite or 
   })
   assert.equal(result.status, 1)
   assert.match(result.stderr, /restricted to GitHub Actions/)
+})
+
+test('a cleanup failure cannot hide the original native database error', async t => {
+  const log = t.mock.method(console, 'error', () => {})
+  const sqlite = {
+    async createConnection() { return {async open() { throw Error('native open failed') }} },
+    async closeConnection() { throw Error('cleanup failed') },
+  }
+  await assert.rejects(runNativeSqliteAudit({sqlite, ...context}), /native open failed/)
+  assert.equal(log.mock.callCount(), 1)
 })

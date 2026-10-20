@@ -1,11 +1,13 @@
 """Exercise Android collector errors without an emulator or personal data."""
 import importlib.util
 import io
+import json
 from pathlib import Path
 import subprocess
+import tempfile
 import unittest
 from contextlib import redirect_stdout
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 source = Path(__file__).resolve().parents[1] / 'scripts/run-native-sqlite-audit.py'
 spec = importlib.util.spec_from_file_location('native_sqlite_runner', source)
@@ -73,6 +75,69 @@ class AndroidCollectorTests(unittest.TestCase):
         self.assertNotIn('UnrelatedTag', filtered)
         self.assertIn('probe error 999', filtered)
         self.assertIn('FATAL EXCEPTION', filtered)
+
+
+class RecoveryControllerTests(unittest.TestCase):
+    DEVICE = '11111111-1111-1111-1111-111111111111'
+
+    def report(self, status='ready_for_interruption'):
+        return {
+            'schemaVersion': 2, 'runId': '123', 'attempt': '1', 'platform': 'ios',
+            'database': 'cv2_sqlite_audit_123_1_ios', 'databaseVersion': 3,
+            'committedVersion': 2, 'transactionOpen': True, 'status': status,
+            'checks': runner.CHECKS + ['process_restart', 'uncommitted_migration_prepared'],
+        }
+
+    def test_pending_report_requires_uncommitted_transaction_evidence(self):
+        report = self.report()
+        runner.validate(report, 'ios', '123', '1', 'ready_for_interruption')
+        for changed in [{'transactionOpen': False}, {'committedVersion': 3}, {'schemaVersion': 1}]:
+            with self.assertRaisesRegex(RuntimeError, 'Invalid or incomplete'):
+                runner.validate({**report, **changed}, 'ios', '123', '1', 'ready_for_interruption')
+
+    def test_previous_phase_can_remain_on_disk_until_the_next_report_arrives(self):
+        previous = {**self.report(), 'status': 'ready_for_restart', 'databaseVersion': 2,
+                    'transactionOpen': False, 'checks': runner.CHECKS}
+        reads = iter([json.dumps(previous), json.dumps(self.report())])
+        with patch.object(runner.time, 'sleep'):
+            result = runner.wait_report(lambda: next(reads), 'ios', '123', '1', 'ready_for_interruption')
+        self.assertEqual(result['status'], 'ready_for_interruption')
+
+    def test_future_or_completed_phase_cannot_skip_the_interruption(self):
+        with self.assertRaisesRegex(RuntimeError, 'Unexpected native probe state'):
+            runner.wait_report(lambda: '{"status":"passed"}', 'ios', '123', '1', 'ready_for_interruption')
+
+    def test_unknown_expected_phase_is_rejected_before_reading(self):
+        with patch.object(runner, 'command') as command:
+            with self.assertRaisesRegex(RuntimeError, 'Unknown expected'):
+                runner.wait_report(lambda: '', 'ios', '123', '1', 'unknown')
+            command.assert_not_called()
+
+    def test_interrupt_refuses_the_collector_process(self):
+        with patch.object(runner.os, 'getpid', return_value=12345), patch.object(runner.os, 'kill') as kill:
+            with self.assertRaisesRegex(RuntimeError, 'Refusing to interrupt this process'):
+                runner.interrupt_ios_audit_app(self.DEVICE, '12345')
+            kill.assert_not_called()
+
+    def test_interrupt_refuses_an_unrelated_executable(self):
+        with tempfile.TemporaryDirectory(prefix='cv-process-identity-') as directory:
+            bundle = Path(directory) / 'App.app'
+            bundle.mkdir()
+            (bundle / 'App').write_text('test fixture, never executed')
+            with patch.object(runner, 'command', side_effect=[reply(out=str(bundle)), reply(out='/unrelated/process')]), patch.object(runner.os, 'getpid', return_value=99), patch.object(runner.os, 'kill') as kill:
+                with self.assertRaisesRegex(RuntimeError, 'unverified simulator app identity'):
+                    runner.interrupt_ios_audit_app(self.DEVICE, '12345')
+                kill.assert_not_called()
+
+    def test_interrupt_targets_only_the_verified_simulator_app_then_waits_for_exit(self):
+        with tempfile.TemporaryDirectory(prefix='cv-process-identity-') as directory:
+            bundle = Path(directory) / 'App.app'
+            bundle.mkdir()
+            executable = bundle / 'App'
+            executable.write_text('test fixture, never executed')
+            with patch.object(runner, 'command', side_effect=[reply(out=str(bundle)), reply(out=str(executable))]), patch.object(runner.os, 'getpid', return_value=99), patch.object(runner.os, 'kill', side_effect=[None, ProcessLookupError]) as kill:
+                runner.interrupt_ios_audit_app(self.DEVICE, '12345')
+            self.assertEqual(kill.call_args_list, [call(12345, runner.signal.SIGKILL), call(12345, 0)])
 
 
 if __name__ == '__main__':

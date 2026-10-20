@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "assessedSourceCommit": "c7080493bce8dd2f53e89e849129c3cdfc0c2064",
+  "dependencies": {"capacitor": "8.5.2", "sqlite": "8.1.1"},
+  "protocolVersionAssessed": 1,
+  "web": {"testsPassed": 138, "collectorTestsPassed": 8, "typeScript": "passed", "build": "passed"},
+  "android": {
+    "sourceCommit": "c7080493bce8dd2f53e89e849129c3cdfc0c2064",
+    "runId": 39497414637,
+    "jobId": 118886112699,
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39497414637",
+    "status": "passed",
+    "emulatorApi": 36,
+    "processBefore": "1942",
+    "processAfter": "3056",
+    "debugApkBytes": 14612435
+  },
+  "ios": {
+    "sourceCommit": "65eaf27f6dc79b6e02af1a50fc6548045187ebd2",
+    "runId": 39495295218,
+    "jobId": 118878867970,
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39495295218",
+    "status": "passed",
+    "scope": "unsigned_simulator",
+    "xcode": "26.3",
+    "simulatorSdk": "26.2",
+    "processBefore": "8137",
+    "processAfter": "8639"
+  },
+  "checksPassedOnBothPlatforms": [
+    "parameterized_unicode_crud", "explicit_commit", "explicit_rollback",
+    "failed_batch_atomicity", "migration_v1_v2", "connection_reopen", "process_restart"
+  ],
+  "previousAndroidFailure": {
+    "runId": 39495295218,
+    "type": "report_timeout",
+    "rootCause": null,
+    "followUp": "Nova execucao com diagnostico passou; a causa original nao foi comprovada."
+  },
+  "limits": [
+    "Dados sinteticos e banco exclusivo de auditoria; migracao pessoal nao ativada.",
+    "O protocolo 1 reiniciou processos apos fechar conexoes; interrupcao com transacao aberta e recuperacao ainda precisam da proxima execucao.",
+    "Esta evidencia nao representa ensaio de perda fisica de energia, instalacao em iPhone ou aprovacao nas lojas."
+  ]
+}

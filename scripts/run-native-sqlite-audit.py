@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -23,18 +24,29 @@ def command(args, *, check=True, timeout=90):
 
 
 def validate(report, platform, run_id, attempt, status):
+    phases = {
+        'ready_for_restart': (2, 2, False, CHECKS),
+        'ready_for_interruption': (3, 2, True, CHECKS + ['process_restart', 'uncommitted_migration_prepared']),
+        'passed': (3, 3, False, CHECKS + ['process_restart', 'interrupted_migration_rollback', 'migration_retry_committed']),
+    }
+    if status not in phases:
+        raise RuntimeError('Unknown native audit phase')
+    version, committed, transaction_open, checks = phases[status]
     expected = {
-        'schemaVersion': 1, 'runId': run_id, 'attempt': attempt,
+        'schemaVersion': 2, 'runId': run_id, 'attempt': attempt,
         'platform': platform,
         'database': f'cv2_sqlite_audit_{run_id}_{attempt}_{platform}',
-        'databaseVersion': 2, 'status': status,
-        'checks': CHECKS + (['process_restart'] if status == 'passed' else []),
+        'databaseVersion': version, 'committedVersion': committed,
+        'transactionOpen': transaction_open, 'status': status, 'checks': checks,
     }
     if any(report.get(key) != value for key, value in expected.items()):
         raise RuntimeError('Invalid or incomplete native report: ' + json.dumps(report))
 
 
 def wait_report(read, platform, run_id, attempt, status):
+    phases = ['ready_for_restart', 'ready_for_interruption', 'passed']
+    if status not in phases:
+        raise RuntimeError('Unknown expected native audit phase')
     deadline = time.monotonic() + 120
     last = 'result not available'
     while time.monotonic() < deadline:
@@ -52,10 +64,11 @@ def wait_report(read, platform, run_id, attempt, status):
                 if report.get('status') == status:
                     validate(report, platform, run_id, attempt, status)
                     return report
-                # Phase-one output remains on disk until phase two writes its result.
-                if status == 'passed' and report.get('status') == 'ready_for_restart':
-                    validate(report, platform, run_id, attempt, 'ready_for_restart')
-                    last = 'waiting for process restart verification'
+                # Earlier output remains on disk while the next launch runs.
+                phase = report.get('status')
+                if phase in phases and phases.index(phase) < phases.index(status):
+                    validate(report, platform, run_id, attempt, phase)
+                    last = 'waiting for ' + status
                 else:
                     raise RuntimeError('Unexpected native probe state: ' + json.dumps(report))
         time.sleep(1)
@@ -141,11 +154,22 @@ def android(run_id, attempt):
             if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
                 raise RuntimeError('Android process did not stop')
             launch_android(prefix)
+            pending = wait_report(read, 'android', run_id, attempt, 'ready_for_interruption')
+            pid_pending = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
+            print('Uncommitted schema and record writes prepared; force-stopping only the audit app.', flush=True)
+            command(prefix + ['shell', 'am', 'force-stop', APP])
+            if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
+                raise RuntimeError('Android process did not stop during the interruption test')
+            launch_android(prefix)
             report = wait_report(read, 'android', run_id, attempt, 'passed')
             pid_after = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
-            if not pid_before or not pid_after or pid_before == pid_after:
-                raise RuntimeError('Could not verify a new Android process')
-            return {**report, 'processRestart': {'before': pid_before, 'after': pid_after}, 'phaseOne': first['status']}
+            pids = [pid_before, pid_pending, pid_after]
+            if any(not re.fullmatch(r'[1-9]\d*', pid) for pid in pids) or len(set(pids)) != 3:
+                raise RuntimeError('Could not verify three distinct Android processes')
+            return {**report, 'processRestart': {'before': pid_before, 'after': pid_pending},
+                    'forcedInterruption': {'before': pid_pending, 'after': pid_after,
+                                           'method': 'am_force_stop', 'transactionOpenConfirmed': pending['transactionOpen']},
+                    'phaseOne': first['status']}
         except Exception:
             android_diagnostics(prefix, log_path)
             raise
@@ -157,6 +181,30 @@ def android(run_id, attempt):
                 except subprocess.TimeoutExpired:
                     collector.kill()
                     collector.wait(timeout=5)
+
+
+def interrupt_ios_audit_app(device, pid):
+    # Only the process returned by simctl for this fresh audit application's
+    # installed executable may be killed. Refuse unrelated PIDs and paths.
+    if not re.fullmatch(r'[0-9A-Fa-f-]{36}', device) or not re.fullmatch(r'[1-9]\d*', pid):
+        raise RuntimeError('Invalid simulator or process identity')
+    number = int(pid)
+    if number <= 1 or number == os.getpid():
+        raise RuntimeError('Refusing to interrupt this process')
+    bundle = Path(command(['xcrun', 'simctl', 'get_app_container', device, APP, 'app']).stdout.strip()).resolve()
+    expected = bundle / 'App'
+    actual = command(['ps', '-ww', '-p', pid, '-o', 'comm=']).stdout.strip()
+    if bundle.name != 'App.app' or not expected.is_file() or Path(actual).resolve() != expected.resolve():
+        raise RuntimeError('Refusing to kill a process with unverified simulator app identity')
+    os.kill(number, signal.SIGKILL)
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        try:
+            os.kill(number, 0)
+        except ProcessLookupError:
+            return
+        time.sleep(0.1)
+    raise TimeoutError('The verified simulator app process did not exit')
 
 
 def ios(run_id, attempt):
@@ -187,11 +235,18 @@ def ios(run_id, attempt):
     pid_before = launch()
     first = wait_report(read, 'ios', run_id, attempt, 'ready_for_restart')
     command(['xcrun', 'simctl', 'terminate', device, APP])
+    pid_pending = launch()
+    pending = wait_report(read, 'ios', run_id, attempt, 'ready_for_interruption')
+    print('Uncommitted schema and record writes prepared; interrupting verified simulator app.', flush=True)
+    interrupt_ios_audit_app(device, pid_pending)
     pid_after = launch()
     report = wait_report(read, 'ios', run_id, attempt, 'passed')
-    if pid_before == pid_after:
-        raise RuntimeError('Could not verify a new iOS process')
-    return {**report, 'processRestart': {'before': pid_before, 'after': pid_after}, 'phaseOne': first['status']}
+    if len({pid_before, pid_pending, pid_after}) != 3:
+        raise RuntimeError('Could not verify three distinct iOS processes')
+    return {**report, 'processRestart': {'before': pid_before, 'after': pid_pending},
+            'forcedInterruption': {'before': pid_pending, 'after': pid_after,
+                                   'method': 'SIGKILL_verified_simulator_app', 'transactionOpenConfirmed': pending['transactionOpen']},
+            'phaseOne': first['status']}
 
 
 def main():
