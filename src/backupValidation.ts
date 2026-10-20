@@ -52,15 +52,20 @@ export function parseBackup(raw: unknown, allowedIds: ReadonlySet<number>): Pars
     for (const [id, value] of Object.entries(rawMetadata)) {
       if (!allowedIds.has(Number(id)) || !object(value) || typeof value.tmdbId !== 'number' || !Number.isFinite(value.tmdbId) || value.tmdbId <= 0 ||
           typeof value.posterPath !== 'string' || !tmdbPath.test(value.posterPath)) continue
+      const year = Number(value.year ?? 0)
+      const confidence = Number(value.confidence ?? 0)
+      if (!Number.isFinite(year) || !Number.isFinite(confidence)) {
+        throw new Error('Metadados de pôster com números inválidos')
+      }
       const backdropPath = typeof value.backdropPath === 'string' && tmdbPath.test(value.backdropPath) ? value.backdropPath : null
       parsed.posterMeta[id] = {
         tmdbId: value.tmdbId,
         tmdbTitle: String(value.tmdbTitle || '').slice(0,200),
-        year: Number(value.year || 0),
+        year,
         posterPath: value.posterPath,
         backdropPath,
         overview: String(value.overview || '').slice(0,3000),
-        confidence: Number(value.confidence || 0),
+        confidence,
         checkedAt: String(value.checkedAt || ''),
       }
     }
