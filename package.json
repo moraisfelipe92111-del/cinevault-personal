@@ -14,26 +14,28 @@
     "trailers:sync": "node scripts/sync-trailers.mjs"
   },
   "dependencies": {
+    "@capacitor-community/sqlite": "8.1.1",
+    "@capacitor/android": "8.5.2",
+    "@capacitor/browser": "8.0.3",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/filesystem": "8.1.4",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/share": "8.0.3",
     "@tailwindcss/vite": "^4.3.3",
     "lucide-react": "^1.56.0",
     "motion": "^14.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "tailwindcss": "^4.3.3",
-    "@capacitor/core": "8.5.2",
-    "@capacitor/android": "8.5.2",
-    "@capacitor/filesystem": "8.1.4",
-    "@capacitor/share": "8.0.3",
-    "@capacitor/browser": "8.0.3"
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.5.2",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
-    "vite": "^8.3.0",
-    "@capacitor/cli": "8.5.2"
+    "vite": "^8.3.0"
   }
 }

@@ -23,7 +23,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '24'
+          node-version: '24.21.0'
           cache: npm
       - name: Instalar dependencias do lockfile
         run: npm ci --no-audit --no-fund
@@ -33,3 +33,134 @@ jobs:
         run: npm run build
       - name: Confirmar que os arquivos versionados foram preservados
         run: git diff --exit-code
+
+  android-native:
+    name: Android - compilacao SQLite
+    needs: test-and-build
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[native-audit]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.21.0'
+          cache: npm
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Instalar dependencias e compilar web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Conferir SDK Android
+        run: |
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+      - name: Gerar projeto Android do CineVault
+        run: |
+          npx cap add android
+          npx cap sync android
+          node scripts/apply-android-icons.mjs
+          node scripts/configure-native-identity.mjs
+          node scripts/install-android-updater.mjs
+          node --experimental-strip-types scripts/prepare-native-audit.mjs android
+      - name: Compilar Android
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon --max-workers=2 --console=plain --stacktrace
+      - name: Conferir pacote e inclusao do SQLite
+        run: |
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging android/app/build/outputs/apk/debug/app-debug.apk > "$RUNNER_TEMP/cinevault-badging.txt"
+          python3 - <<'PY'
+          import json, os, pathlib, zipfile
+          apk = pathlib.Path('android/app/build/outputs/apk/debug/app-debug.apk')
+          badging = pathlib.Path(os.environ['RUNNER_TEMP'], 'cinevault-badging.txt').read_text()
+          expected = [
+              "name='com.cinevault.pessoal'",
+              "versionName='" + os.environ['CV_AUDIT_VERSION'] + "'",
+              "versionCode='" + os.environ['CV_AUDIT_BUILD'] + "'",
+              "targetSdkVersion:'36'"
+          ]
+          if any(value not in badging for value in expected):
+              raise SystemExit('Pacote ou versao Android divergente.')
+          with zipfile.ZipFile(apk) as archive:
+              plugins = json.loads(archive.read('assets/capacitor.plugins.json'))
+              if not any(p.get('pkg') == '@capacitor-community/sqlite' for p in plugins):
+                  raise SystemExit('SQLite ausente do registro nativo.')
+              libraries = sorted(n for n in archive.namelist() if n.endswith('/libsqlcipher.so'))
+              if not libraries:
+                  raise SystemExit('Biblioteca SQLCipher ausente do APK.')
+          print(json.dumps({'apkBytes': apk.stat().st_size, 'sqlcipherLibraries': libraries}, indent=2))
+          PY
+          git diff --exit-code
+
+  ios-native:
+    name: iOS - compilacao SQLite para simulador
+    needs: test-and-build
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[native-audit]')
+    runs-on: macos-15
+    timeout-minutes: 35
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.21.0'
+          cache: npm
+      - name: Conferir Xcode e CocoaPods
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphonesimulator --show-sdk-version
+          pod --version
+      - name: Instalar dependencias e compilar web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Gerar projeto iOS do CineVault
+        run: |
+          npx cap add ios --packagemanager CocoaPods
+          npx cap sync ios
+          node --experimental-strip-types scripts/prepare-native-audit.mjs ios
+      - name: Compilar para simulador sem assinatura
+        run: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/cinevault-ios" \
+            MARKETING_VERSION="$CV_AUDIT_VERSION" \
+            CURRENT_PROJECT_VERSION="$CV_AUDIT_BUILD" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+      - name: Conferir aplicativo e framework SQLite
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, plistlib
+          app = pathlib.Path(os.environ['RUNNER_TEMP'], 'cinevault-ios/Build/Products/Debug-iphonesimulator/App.app')
+          with (app / 'Info.plist').open('rb') as handle:
+              info = plistlib.load(handle)
+          expected = {
+              'CFBundleIdentifier': 'com.cinevault.pessoal',
+              'CFBundleShortVersionString': os.environ['CV_AUDIT_VERSION'],
+              'CFBundleVersion': os.environ['CV_AUDIT_BUILD']
+          }
+          if any(str(info.get(key)) != value for key, value in expected.items()):
+              raise SystemExit('Identidade ou versao iOS divergente.')
+          framework = app / 'Frameworks/CapacitorCommunitySqlite.framework/CapacitorCommunitySqlite'
+          if not framework.is_file():
+              raise SystemExit('Framework SQLite ausente do aplicativo.')
+          print(json.dumps({'identity': expected, 'sqliteFrameworkBytes': framework.stat().st_size, 'scope': 'simulator_build_only'}, indent=2))
+          PY
+          git diff --exit-code
