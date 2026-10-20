@@ -62,6 +62,62 @@ def wait_report(read, platform, run_id, attempt, status):
     raise TimeoutError('Native probe timed out: ' + last)
 
 
+def launch_android(prefix):
+    output = command(prefix + ['shell', 'am', 'start', '-W', '-n', APP + '/.MainActivity']).stdout
+    print('Android launch:\n' + output.strip(), flush=True)
+    if not re.search(r'^Status:\s*ok\s*$', output, re.MULTILINE):
+        raise RuntimeError('Android did not confirm a successful activity launch: ' + output.strip())
+
+
+def read_android_report(prefix):
+    reply = command(prefix + ['shell', 'run-as', APP, 'cat', 'cache/' + RESULT], check=False)
+    if reply.returncode == 0:
+        return reply.stdout
+    detail = (reply.stderr + '\n' + reply.stdout).strip()
+    state = command(prefix + ['get-state'], check=False)
+    if state.returncode or state.stdout.strip() != 'device':
+        raise RuntimeError('Android emulator disconnected while waiting for the report: ' +
+                           (state.stderr + '\n' + state.stdout).strip())
+    if 'no such file or directory' not in detail.lower():
+        raise RuntimeError('Cannot read the Android audit report: ' + detail)
+    pid = command(prefix + ['shell', 'pidof', APP], check=False)
+    if pid.returncode or not pid.stdout.strip():
+        raise RuntimeError('CineVault process exited before producing the audit report')
+    return ''
+
+
+def relevant_android_log(text):
+    pattern = re.compile(r'CINEVAULT_SQLITE_AUDIT|Capacitor|chromium|AndroidRuntime|FATAL|'
+                         r'lowmemorykiller|lmkd|am_crash|am_kill|ActivityTaskManager|'
+                         r'com\.cinevault\.pessoal|signal [0-9]+', re.IGNORECASE)
+    return '\n'.join(line for line in text.splitlines() if pattern.search(line))[-18000:]
+
+
+def android_diagnostics(prefix, log_path):
+    print('\n=== ANDROID RUNTIME DIAGNOSTICS ===', flush=True)
+    for args in [prefix + ['get-state'], prefix + ['shell', 'pidof', APP], ['free', '-m']]:
+        try:
+            reply = command(args, check=False, timeout=10)
+            print(' '.join(args) + '\n' + (reply.stdout + reply.stderr)[-2500:], flush=True)
+        except Exception as error:
+            print('Diagnostic command unavailable: ' + str(error), flush=True)
+    try:
+        text = log_path.read_text(encoding='utf-8', errors='replace')
+        print('Filtered emulator logcat:\n' + relevant_android_log(text), flush=True)
+    except Exception as error:
+        print('Logcat unavailable: ' + str(error), flush=True)
+    try:
+        reply = command(['sudo', '-n', 'dmesg', '--ctime'], check=False, timeout=10)
+        if reply.returncode == 0:
+            memory = [line for line in reply.stdout.splitlines() if re.search(
+                r'out of memory|oom-kill|killed process|qemu.*segfault|segfault.*qemu', line, re.IGNORECASE)]
+            print('Host memory/crash events:\n' + '\n'.join(memory[-20:])[-6000:], flush=True)
+        else:
+            print('Host kernel diagnostics unavailable: ' + reply.stderr[-500:], flush=True)
+    except Exception as error:
+        print('Host kernel diagnostics unavailable: ' + str(error), flush=True)
+
+
 def android(run_id, attempt):
     devices = command(['adb', 'devices']).stdout.splitlines()[1:]
     active = [line.split()[0] for line in devices if len(line.split()) == 2 and line.split()[1] == 'device']
@@ -70,27 +126,37 @@ def android(run_id, attempt):
     prefix = ['adb', '-s', active[0]]
     if command(prefix + ['shell', 'pm', 'path', APP], check=False).stdout.strip():
         raise RuntimeError('Fresh emulator required: CineVault is already installed')
-    apk = 'android/app/build/outputs/apk/debug/app-debug.apk'
-    command(prefix + ['install', apk])
-
-    def launch():
-        command(prefix + ['shell', 'am', 'start', '-W', '-n', APP + '/.MainActivity'])
-
-    def read():
-        return command(prefix + ['shell', 'run-as', APP, 'cat', 'cache/' + RESULT], check=False).stdout
-
-    launch()
-    first = wait_report(read, 'android', run_id, attempt, 'ready_for_restart')
-    pid_before = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
-    command(prefix + ['shell', 'am', 'force-stop', APP])
-    if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
-        raise RuntimeError('Android process did not stop')
-    launch()
-    report = wait_report(read, 'android', run_id, attempt, 'passed')
-    pid_after = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
-    if not pid_before or not pid_after or pid_before == pid_after:
-        raise RuntimeError('Could not verify a new Android process')
-    return {**report, 'processRestart': {'before': pid_before, 'after': pid_after}, 'phaseOne': first['status']}
+    log_path = Path(os.environ['RUNNER_TEMP']) / 'cinevault-android-logcat.txt'
+    with log_path.open('w', encoding='utf-8') as log_file:
+        collector = subprocess.Popen(prefix + ['logcat', '-v', 'threadtime'], stdout=log_file, stderr=subprocess.STDOUT)
+        try:
+            apk = 'android/app/build/outputs/apk/debug/app-debug.apk'
+            command(prefix + ['install', apk])
+            read = lambda: read_android_report(prefix)
+            launch_android(prefix)
+            first = wait_report(read, 'android', run_id, attempt, 'ready_for_restart')
+            print('SQLite phase one passed; checking process restart.', flush=True)
+            pid_before = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
+            command(prefix + ['shell', 'am', 'force-stop', APP])
+            if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
+                raise RuntimeError('Android process did not stop')
+            launch_android(prefix)
+            report = wait_report(read, 'android', run_id, attempt, 'passed')
+            pid_after = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
+            if not pid_before or not pid_after or pid_before == pid_after:
+                raise RuntimeError('Could not verify a new Android process')
+            return {**report, 'processRestart': {'before': pid_before, 'after': pid_after}, 'phaseOne': first['status']}
+        except Exception:
+            android_diagnostics(prefix, log_path)
+            raise
+        finally:
+            if collector.poll() is None:
+                collector.terminate()
+                try:
+                    collector.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    collector.kill()
+                    collector.wait(timeout=5)
 
 
 def ios(run_id, attempt):
