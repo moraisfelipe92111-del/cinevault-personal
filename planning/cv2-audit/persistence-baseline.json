@@ -1,0 +1,179 @@
+{
+  "reportSchemaVersion": 1,
+  "sourceCommit": "217ffa8145dbe4594798a6b78142f943254b7903",
+  "generatedAt": "2026-10-20T19:59:58.459Z",
+  "summary": {
+    "films": 1000,
+    "uniqueLocalIds": 1000,
+    "linkedPosters": 1000,
+    "centralTmdbIds": 983,
+    "duplicateCentralTmdbIds": 0,
+    "missingCentralTmdbIds": [
+      6,
+      7,
+      63,
+      78,
+      108,
+      112,
+      117,
+      134,
+      136,
+      137,
+      225,
+      234,
+      249,
+      255,
+      264,
+      281,
+      290
+    ],
+    "enrichedDetails": 683,
+    "trailerReferences": 973,
+    "bundledOfflinePosters": 0
+  },
+  "personalStorage": [
+    {
+      "key": "cinevault.personal.v2",
+      "fields": [
+        "favorites",
+        "watched",
+        "ratings"
+      ],
+      "backupFields": [
+        "favorites",
+        "watched",
+        "ratings"
+      ]
+    },
+    {
+      "key": "cinevault.pulse.v1",
+      "fields": [
+        "queue",
+        "history",
+        "notes",
+        "recent",
+        "dailyOffset"
+      ],
+      "backupFields": [
+        "pulse"
+      ]
+    },
+    {
+      "key": "cinevault.posters.v1",
+      "backupFields": [
+        "posters"
+      ]
+    },
+    {
+      "key": "cinevault.posterMeta.v2",
+      "backupFields": [
+        "posterMeta"
+      ]
+    },
+    {
+      "key": "cinevault.posterUnresolved.v1",
+      "backupFields": [
+        "unresolved"
+      ]
+    },
+    {
+      "key": "cinevault.experience.v1",
+      "fields": [
+        "intro",
+        "sound",
+        "updates",
+        "sonic",
+        "volume"
+      ],
+      "backupFields": []
+    }
+  ],
+  "lockedVersions": {
+    "react": "19.3.0",
+    "typescript": "6.0.3",
+    "vite": "8.3.4",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/android": "8.5.2"
+  },
+  "sourceFiles": [
+    {
+      "file": "src/films.json",
+      "bytes": 564550,
+      "sha256": "24ca1c729cf1b4a366a3d19df39ce11169e0bae8b7cf1e8bd97fcb316b140a60"
+    },
+    {
+      "file": "src/movieTmdbIds.json",
+      "bytes": 15749,
+      "sha256": "14763fa1af180f60d6eab4c37f2d1ca6cbb852c8b58f8885279d037e5934b075"
+    },
+    {
+      "file": "src/catalogPosters.json",
+      "bytes": 75869,
+      "sha256": "c71ea0de1fc6460f4e93261f00f1689518ebc635de62bb88dcf7ce89ab1c2d4e"
+    },
+    {
+      "file": "src/filmDetails.json",
+      "bytes": 470421,
+      "sha256": "716793a7e4c83025dd2eb4e88bae38f800a4575060f9d69906d9a4f89b3b5af5"
+    },
+    {
+      "file": "src/trailerCatalog.json",
+      "bytes": 341579,
+      "sha256": "22b236cb152c9a28b93f7f4d89811ac2a29759ea811d758283927202acf75705"
+    },
+    {
+      "file": "src/offlineBundled.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "file": "public/offline-posters/index.json",
+      "bytes": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "file": "package-lock.json",
+      "bytes": 108763,
+      "sha256": "1a8dec3ab096db95b9a0be888eee6ee6d1a94093836cf57587e52271830937ee"
+    }
+  ],
+  "verifiedChecks": {
+    "workflowRun": 39486796010,
+    "unitTestsPassed": 127,
+    "typescript": "passed",
+    "productionWebBuild": "passed",
+    "nativeAndroidRuntime": "pending",
+    "nativeIosRuntime": "pending"
+  },
+  "currentLimitations": [
+    "Preferencias da experiencia ausentes do backup v4.",
+    "Gerenciamento de capas offline disponivel apenas na web.",
+    "Rollback de gravacao atual nao garante atomicidade contra encerramento do processo.",
+    "Importadores podem filtrar, normalizar ou limitar registros; a migracao precisa identificar essas transformacoes.",
+    "17 filmes sem identificador no mapa TMDb central."
+  ],
+  "migrationRequirements": [
+    "Preservar todos os IDs locais existentes.",
+    "Separar catalogo e curadoria dos dados pessoais mutaveis.",
+    "Manter leitura dos backups legados e das versoes 1 a 4.",
+    "Preservar a origem antes de converter qualquer registro.",
+    "Informar registros alterados, rejeitados ou sem correspondencia.",
+    "Validar transacoes, interrupcoes e falta de espaco.",
+    "Comparar os dados antes e depois da migracao.",
+    "Validar persistencia e restauracao em Android e iOS."
+  ],
+  "sqliteEvaluation": {
+    "status": "candidate_not_installed",
+    "package": "@capacitor-community/sqlite",
+    "evaluatedVersion": "8.1.1",
+    "declaredCapacitorPeer": ">=8.0.0",
+    "nativeCompatibilityInCineVault": "pending",
+    "requiredReviews": [
+      "Builds Android e iOS.",
+      "Comportamento de transacoes e migracoes.",
+      "Dependencias SQLCipher e requisitos de distribuicao.",
+      "Tamanho do pacote e impacto na inicializacao.",
+      "Compatibilidade dos backups existentes."
+    ]
+  }
+}
