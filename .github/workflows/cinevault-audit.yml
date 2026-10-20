@@ -56,6 +56,8 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npm run build
+      - name: Preparar teste SQLite no aplicativo gerado
+        run: node scripts/build-native-sqlite-audit.mjs
       - name: Conferir SDK Android
         run: |
           test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
@@ -99,6 +101,25 @@ jobs:
           PY
           git diff --exit-code
 
+      - name: Habilitar KVM no runner Linux
+        run: |
+          test -c /dev/kvm
+          sudo chmod 666 /dev/kvm
+      - name: Executar CineVault e SQLite no emulador Android
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          cores: 2
+          ram-size: 2048M
+          force-avd-creation: true
+          disable-animations: true
+          script: python3 scripts/run-native-sqlite-audit.py android
+      - name: Conferir preservacao dos fontes apos execucao Android
+        run: git diff --exit-code
+
   ios-native:
     name: iOS - compilacao SQLite para simulador
     needs: test-and-build
@@ -124,6 +145,8 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npm run build
+      - name: Preparar teste SQLite no aplicativo gerado
+        run: node scripts/build-native-sqlite-audit.mjs
       - name: Gerar projeto iOS do CineVault
         run: |
           npx cap add ios --packagemanager CocoaPods
@@ -164,3 +187,7 @@ jobs:
           print(json.dumps({'identity': expected, 'sqliteFrameworkBytes': framework.stat().st_size, 'scope': 'simulator_build_only'}, indent=2))
           PY
           git diff --exit-code
+      - name: Executar CineVault e SQLite no simulador iOS
+        run: python3 scripts/run-native-sqlite-audit.py ios
+      - name: Conferir preservacao dos fontes apos execucao iOS
+        run: git diff --exit-code
