@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "783fb8fe38c7f447989d02e7c66d3c35329c3f84",
+  "workflow": {
+    "runId": 39491801820,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39491801820"
+  },
+  "dependencies": {
+    "capacitor": "8.5.2",
+    "sqlite": "8.1.1"
+  },
+  "web": {
+    "jobId": 118866597666,
+    "testsPassed": 127,
+    "typeScript": "passed",
+    "build": "passed"
+  },
+  "android": {
+    "jobId": 118866775006,
+    "build": "debug",
+    "appId": "com.cinevault.pessoal",
+    "version": "1.3.2",
+    "versionCode": 15,
+    "targetSdk": 36,
+    "apkBytes": 14592413,
+    "sqlitePluginRegistered": true,
+    "sqlcipherAbis": [
+      "arm64-v8a",
+      "armeabi-v7a",
+      "x86",
+      "x86_64"
+    ]
+  },
+  "ios": {
+    "jobId": 118866774918,
+    "build": "debug_simulator_unsigned",
+    "bundleId": "com.cinevault.pessoal",
+    "version": "1.3.2",
+    "buildNumber": "15",
+    "xcode": "26.3",
+    "simulatorSdk": "26.2",
+    "sqliteFrameworkBytes": 4103128
+  },
+  "decision": "SQLite candidato com compilacao aprovada; migracao ainda nao ativada.",
+  "limitations": [
+    "Aplicativo nao iniciado nestes jobs.",
+    "Bridge nativa, transacoes e recuperacao ainda nao testadas.",
+    "APK debug nao distribuido; iOS sem assinatura para simulador.",
+    "Assinatura Apple Developer ativa ainda nao verificada.",
+    "Tamanhos nao representam download ou instalacao pelas lojas."
+  ],
+  "migrationGates": [
+    "Testar CRUD, Unicode, commit e rollback no plugin nativo usando dados sinteticos.",
+    "Testar reabertura e recuperacao apos encerramento do processo.",
+    "Preservar valores brutos das seis chaves pessoais antes de transformar dados.",
+    "Versionar esquema e registrar conclusao da migracao na mesma transacao.",
+    "Preservar IDs e valores sem descarte ou normalizacao silenciosa.",
+    "Manter backups legados e versoes 1 a 4; cobrir preferencias ausentes no v4.",
+    "Centralizar gravacoes e evitar escritores independentes nos dois armazenamentos.",
+    "Impedir retorno silencioso ao localStorage desatualizado apos novas gravacoes no banco.",
+    "Medir desempenho e armazenamento; revisar dependencias e licencas antes da publicacao."
+  ],
+  "scope": "Local-first, sem conta obrigatoria ou backend nesta etapa."
+}
