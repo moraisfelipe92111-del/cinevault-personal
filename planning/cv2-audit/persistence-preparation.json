@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "assessedSourceCommit": "361c84fa2404b088fe512f0008bd867863ae2dc7",
-  "stage": "raw_snapshot_preparation",
+  "assessedSourceCommit": "e4fde5e897b9d2b4a988908090719e4a9fc7b730",
+  "stage": "coordinated_legacy_storage",
   "applicationStorageMigrationEnabled": false,
   "snapshotModule": "src/personalStorageSnapshot.ts",
-  "applicationStartupIntegration": "pending",
+  "applicationStartupIntegration": "shared_access_integrated; pre-render_snapshot_and_SQLite_hydration_pending",
   "currentWriters": [
     {
       "file": "src/App.tsx",
@@ -12,7 +12,7 @@
         "cinevault.personal.v2",
         "cinevault.pulse.v1"
       ],
-      "method": "independent React effects"
+      "method": "independent React effects through the shared personalStorage facade"
     },
     {
       "file": "src/jsonMapStorage.ts",
@@ -21,14 +21,14 @@
         "cinevault.posterMeta.v2",
         "cinevault.posterUnresolved.v1"
       ],
-      "method": "poster effects and validated import batch"
+      "method": "poster effects and validated import batch through the shared personalStorage facade"
     },
     {
       "file": "src/experience.tsx",
       "keys": [
         "cinevault.experience.v1"
       ],
-      "method": "preferences save callback"
+      "method": "preferences save callback through the shared personalStorage facade"
     }
   ],
   "snapshotContract": {
@@ -65,7 +65,7 @@
     "newSnapshotIsReplacementForUserBackup": false
   },
   "activationGates": [
-    "Centralize all six writers, including preferences and backup imports, and prevent writes while taking the snapshot or migrating.",
+    "Coordinate external writers and any other tabs or processes before capture or migration; the integrated facade pause is scoped to one JavaScript instance.",
     "Capture before App and ExperienceLayer parse or normalize personal data during startup.",
     "Preserve the raw envelope durably in SQLite and verify exact read-back, including missing keys, malformed JSON, lone surrogates and large inputs, through the native bridge.",
     "Declare and version the personal database schema; bind values and use one statement per native call inside the explicit transaction.",
@@ -75,5 +75,33 @@
     "Maintain legacy and v1-v4 backup compatibility and explicitly preserve experience preferences in the future backup contract.",
     "Test interruption, retry, quota or disk failure, concurrent writers and a fresh process reopening migrated personal data on Android and iOS."
   ],
-  "scope": "Local-first native preparation; no account or backend required."
+  "scope": "Local-first native preparation; no account or backend required.",
+  "lastValidatedWeb": {
+    "sourceCommit": "e4fde5e897b9d2b4a988908090719e4a9fc7b730",
+    "runId": 39692674753,
+    "jobId": 119542417197,
+    "testsPassed": 155,
+    "pythonTestsPassed": 25,
+    "typeScript": "passed",
+    "build": "passed",
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39692674753"
+  },
+  "coordinatorContract": {
+    "module": "src/personalStorage.ts",
+    "backend": "localStorage; no SQLite cutover in this change",
+    "allowedKeys": "the same six keys as the raw snapshot registry",
+    "phases": [
+      "active",
+      "paused",
+      "closed"
+    ],
+    "pauseScope": "this JavaScript instance only; other tabs, processes or direct external storage writes are not locked",
+    "batchGuard": "validates all keys and holds the write guard across original-value reads, every write, and rollback",
+    "capture": "only the current pause owner can capture or compare raw values; observed external changes abort comparison",
+    "pauseOwnership": "stale handles cannot resume or close another pause; failed captures retain the pause",
+    "closedLegacyAccess": "once closed, the facade refuses reads as well as writes and has no reopen method",
+    "cutoverAuthority": "a future bootstrap must first verify the durable database completion marker and new repository before closing legacy access; the in-memory phase is not that marker",
+    "startup": "creating the shared coordinator performs no storage access; production startup does not request a pause or capture yet",
+    "nativeValidation": "pending_new_android_and_ios_runs_for_the_integrated_facade"
+  }
 }

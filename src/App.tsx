@@ -1,3 +1,4 @@
+import { personalStorage } from './personalStorage'
 import { Suspense, lazy, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Search, Home, Clapperboard, Heart, Shuffle, ChartNoAxesColumn, Star, X, Check, Sparkles, ListOrdered, ListPlus, ArrowUp, ArrowDown, BookOpen, ChevronRight, Download, Upload, SlidersHorizontal, ChevronLeft, ImagePlus, RefreshCw, PauseCircle, WifiOff, HardDrive, Trash2, ShieldCheck } from 'lucide-react'
 import filmsData from './films.json'
@@ -23,7 +24,7 @@ const PAGE_SIZE=30
 const empty:Saved={favorites:[],watched:[],ratings:{}}
 function load(onInvalid:()=>void):Saved {
  try {
-  const raw=localStorage.getItem(KEY)
+  const raw=personalStorage.getItem(KEY)
   if(raw===null)return empty
   const x:unknown=JSON.parse(raw)
   if(!x||typeof x!=='object'||Array.isArray(x))throw Error('Dados inválidos')
@@ -65,11 +66,11 @@ function FilmArt({film,large=false,poster,fallbackPoster}:{film:Film,large?:bool
 
 export default function App(){
  const blockedStorage=useRef({saved:false,pulse:false})
- const [posterStorage]=useState(()=>createJsonMapStorage(()=>localStorage))
+ const [posterStorage]=useState(()=>createJsonMapStorage(()=>personalStorage))
   const [saved,setSaved]=useState<Saved>(()=>load(()=>{blockedStorage.current.saved=true}))
   const [pulse,setPulse]=useState<PulseState>(()=>{
    try{
-    const raw=localStorage.getItem(PULSE_KEY)
+    const raw=personalStorage.getItem(PULSE_KEY)
     return raw===null?{...EMPTY_PULSE}:parsePulse(JSON.parse(raw),new Set(films.map(f=>f.id)))
    }
    catch{blockedStorage.current.pulse=true;return {...EMPTY_PULSE}}
@@ -188,9 +189,9 @@ export default function App(){
   return ()=>{active=false}
  },[])
  useEffect(()=>{const onFocus=()=>setToday(new Date());window.addEventListener('focus',onFocus);return()=>window.removeEventListener('focus',onFocus)},[])
- useEffect(()=>{if(blockedStorage.current.pulse){setNotice('Diário local inválido: conteúdo original preservado. Importe um backup válido para recuperar.');return}try{localStorage.setItem(PULSE_KEY,JSON.stringify(pulse))}catch{setNotice('Sem espaço para registrar o diário. Exporte um backup.')}},[pulse])
+ useEffect(()=>{if(blockedStorage.current.pulse){setNotice('Diário local inválido: conteúdo original preservado. Importe um backup válido para recuperar.');return}try{personalStorage.setItem(PULSE_KEY,JSON.stringify(pulse))}catch{setNotice('Sem espaço para registrar o diário. Exporte um backup.')}},[pulse])
  useEffect(()=>{if(selected){setNoteDraft(pulse.notes[String(selected.id)]||'');setPulse(old=>visitFilm(old,selected.id))}},[selected?.id])
- useEffect(()=>{if(blockedStorage.current.saved){setNotice('Lista local inválida: os dados originais foram preservados. Importe um backup válido.');return}try{localStorage.setItem(KEY,JSON.stringify(saved))}catch{setNotice('Não foi possível salvar os dados neste navegador. Exporte um backup.')}},[saved])
+ useEffect(()=>{if(blockedStorage.current.saved){setNotice('Lista local inválida: os dados originais foram preservados. Importe um backup válido.');return}try{personalStorage.setItem(KEY,JSON.stringify(saved))}catch{setNotice('Não foi possível salvar os dados neste navegador. Exporte um backup.')}},[saved])
  useEffect(()=>{void refreshOffline()},[posters,bundledPosters])
  useEffect(()=>{setLimit(PAGE_SIZE)},[query,priority,genre,hideWatched,onlyFavorites,sortMode])
  useEffect(()=>{if(!selected)return;const previous=document.activeElement as HTMLElement|null;closeRef.current?.focus();const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')setSelected(null);if(event.key==='Tab'&&dialogRef.current){const elements=[...dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled])')];if(!elements.length)return;const first=elements[0],last=elements[elements.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}};document.addEventListener('keydown',onKey);const previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.removeEventListener('keydown',onKey);document.body.style.overflow=previousOverflow;previous?.focus()}},[selected])

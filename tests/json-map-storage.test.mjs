@@ -155,7 +155,7 @@ test('backup invalido nao chega a gravacao nem libera mapas', () => {
 
 test('App usa a protecao nas leituras, gravacoes e restauracao', () => {
   const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
-  assert.ok(app.includes('useState(()=>createJsonMapStorage(()=>localStorage))'))
+  assert.ok(app.includes('useState(()=>createJsonMapStorage(()=>personalStorage))'))
 
   for (const [key, type, state] of [
     ['POSTER_KEY', 'string', 'posters'],

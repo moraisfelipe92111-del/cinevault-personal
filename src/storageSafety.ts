@@ -3,6 +3,8 @@ export interface JsonStore {
   getItem(key: string): string | null
   setItem(key: string, value: string): void
   removeItem(key: string): void
+  /** Optional synchronous guard covering the entire batch, including rollback. */
+  withWriteAccess?(keys: readonly string[], operation: () => void): void
 }
 export type JsonChange = { key: string; value: unknown }
 
@@ -15,17 +17,21 @@ export function commitJsonBatch(store: JsonStore, changes: readonly JsonChange[]
     return {key, json: JSON.stringify(value)}
   })
   if (serialized.some(x => typeof x.json !== 'string')) throw new Error('Dados não serializáveis')
-  const snapshot = serialized.map(({key}) => ({key, previous: store.getItem(key)}))
-  try {
-    for (const {key, json} of serialized) store.setItem(key, json)
-  } catch {
-    let rollbackFailed = false
-    for (const {key, previous} of snapshot) {
-      try { if (previous === null) store.removeItem(key); else store.setItem(key, previous) }
-      catch { rollbackFailed = true }
+  const apply = () => {
+    const snapshot = serialized.map(({key}) => ({key, previous: store.getItem(key)}))
+    try {
+      for (const {key, json} of serialized) store.setItem(key, json)
+    } catch {
+      let rollbackFailed = false
+      for (const {key, previous} of snapshot) {
+        try { if (previous === null) store.removeItem(key); else store.setItem(key, previous) }
+        catch { rollbackFailed = true }
+      }
+      throw new Error(rollbackFailed
+        ? 'Falha ao salvar e ao restaurar parte dos dados. Não feche o app; exporte o backup atual.'
+        : 'Sem espaço para restaurar o backup. Os dados anteriores foram mantidos.')
     }
-    throw new Error(rollbackFailed
-      ? 'Falha ao salvar e ao restaurar parte dos dados. Não feche o app; exporte o backup atual.'
-      : 'Sem espaço para restaurar o backup. Os dados anteriores foram mantidos.')
   }
+  if (typeof store.withWriteAccess === 'function') store.withWriteAccess(serialized.map(item => item.key), apply)
+  else apply()
 }

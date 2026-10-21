@@ -1,3 +1,4 @@
+import { personalStorage } from './personalStorage'
 import { useEffect, useRef, useState } from 'react'
 import { BellRing, Check, ChevronRight, Download, Eye, Film, Headphones, RotateCw, Settings2, ShieldCheck, Sparkles, Volume2, VolumeX, X } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
@@ -10,7 +11,7 @@ const PREF_KEY='cinevault.experience.v1'
 type Preferences={intro:boolean,sound:boolean,updates:boolean,sonic:SonicStyle,volume:number}
 const defaults:Preferences={intro:true,sound:true,updates:true,sonic:'signature',volume:.60}
 function preferences():Preferences {
- try {const parsed:unknown=JSON.parse(localStorage.getItem(PREF_KEY)||'null');return parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?{
+ try {const parsed:unknown=JSON.parse(personalStorage.getItem(PREF_KEY)||'null');return parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?{
  intro:(parsed as Partial<Preferences>).intro!==false,
  sound:(parsed as Partial<Preferences>).sound!==false,
  updates:(parsed as Partial<Preferences>).updates!==false,
@@ -38,7 +39,7 @@ export function ExperienceLayer(){
  const introPlayed = useRef(false)
  const openingTimer = useRef<number|null>(null)
  const reduced=typeof window!=='undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
- function save(p:Preferences){setPrefs(p);try{localStorage.setItem(PREF_KEY,JSON.stringify(p))}catch{/* Persistence is best-effort; never block app */}}
+ function save(p:Preferences){setPrefs(p);try{personalStorage.setItem(PREF_KEY,JSON.stringify(p))}catch{/* Persistence is best-effort; never block app */}}
  function closeSplash(){if(openingTimer.current!==null){window.clearTimeout(openingTimer.current);openingTimer.current=null}stopBrandAudio();setSplash(false)}
  function replaySplash(){stopBrandAudio();setSettings(false);setAutoSoundBlocked(false);setSplash(true);if(prefs.sound)void playBrandTone(prefs.sonic,prefs.volume).then(ok=>{if(!ok)setAutoSoundBlocked(true)});if(openingTimer.current!==null)window.clearTimeout(openingTimer.current);openingTimer.current=window.setTimeout(()=>{openingTimer.current=null;setSplash(false)},reduced?380:2570)}
  async function check(manual:boolean){
