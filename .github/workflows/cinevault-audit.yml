@@ -103,6 +103,10 @@ jobs:
           PY
           git diff --exit-code
 
+      - name: Instalar biblioteca exigida pelo emulador Linux
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends libpulse0
       - name: Habilitar KVM no runner Linux
         run: |
           test -c /dev/kvm
