@@ -6,7 +6,7 @@ export const AUDIT_CHECKS = Object.freeze([
 const TEXT = "Sessão de cinema 🎬 — ação, emoção e d'água\n'); DROP TABLE audit_entries; --"
 const UPDATED = TEXT + '\nAtualizado sem alterar os caracteres.'
 const PENDING = 'Uncommitted change that must disappear after process interruption'
-const RECOVERY_SCHEMA = 'CREATE TABLE audit_recovery_schema (id INTEGER PRIMARY KEY, state TEXT NOT NULL); INSERT INTO audit_recovery_schema (id, state) VALUES (3, \'completed\');'
+const RECOVERY_SCHEMA = 'CREATE TABLE audit_recovery_schema (id INTEGER PRIMARY KEY, state TEXT NOT NULL);'
 
 const PHASES = {
   ready_for_restart: { databaseVersion: 2, committedVersion: 2, transactionOpen: false, checks: [...AUDIT_CHECKS] },
@@ -54,10 +54,21 @@ async function verifyData(db, version = 2) {
   requireValue(migration?.length === 1 && migration[0].id === 2, 'migration missing or repeated')
 }
 
-async function verifyRecovery(db) {
-  await verifyData(db, 3)
+async function prepareRecoveryMigration(db) {
+  // Keep each native call to one statement inside the already-open transaction.
+  await db.execute(RECOVERY_SCHEMA, false)
+  await db.run('INSERT INTO audit_recovery_schema (id, state) VALUES (?, ?)', [3, 'completed'], false)
+  await db.execute('PRAGMA user_version = 3;', false)
+}
+
+async function verifyRecoveryMarker(db) {
   const rows = (await db.query('SELECT id, state FROM audit_recovery_schema')).values
   requireValue(rows?.length === 1 && rows[0].id === 3 && rows[0].state === 'completed', 'recovery migration marker mismatch')
+}
+
+async function verifyRecovery(db) {
+  await verifyData(db, 3)
+  await verifyRecoveryMarker(db)
 }
 
 export async function runNativeSqliteAudit({ sqlite, previous = null, ...context }) {
@@ -131,11 +142,11 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
       await verifyData(db)
       await db.beginTransaction()
       await db.run('UPDATE audit_entries SET value = ? WHERE id = ?', [PENDING, 1], false)
-      await db.execute(RECOVERY_SCHEMA, false)
-      await db.execute('PRAGMA user_version = 3;', false)
+      await prepareRecoveryMigration(db)
       requireValue((await db.isTransactionActive()).result === true, 'interruption requires an open transaction')
       requireValue((await db.getVersion()).version === 3, 'pending schema version not applied')
       requireValue((await db.query('SELECT value FROM audit_entries WHERE id = ?', [1])).values?.[0]?.value === PENDING, 'pending write not applied')
+      await verifyRecoveryMarker(db)
       // Deliberately leave the native connection open. The CI controller kills
       // this fresh audit application's process before the next launch.
       awaitingInterruption = true
@@ -146,8 +157,7 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
       const tables = (await db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", ['audit_recovery_schema'])).values
       requireValue(tables?.length === 0, 'interrupted schema change survived')
       await db.beginTransaction()
-      await db.execute(RECOVERY_SCHEMA, false)
-      await db.execute('PRAGMA user_version = 3;', false)
+      await prepareRecoveryMigration(db)
       await db.commitTransaction()
       await verifyRecovery(db)
       await close()

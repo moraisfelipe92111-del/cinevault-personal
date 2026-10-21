@@ -34,8 +34,16 @@ class HostSQLite {
           } catch (error) { this.db.exec('ROLLBACK'); throw error }
         }
       },
-      async execute(sql) { this.db.exec(sql) },
-      async run(sql, values = []) { this.db.prepare(sql).run(...values) },
+      async execute(sql) {
+        // Android 8.1.1 splits batches at ;\n, then execSQL prepares one statement.
+        // Preparing one statement reproduces the same-line batch failure seen in CI.
+        if (owner.broken === 'single-statement-execute') this.db.prepare(sql).run()
+        else this.db.exec(sql)
+      },
+      async run(sql, values = []) {
+        if (owner.broken === 'missing-recovery-marker' && /^INSERT INTO audit_recovery_schema\b/.test(sql)) return
+        this.db.prepare(sql).run(...values)
+      },
       async query(sql, values = []) {
         // Deliberately change property order; comparison must use values, not JSON key order.
         return {values: this.db.prepare(sql).all(...values).map(row => Object.fromEntries(Object.entries(row).reverse()))}
@@ -112,6 +120,42 @@ test('host SQLite: interrupted schema and record writes roll back, then migratio
   assert.equal(result.databaseVersion, 3)
   assert.ok(result.checks.includes('interrupted_migration_rollback'))
   assert.ok(result.checks.includes('migration_retry_committed'))
+})
+
+test('host SQLite: recovery succeeds when native execute accepts one statement per call', async t => {
+  const root = rootFor(t)
+  const mode = 'single-statement-execute'
+  const first = await runNativeSqliteAudit({sqlite: new HostSQLite(root, mode), ...context})
+  const manager = new HostSQLite(root, mode)
+  const pending = await runNativeSqliteAudit({sqlite: manager, previous: first, ...context})
+  await manager.closeConnection(pending.database)
+  const result = await runNativeSqliteAudit({sqlite: new HostSQLite(root, mode), previous: pending, ...context})
+  validateAuditReport(result, context, 'passed')
+  const db = new DatabaseSync(path.join(root, result.database + '.sqlite'))
+  try {
+    assert.deepEqual(db.prepare('SELECT id, state FROM audit_recovery_schema').all().map(row => ({...row})),
+      [{id: 3, state: 'completed'}])
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 3)
+  } finally { db.close() }
+})
+
+test('audit refuses interruption when the uncommitted migration marker was not written', async t => {
+  const root = rootFor(t)
+  const first = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
+  const manager = new HostSQLite(root, 'missing-recovery-marker')
+  try {
+    await assert.rejects(runNativeSqliteAudit({sqlite: manager, previous: first, ...context}), /recovery migration marker mismatch/)
+    assert.equal(manager.connections.size, 0)
+    const db = new DatabaseSync(path.join(root, first.database + '.sqlite'))
+    try {
+      assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2)
+      assert.equal(db.prepare("SELECT name FROM sqlite_master WHERE name = 'audit_recovery_schema'").all().length, 0)
+      assert.notEqual(db.prepare('SELECT value FROM audit_entries WHERE id = 1').get().value,
+        'Uncommitted change that must disappear after process interruption')
+    } finally { db.close() }
+  } finally {
+    for (const name of [...manager.connections.keys()]) await manager.closeConnection(name)
+  }
 })
 
 test('audit refuses an interrupted migration that actually committed the changed records', async t => {
