@@ -30,7 +30,7 @@ jobs:
       - name: Executar testes
         run: npm run test:unit
       - name: Verificar coletor dos testes nativos
-        run: python3 -B -m unittest discover -s tests -p 'test_native_sqlite_runner.py' -v
+        run: python3 -B -m unittest discover -s tests -p 'test_native_*.py' -v
       - name: Verificar TypeScript e compilar aplicativo web
         run: npm run build
       - name: Confirmar que os arquivos versionados foram preservados
@@ -107,19 +107,8 @@ jobs:
         run: |
           test -c /dev/kvm
           sudo chmod 666 /dev/kvm
-      - name: Executar CineVault e SQLite no emulador Android
-        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
-        with:
-          api-level: 36
-          target: google_apis
-          arch: x86_64
-          profile: pixel_2
-          cores: 2
-          ram-size: 2048M
-          emulator-options: -no-window -gpu swiftshader -feature -Vulkan -no-snapshot -noaudio -no-boot-anim
-          force-avd-creation: true
-          disable-animations: true
-          script: python3 -u scripts/run-native-sqlite-audit.py android
+      - name: Executar CineVault e SQLite em emulador supervisionado
+        run: python3 -u scripts/run-android-sqlite-emulator.py
       - name: Conferir preservacao dos fontes apos execucao Android
         run: git diff --exit-code
 

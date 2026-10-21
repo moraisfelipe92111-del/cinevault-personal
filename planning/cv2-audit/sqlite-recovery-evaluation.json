@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "assessedSourceCommit": "4a9ae9d1e37e1d05f720950fdc6c6ff7af4f071c",
+  "assessedSourceCommit": "7006e393b3569c9312f1322553ea86fa6ba8144e",
   "protocolVersionAssessed": 2,
   "status": "pending_android_recovery",
   "applicationStorageMigrationEnabled": false,
   "web": {
-    "runId": 39500446934,
+    "runId": 39528099118,
     "attempt": 1,
-    "jobId": 118896289902,
+    "jobId": 118987388527,
     "testsPassed": 142,
     "collectorTestsPassed": 15,
     "typeScript": "passed",
@@ -19,47 +19,83 @@
     "jobId": 118896469715,
     "status": "passed",
     "scope": "unsigned_simulator_ios_26_2",
-    "processes": ["8222", "9126", "9372"],
+    "processes": [
+      "8222",
+      "9126",
+      "9372"
+    ],
     "interruptionMethod": "SIGKILL_verified_simulator_app",
     "transactionOpenConfirmed": true,
     "databaseVersionAfterRecovery": 3,
     "checksPassed": [
-      "parameterized_unicode_crud", "explicit_commit", "explicit_rollback",
-      "failed_batch_atomicity", "migration_v1_v2", "connection_reopen",
-      "process_restart", "interrupted_migration_rollback", "migration_retry_committed"
+      "parameterized_unicode_crud",
+      "explicit_commit",
+      "explicit_rollback",
+      "failed_batch_atomicity",
+      "migration_v1_v2",
+      "connection_reopen",
+      "process_restart",
+      "interrupted_migration_rollback",
+      "migration_retry_committed"
     ],
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39500446934/attempts/1"
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39500446934/attempts/1",
+    "sourceCommit": "4a9ae9d1e37e1d05f720950fdc6c6ff7af4f071c"
   },
   "android": {
-    "runId": 39500446934,
+    "runId": 39528099118,
     "status": "pending",
     "emulatorVersionObserved": "37.2.12.0",
     "emulatorApi": 36,
-    "attempts": [
-      {"attempt": 1, "jobId": 118896469599, "lastCompletedPhase": null},
-      {"attempt": 2, "jobId": 118982199173, "lastCompletedPhase": "ready_for_restart"}
-    ],
     "observedFailure": "ADB reported device offline while waiting for the report; the emulator console port also refused the cleanup connection.",
     "rootCause": null,
     "hostOomEstablished": false,
     "openTransactionInterruptionReached": false,
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39500446934/attempts/2"
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39528099118",
+    "priorAttempts": [
+      {
+        "runId": 39500446934,
+        "attempt": 1,
+        "jobId": 118896469599,
+        "lastCompletedPhase": null
+      },
+      {
+        "runId": 39500446934,
+        "attempt": 2,
+        "jobId": 118982199173,
+        "lastCompletedPhase": "ready_for_restart"
+      }
+    ],
+    "sourceCommit": "7006e393b3569c9312f1322553ea86fa6ba8144e",
+    "attempt": 1,
+    "jobId": 118987506950,
+    "lastCompletedPhase": "ready_for_restart",
+    "guestMemoryPressureObserved": true,
+    "emulatorProcessPresentInFailureSnapshot": false
   },
   "nextConfigurationExperiment": {
-    "inheritedGraphicsMode": "swiftshader_indirect",
     "graphicsMode": "swiftshader",
     "vulkanEnabled": false,
-    "reason": "Replace a deprecated graphics mode and isolate Vulkan rendering while retaining the same SQLite recovery protocol.",
-    "diagnosticsAdded": ["host_emulator_processes", "host_free_disk_space"],
+    "previousGuestRamMb": 2048,
+    "guestRamMb": 4096,
+    "emulatorProcess": "direct_child_of_ci_supervisor",
+    "reason": "Guest lowmemorykiller events appeared before the disconnect; the emulator process was absent in the failure snapshot. The cause of process termination remains unproven.",
+    "supervisor": "scripts/run-android-sqlite-emulator.py",
+    "diagnosticsAdded": [
+      "emulator_exit_code_or_signal",
+      "direct_emulator_output_file",
+      "host_memory_before_and_after",
+      "cgroup_memory_events",
+      "guest_memory_before_probe"
+    ],
     "validation": "pending_new_android_run",
     "sources": [
-      "https://developer.android.com/studio/run/emulator-acceleration",
-      "https://developer.android.com/studio/run/emulator-troubleshooting"
+      "https://developer.android.com/studio/run/emulator-commandline",
+      "https://developer.android.com/tools/variables"
     ]
   },
   "limits": [
     "Synthetic data in a dedicated audit database; personal storage migration remains disabled.",
-    "The graphics setting is a controlled experiment, not a demonstrated root cause or confirmed fix.",
+    "The graphics-only experiment did not prevent the disconnect. More guest RAM and explicit emulator supervision still require cloud validation.",
     "Simulator evidence does not establish physical power-loss durability or store distribution readiness."
   ]
 }
