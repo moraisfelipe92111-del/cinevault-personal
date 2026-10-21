@@ -108,12 +108,24 @@ def relevant_android_log(text):
 
 def android_diagnostics(prefix, log_path):
     print('\n=== ANDROID RUNTIME DIAGNOSTICS ===', flush=True)
-    for args in [prefix + ['get-state'], prefix + ['shell', 'pidof', APP], ['free', '-m']]:
+    for args in [prefix + ['get-state'], prefix + ['shell', 'pidof', APP], ['free', '-m'],
+                 ['df', '-m', os.environ.get('RUNNER_TEMP', '/tmp')]]:
         try:
             reply = command(args, check=False, timeout=10)
             print(' '.join(args) + '\n' + (reply.stdout + reply.stderr)[-2500:], flush=True)
         except Exception as error:
             print('Diagnostic command unavailable: ' + str(error), flush=True)
+    try:
+        reply = command(['ps', '-eo', 'pid,ppid,stat,comm'], check=False, timeout=10)
+        if reply.returncode == 0:
+            processes = [line for line in reply.stdout.splitlines()
+                         if re.search(r'\b(qemu\S*|emulator\S*|crashpad\S*|adb)\s*$', line)]
+            print('Host emulator processes (PID PPID STAT COMMAND):\n' +
+                  ('\n'.join(processes)[-4000:] or '(none found)'), flush=True)
+        else:
+            print('Host process diagnostics unavailable: ' + reply.stderr[-500:], flush=True)
+    except Exception as error:
+        print('Host process diagnostics unavailable: ' + str(error), flush=True)
     try:
         text = log_path.read_text(encoding='utf-8', errors='replace')
         print('Filtered emulator logcat:\n' + relevant_android_log(text), flush=True)

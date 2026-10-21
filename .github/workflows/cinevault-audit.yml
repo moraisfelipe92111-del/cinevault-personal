@@ -116,6 +116,7 @@ jobs:
           profile: pixel_2
           cores: 2
           ram-size: 2048M
+          emulator-options: -no-window -gpu swiftshader -feature -Vulkan -no-snapshot -noaudio -no-boot-anim
           force-avd-creation: true
           disable-animations: true
           script: python3 -u scripts/run-native-sqlite-audit.py android
