@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "assessedSourceCommit": "361c84fa2404b088fe512f0008bd867863ae2dc7",
+  "stage": "raw_snapshot_preparation",
+  "applicationStorageMigrationEnabled": false,
+  "snapshotModule": "src/personalStorageSnapshot.ts",
+  "applicationStartupIntegration": "pending",
+  "currentWriters": [
+    {
+      "file": "src/App.tsx",
+      "keys": [
+        "cinevault.personal.v2",
+        "cinevault.pulse.v1"
+      ],
+      "method": "independent React effects"
+    },
+    {
+      "file": "src/jsonMapStorage.ts",
+      "keys": [
+        "cinevault.posters.v1",
+        "cinevault.posterMeta.v2",
+        "cinevault.posterUnresolved.v1"
+      ],
+      "method": "poster effects and validated import batch"
+    },
+    {
+      "file": "src/experience.tsx",
+      "keys": [
+        "cinevault.experience.v1"
+      ],
+      "method": "preferences save callback"
+    }
+  ],
+  "snapshotContract": {
+    "format": "cinevault.personal-storage-snapshot",
+    "version": 1,
+    "allSixKeysRequired": true,
+    "rawValues": "string or null; null means the key is absent",
+    "parsingStoredValues": "none",
+    "preservation": [
+      "exact UTF-16 code units",
+      "whitespace",
+      "unknown IDs and fields",
+      "invalid JSON",
+      "empty strings",
+      "missing keys",
+      "experience preferences"
+    ],
+    "serialization": "A JSON envelope escapes NUL and lone surrogates before any future native text storage; the raw values are never normalized.",
+    "sourceReads": "Two synchronous passes detect differences between reads. They are not an atomic snapshot across tabs or processes.",
+    "sourceWrites": "none",
+    "databaseWrites": "none",
+    "errorPolicy": "Denied or unexpected reads and any observed source change abort capture without substituting empty data. Errors do not include raw values."
+  },
+  "backupCompatibility": {
+    "supportedExistingImports": [
+      "legacy unversioned",
+      1,
+      2,
+      3,
+      4
+    ],
+    "currentExportVersion": 4,
+    "preferencesInCurrentV4Backup": false,
+    "newSnapshotIsReplacementForUserBackup": false
+  },
+  "activationGates": [
+    "Centralize all six writers, including preferences and backup imports, and prevent writes while taking the snapshot or migrating.",
+    "Capture before App and ExperienceLayer parse or normalize personal data during startup.",
+    "Preserve the raw envelope durably in SQLite and verify exact read-back, including missing keys, malformed JSON, lone surrogates and large inputs, through the native bridge.",
+    "Declare and version the personal database schema; bind values and use one statement per native call inside the explicit transaction.",
+    "Commit transformed records, schema version and migration completion marker in the same database transaction; reopen and compare exact results.",
+    "Report every rejected, filtered, normalized or unmapped record; never silently discard records merely because a raw copy exists.",
+    "Use the database completion marker as the cutover authority on restart, and never silently read stale localStorage after new database writes.",
+    "Maintain legacy and v1-v4 backup compatibility and explicitly preserve experience preferences in the future backup contract.",
+    "Test interruption, retry, quota or disk failure, concurrent writers and a fresh process reopening migrated personal data on Android and iOS."
+  ],
+  "scope": "Local-first native preparation; no account or backend required."
+}

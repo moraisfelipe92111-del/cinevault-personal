@@ -1,33 +1,31 @@
 {
   "schemaVersion": 1,
-  "assessedSourceCommit": "102253d0b1ce832f00689149449228b189d35aa2",
+  "assessedSourceCommit": "361c84fa2404b088fe512f0008bd867863ae2dc7",
   "protocolVersionAssessed": 2,
-  "status": "pending_android_recovery",
+  "status": "native_recovery_passed",
   "applicationStorageMigrationEnabled": false,
+  "workflowRun": 39690636181,
+  "attempt": 1,
+  "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39690636181",
   "web": {
-    "runId": 39689408783,
-    "attempt": 1,
-    "jobId": 119531566078,
-    "testsPassed": 142,
-    "collectorTestsPassed": 25,
+    "jobId": 119535667669,
+    "testsPassed": 144,
+    "pythonTestsPassed": 25,
     "typeScript": "passed",
     "build": "passed"
   },
-  "ios": {
-    "runId": 39500446934,
-    "attempt": 1,
-    "jobId": 118896469715,
+  "android": {
+    "jobId": 119535812077,
+    "schemaVersion": 2,
+    "runId": "39690636181",
+    "attempt": "1",
+    "platform": "android",
+    "database": "cv2_sqlite_audit_39690636181_1_android",
     "status": "passed",
-    "scope": "unsigned_simulator_ios_26_2",
-    "processes": [
-      "8222",
-      "9126",
-      "9372"
-    ],
-    "interruptionMethod": "SIGKILL_verified_simulator_app",
-    "transactionOpenConfirmed": true,
-    "databaseVersionAfterRecovery": 3,
-    "checksPassed": [
+    "databaseVersion": 3,
+    "committedVersion": 3,
+    "transactionOpen": false,
+    "checks": [
       "parameterized_unicode_crud",
       "explicit_commit",
       "explicit_rollback",
@@ -38,10 +36,56 @@
       "interrupted_migration_rollback",
       "migration_retry_committed"
     ],
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39500446934/attempts/1",
-    "sourceCommit": "4a9ae9d1e37e1d05f720950fdc6c6ff7af4f071c"
+    "processRestart": {
+      "before": "1945",
+      "after": "3316"
+    },
+    "forcedInterruption": {
+      "before": "3316",
+      "after": "4096",
+      "method": "am_force_stop",
+      "transactionOpenConfirmed": true
+    },
+    "phaseOne": "ready_for_restart",
+    "guestRamMb": 4096,
+    "emulatorAliveBeforeCleanup": true
   },
-  "android": {
+  "ios": {
+    "jobId": 119535812181,
+    "schemaVersion": 2,
+    "runId": "39690636181",
+    "attempt": "1",
+    "platform": "ios",
+    "database": "cv2_sqlite_audit_39690636181_1_ios",
+    "status": "passed",
+    "databaseVersion": 3,
+    "committedVersion": 3,
+    "transactionOpen": false,
+    "checks": [
+      "parameterized_unicode_crud",
+      "explicit_commit",
+      "explicit_rollback",
+      "failed_batch_atomicity",
+      "migration_v1_v2",
+      "connection_reopen",
+      "process_restart",
+      "interrupted_migration_rollback",
+      "migration_retry_committed"
+    ],
+    "processRestart": {
+      "before": "8313",
+      "after": "8769"
+    },
+    "forcedInterruption": {
+      "before": "8769",
+      "after": "10594",
+      "method": "SIGKILL_verified_simulator_app",
+      "transactionOpenConfirmed": true
+    },
+    "phaseOne": "ready_for_restart",
+    "scope": "unsigned_simulator_ios_26_2"
+  },
+  "previousAndroidFailure": {
     "runId": 39689408783,
     "attempt": 1,
     "jobId": 119531713269,
@@ -90,45 +134,10 @@
       }
     ]
   },
-  "nextConfigurationExperiment": {
-    "graphicsMode": "swiftshader",
-    "vulkanEnabled": false,
-    "previousGuestRamMb": 2048,
-    "guestRamMb": 4096,
-    "emulatorProcess": "direct_child_of_ci_supervisor",
-    "reason": "Guest lowmemorykiller events appeared before the disconnect; the emulator process was absent in the failure snapshot. The cause of process termination remains unproven.",
-    "supervisor": "scripts/run-android-sqlite-emulator.py",
-    "diagnosticsAdded": [
-      "emulator_exit_code_or_signal",
-      "direct_emulator_output_file",
-      "host_memory_before_and_after",
-      "cgroup_memory_events",
-      "guest_memory_before_probe"
-    ],
-    "validation": "emulator_booted_and_remained_alive_during_native_probe_failure",
-    "sources": [
-      "https://developer.android.com/studio/run/emulator-commandline",
-      "https://developer.android.com/tools/variables"
-    ]
-  },
   "limits": [
     "Synthetic data in a dedicated audit database; personal storage migration remains disabled.",
-    "With 4 GiB and explicit supervision, Android reached the recovery launch and the emulator remained alive. This single run does not establish the cause of the earlier emulator exits.",
-    "The corrected shared probe requires new Android and iOS execution; the earlier iOS success remains historical evidence for its earlier source commit.",
-    "Simulator evidence does not establish physical power-loss durability or store distribution readiness."
-  ],
-  "probeCorrection": {
-    "change": "Create the recovery table, bind and insert its completion marker, and update user_version in separate native calls within the same open transaction.",
-    "extraCheck": "Verify the uncommitted completion marker before allowing the controller to interrupt the application.",
-    "regressions": [
-      "Full recovery succeeds when execute accepts only one statement per call.",
-      "Missing uncommitted completion marker refuses interruption and rolls back pending schema and data."
-    ],
-    "nativeValidation": "pending_new_android_and_ios_runs",
-    "pluginVersion": "8.1.1",
-    "sources": [
-      "https://github.com/capacitor-community/sqlite/blob/v8.1.1/android/src/main/java/com/getcapacitor/community/database/sqlite/SQLite/UtilsSQLite.java",
-      "https://github.com/capacitor-community/sqlite/blob/v8.1.1/android/src/main/java/com/getcapacitor/community/database/sqlite/SQLite/Database.java"
-    ]
-  }
+    "The supervised Android emulator with 4 GiB remained alive throughout this successful probe. This does not establish the cause of the earlier emulator exits.",
+    "iOS used an unsigned simulator application. Physical-device power-loss durability and store distribution readiness are not established.",
+    "The raw personal snapshot format still needs SQLite bridge round-trip, database read-back and writer coordination tests before production migration."
+  ]
 }
