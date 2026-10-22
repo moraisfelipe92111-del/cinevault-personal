@@ -2,6 +2,11 @@ import {
   parsePersonalStorageSnapshot, serializePersonalStorageSnapshot,
   type PersonalStorageSnapshot,
 } from './personalStorageSnapshot.ts'
+import {
+  SQLITE_TEXT_CHUNK_UNITS as CHUNK_UNITS, MAX_PERSONAL_SQLITE_UNITS as MAX_UNITS,
+  MAX_PERSONAL_SQLITE_CHUNKS as MAX_CHUNKS,
+  splitPersonalSqliteText as chunksFor, digestPersonalSqliteText as digest,
+} from './personalSqliteEncoding.ts'
 
 // Explicit preparation API only. The caller owns an open, exclusive connection.
 // Importing or constructing this repository never opens a DB or reads storage.
@@ -17,9 +22,6 @@ export type SnapshotSqliteConnection = {
 
 const TABLE = 'cv_personal_raw_snapshot'
 const CHUNKS = 'cv_personal_raw_snapshot_chunk'
-const CHUNK_UNITS = 16384
-const MAX_UNITS = 32 * 1024 * 1024
-const MAX_CHUNKS = Math.ceil(MAX_UNITS / (CHUNK_UNITS - 1))
 const SCHEMAS = [
   [TABLE, `CREATE TABLE ${TABLE} (id INTEGER PRIMARY KEY CHECK (id = 1), format_version INTEGER NOT NULL CHECK (format_version = 1), chunk_count INTEGER NOT NULL CHECK (chunk_count > 0), utf16_length INTEGER NOT NULL CHECK (utf16_length > 0), sha256 TEXT NOT NULL CHECK (length(sha256) = 64))`],
   [CHUNKS, `CREATE TABLE ${CHUNKS} (ordinal INTEGER PRIMARY KEY CHECK (ordinal >= 0), payload TEXT NOT NULL)`],
@@ -36,28 +38,6 @@ function requireValue(condition: unknown, message: string): asserts condition {
 function row(input: unknown): Record<string, unknown> {
   requireValue(input !== null && typeof input === 'object' && !Array.isArray(input), 'invalid database row')
   return input as Record<string, unknown>
-}
-
-function chunksFor(serialized: string): string[] {
-  requireValue(serialized.length <= MAX_UNITS, 'serialized copy exceeds the supported 32 Mi UTF-16 units')
-  const chunks: string[] = []
-  for (let start = 0; start < serialized.length;) {
-    let end = Math.min(start + CHUNK_UNITS, serialized.length)
-    // Each native TEXT parameter must contain complete Unicode scalar values.
-    // JSON already escapes lone surrogates; do not split a valid pair either.
-    const last = serialized.charCodeAt(end - 1), next = serialized.charCodeAt(end)
-    if (last >= 0xd800 && last <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) end--
-    chunks.push(serialized.slice(start, end))
-    start = end
-  }
-  return chunks
-}
-
-async function digest(serialized: string): Promise<string> {
-  requireValue(typeof globalThis.crypto?.subtle?.digest === 'function', 'SHA-256 support is required before database access')
-  const bytes = new TextEncoder().encode(serialized)
-  const result = await globalThis.crypto.subtle.digest('SHA-256', bytes)
-  return Array.from(new Uint8Array(result), byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
 type StoredCopy = { snapshot: PersonalStorageSnapshot; serialized: string; sha256: string }

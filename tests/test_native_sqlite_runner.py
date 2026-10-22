@@ -82,11 +82,12 @@ class RecoveryControllerTests(unittest.TestCase):
 
     def report(self, status='ready_for_interruption'):
         return {
-            'schemaVersion': 3, 'runId': '123', 'attempt': '1', 'platform': 'ios',
+            'schemaVersion': 4, 'runId': '123', 'attempt': '1', 'platform': 'ios',
             'database': 'cv2_sqlite_audit_123_1_ios', 'databaseVersion': 3,
             'committedVersion': 2, 'transactionOpen': True, 'status': status,
             'checks': runner.CHECKS + ['process_restart', 'raw_snapshot_process_restart',
-                                      'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified'],
+                                      'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified',
+                                      'uncommitted_personal_migration_prepared'],
         }
 
     def test_pending_report_requires_uncommitted_transaction_evidence(self):
@@ -100,11 +101,23 @@ class RecoveryControllerTests(unittest.TestCase):
         report = self.report()
         for changed in [
             {'schemaVersion': 2},
+            {'schemaVersion': 3},
             {'checks': [check for check in report['checks'] if check != 'uncommitted_raw_snapshot_modified']},
             {'checks': [check for check in report['checks'] if check != 'raw_snapshot_process_restart']},
+            {'checks': [check for check in report['checks'] if check != 'uncommitted_personal_migration_prepared']},
         ]:
             with self.assertRaisesRegex(RuntimeError, 'Invalid or incomplete'):
                 runner.validate({**report, **changed}, 'ios', '123', '1', 'ready_for_interruption')
+
+    def test_final_report_requires_personal_migration_rollback_commit_and_reopen(self):
+        checks = runner.CHECKS + ['process_restart', 'raw_snapshot_process_restart',
+                                 'interrupted_migration_rollback', 'migration_retry_committed', 'raw_snapshot_interruption_recovery',
+                                 'personal_migration_interruption_rollback', 'personal_migration_atomic_commit', 'personal_migration_connection_reopen']
+        report = {**self.report(), 'status': 'passed', 'committedVersion': 3, 'transactionOpen': False, 'checks': checks}
+        runner.validate(report, 'ios', '123', '1', 'passed')
+        for missing in checks[-3:]:
+            with self.assertRaisesRegex(RuntimeError, 'Invalid or incomplete'):
+                runner.validate({**report, 'checks': [check for check in checks if check != missing]}, 'ios', '123', '1', 'passed')
 
     def test_previous_phase_can_remain_on_disk_until_the_next_report_arrives(self):
         previous = {**self.report(), 'status': 'ready_for_restart', 'databaseVersion': 2,

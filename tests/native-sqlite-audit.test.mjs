@@ -7,6 +7,8 @@ import { spawnSync } from 'node:child_process'
 import { DatabaseSync } from 'node:sqlite'
 import { AUDIT_CHECKS, auditIdentity, runNativeSqliteAudit, validateAuditReport } from '../scripts/native-sqlite-audit.mjs'
 import { injectNativeAudit } from '../scripts/build-native-sqlite-audit.mjs'
+import { createPersonalSqliteSnapshotRepository } from '../src/personalSqliteSnapshot.ts'
+import { createPersonalSqliteMigrationRepository } from '../src/personalSqliteMigration.ts'
 
 // Host SQLite checks the probe and its SQL; this is not evidence of native execution.
 const context = {runId: '123456789', attempt: '1', platform: 'android'}
@@ -218,10 +220,32 @@ test('audit checks the original raw copy after an interrupted transaction and ca
   await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context}), /snapshot/)
 })
 
+test('audit refuses a personal completion marker that incorrectly survived the interruption', async t => {
+  const root = rootFor(t), first = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
+  const manager = new HostSQLite(root), pending = await runNativeSqliteAudit({sqlite: manager, previous: first, ...context})
+  await manager.closeConnection(pending.database)
+  const writer = new HostSQLite(root), db = await writer.createConnection(pending.database, false, 'no-encryption', 2, false)
+  await db.open()
+  const original = await createPersonalSqliteSnapshotRepository(db).read()
+  await (await createPersonalSqliteMigrationRepository(db).prepare(original)).commit(() => {})
+  await writer.closeConnection(pending.database)
+  await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context}), /interrupted personal migration survived/)
+})
+
+test('audit refuses a partial personal schema after interruption instead of repairing or silently skipping it', async t => {
+  const root = rootFor(t), first = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
+  const manager = new HostSQLite(root), pending = await runNativeSqliteAudit({sqlite: manager, previous: first, ...context})
+  await manager.closeConnection(pending.database)
+  const db = new DatabaseSync(path.join(root, pending.database + '.sqlite'))
+  db.exec('CREATE VIEW cv_personal_migration AS SELECT 1 AS id')
+  db.close()
+  await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context}), /unexpected migration schema/)
+})
+
 test('audit rejects stale identity and incomplete markers before opening any database', async t => {
   const previous = await runNativeSqliteAudit({sqlite: new HostSQLite(rootFor(t)), ...context})
   const sqlite = { createConnection() { throw Error('database must not be opened') } }
-  for (const changed of [{runId: '999'}, {database: 'personal'}, {checks: []}, {databaseVersion: 1}, {status: 'passed'}, {schemaVersion: 1}, {schemaVersion: 2}])
+  for (const changed of [{runId: '999'}, {database: 'personal'}, {checks: []}, {databaseVersion: 1}, {status: 'passed'}, {schemaVersion: 1}, {schemaVersion: 2}, {schemaVersion: 3}])
     await assert.rejects(runNativeSqliteAudit({sqlite, previous: {...previous, ...changed}, ...context}), /SQLite audit:/)
 })
 

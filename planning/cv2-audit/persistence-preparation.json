@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "assessedSourceCommit": "aa95f767a1d2c1645cc42582ac53dec899e8d44c",
-  "stage": "raw_sqlite_snapshot_prepared",
+  "assessedSourceCommit": "cb2da8c01296bdb78f1bb542e9728cb46b9d2914",
+  "stage": "transactional_personal_migration_prepared",
   "applicationStorageMigrationEnabled": false,
   "snapshotModule": "src/personalStorageSnapshot.ts",
-  "applicationStartupIntegration": "shared_access_integrated; pre-render_snapshot_and_SQLite_hydration_pending",
+  "applicationStartupIntegration": "shared_legacy_access_integrated; transactional_migration_prepared_but_not_activated_at_startup",
   "currentWriters": [
     {
       "file": "src/App.tsx",
@@ -65,27 +65,27 @@
     "newSnapshotIsReplacementForUserBackup": false
   },
   "activationGates": [
-    "Coordinate external writers and any other tabs or processes before capture or migration; the integrated facade pause is scoped to one JavaScript instance.",
-    "Capture before App and ExperienceLayer parse or normalize personal data during startup.",
-    "Preserve the raw envelope durably in SQLite and verify exact read-back, including missing keys, malformed JSON, lone surrogates and large inputs, through the native bridge.",
-    "Declare and version the personal database schema; bind values and use one statement per native call inside the explicit transaction.",
-    "Commit transformed records, schema version and migration completion marker in the same database transaction; reopen and compare exact results.",
-    "Report every rejected, filtered, normalized or unmapped record; never silently discard records merely because a raw copy exists.",
-    "Use the database completion marker as the cutover authority on restart, and never silently read stale localStorage after new database writes.",
-    "Maintain legacy and v1-v4 backup compatibility and explicitly preserve experience preferences in the future backup contract.",
-    "Test interruption, retry, quota or disk failure, concurrent writers and a fresh process reopening migrated personal data on Android and iOS."
+    "Declare production database ownership and path selection, and hold every source-writer lock across snapshot capture, preparation, source verification and commit; instance guards are not cross-tab or cross-process locks.",
+    "Integrate the bootstrap before App and ExperienceLayer parse, normalize or write personal state.",
+    "Use the raw snapshot repository during the pre-render migration and retain its immutable first copy before preparing target rows.",
+    "Pass Android and iOS protocol 4 tests for the namespaced version-1 migration, including process interruption with its completion marker still uncommitted.",
+    "Implement and validate the future mutable SQLite write repository with atomic batch updates and revision checks before switching application writers.",
+    "Use the verified database completion marker and current committed revision as startup authority; never silently restore stale localStorage after database writes.",
+    "Preserve raw values and report any later rejected, filtered, normalized or unmapped record instead of silently overwriting the database with sanitized defaults.",
+    "Maintain legacy and v1-v4 backup compatibility and define preference preservation in the future backup export contract.",
+    "Test disk failures, retries, bootstrap recovery UX and external source writers with the full startup and mutable-write integration before activating migration."
   ],
   "scope": "Local-first native preparation; no account or backend required.",
   "lastValidatedWeb": {
-    "sourceCommit": "aa95f767a1d2c1645cc42582ac53dec899e8d44c",
-    "runId": 39693957063,
+    "sourceCommit": "cb2da8c01296bdb78f1bb542e9728cb46b9d2914",
+    "runId": 39697755376,
     "runAttempt": 1,
-    "jobId": 119546690532,
-    "testsPassed": 170,
-    "pythonTestsPassed": 25,
+    "jobId": 119559189183,
+    "testsPassed": 193,
+    "pythonTestsPassed": 26,
     "typeScript": "passed",
     "build": "passed",
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39693957063"
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39697755376"
   },
   "coordinatorContract": {
     "module": "src/personalStorage.ts",
@@ -154,20 +154,77 @@
     "ownershipLimit": "The in-memory operation guard protects one repository instance; callers must own the entire native connection and coordinate other contexts. This repository is not the future migrated-data repository or migration completion marker.",
     "databaseSchemaVersion": "Does not change PRAGMA user_version or touch unrelated tables.",
     "productionStartupIntegration": "not_activated",
-    "nativeValidation": "pending_new_android_and_ios_protocol_3_runs"
+    "nativeValidation": "passed_at_cb2da8c_protocol_3; shared_text_codec_refactor_revalidated_by_pending_protocol_4",
+    "encodingModule": "src/personalSqliteEncoding.ts"
   },
   "preparedNativeAudit": {
-    "schemaVersion": 3,
-    "source": "generated synthetic values only",
-    "payload": "larger than 2 Mi UTF-16 units, including malformed JSON, unknown IDs, absent keys, empty text, JSON null text, Unicode, CRLF, NUL, lone surrogates and experience preferences",
-    "expectedFinalChecks": 12,
+    "schemaVersion": 4,
+    "source": "generated synthetic values with a paused in-memory coordinator only",
+    "payload": "Same greater-than-2-Mi-UTF-16-unit six-key fixture, including malformed JSON, missing keys, empty and JSON-null text, unknown IDs, CRLF, NUL, Unicode, lone surrogates and preferences.",
+    "expectedFinalChecks": 15,
     "newChecks": [
-      "raw_snapshot_exact_round_trip",
-      "raw_snapshot_process_restart",
-      "raw_snapshot_interruption_recovery"
+      "personal_migration_interruption_rollback",
+      "personal_migration_atomic_commit",
+      "personal_migration_connection_reopen"
     ],
-    "interruption": "After verifying the durable copy on launch 2, mutate the first copy chunk inside the same uncommitted transaction as the pending schema and record changes. Kill only the verified audit app and compare the entire original raw copy after launch 3.",
-    "activation": "CI generated bundle only; preserves the real application entry and does not migrate the user data.",
+    "interruption": "Launch 2 calls the actual personal migration prepare() API, leaving its target values, schema and completion marker inside an open transaction. It also prepares the earlier audit record/schema and raw-chunk changes. Kill only the verified audit app.",
+    "recovery": "Launch 3 verifies no personal target schema or completion marker survived, then retries the actual migration and commits through its source guard. Reopen the native connection and compare all six exact values and the version-1 marker.",
+    "activation": "CI generated bundle only; production application entry remains on the existing shared legacy facade.",
     "nativeEvidence": "pending"
+  },
+  "migrationModule": "src/personalSqliteMigration.ts",
+  "lastValidatedNative": {
+    "sourceCommit": "cb2da8c01296bdb78f1bb542e9728cb46b9d2914",
+    "runId": 39697755376,
+    "runAttempt": 1,
+    "overallConclusion": "success",
+    "reportSchemaVersion": 3,
+    "android": {
+      "jobId": 119559355222,
+      "checksPassed": 12,
+      "processIds": [
+        "2043",
+        "3979",
+        "4429"
+      ],
+      "forcedInterruption": "am_force_stop"
+    },
+    "ios": {
+      "jobId": 119559355148,
+      "checksPassed": 12,
+      "processIds": [
+        "10102",
+        "10750",
+        "10918"
+      ],
+      "forcedInterruption": "SIGKILL_verified_simulator_app"
+    },
+    "rawSnapshot": "Greater than 2 Mi UTF-16 units. Exact six-key round trip, reopen, process restart and original recovery after an uncommitted chunk mutation all passed.",
+    "scope": "Synthetic data in the dedicated CI audit database; no personal migration activation.",
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39697755376"
+  },
+  "transactionalMigrationContract": {
+    "module": "src/personalSqliteMigration.ts",
+    "activation": "Explicit preparation API on an open, exclusively owned native connection. No DB selection, browser storage access or migration occurs during import, construction or production startup.",
+    "tables": [
+      "cv_personal_migration",
+      "cv_personal_value",
+      "cv_personal_value_chunk"
+    ],
+    "schemaVersion": 1,
+    "versionAuthority": "Namespaced schema_version in cv_personal_migration, committed with state=complete and six entries. The repository leaves global PRAGMA user_version and unrelated tables unchanged.",
+    "dataModel": "Six ordered key slots retaining raw string or absence. JSON encodes the raw string/null itself; it does not parse the JSON stored inside those strings. Unknown IDs, malformed JSON, preference fields and all UTF-16 values remain exact.",
+    "integrity": "Each key has bounded ordered chunks, exact UTF-16 length and SHA-256. The marker stores immutable original-source and current full-envelope digests; revision 0 must equal the original source.",
+    "originalCopy": "Read and verify an existing immutable copy or preserve it durably before opening the target migration transaction. A different source cannot replace it.",
+    "preparedLease": "prepare() validates detached input, opens its own transaction, creates all target tables, writes six values, verifies them and inserts the version-1 completion marker without committing. Only the current prepared lease may commit or roll back.",
+    "commit": "Recheck prepared target integrity, require synchronous source verification while the caller still owns its writer pause, then commit all target data, schema and marker together. Verify committed state and preserved source afterward.",
+    "rollback": "An explicit rollback discards all prepared target objects and revokes its lease while preserving the separately committed original. Stale leases cannot commit or end a later preparation.",
+    "restartAuthority": "read() requires a complete valid marker, exact schema, all six value headers, bounded chunks and both current/original integrity. It returns committed SQLite state and revision; it never reads legacy storage or substitutes empty defaults.",
+    "repeatMigration": "A completed database is authoritative. A second preparation is refused before any mutation, including when legacy storage is older than a newer committed database revision.",
+    "failurePolicy": "Never automatically resume or close the legacy facade. Roll back only this operation's transaction, retain the primary sanitized error, poison uncertain repositories, and require a fresh connection after failures.",
+    "ownershipLimit": "The caller must own the entire connection for the lifetime of the repository and prepared lease, and coordinate every source context. Synchronous rechecks detect observed source changes; they are not a cross-store atomic lock.",
+    "productionMutableWrites": "not_implemented_in_this_step",
+    "productionStartupIntegration": "not_activated",
+    "nativeValidation": "pending_new_android_and_ios_protocol_4_runs"
   }
 }

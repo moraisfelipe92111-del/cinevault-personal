@@ -27,15 +27,17 @@ def validate(report, platform, run_id, attempt, status):
     phases = {
         'ready_for_restart': (2, 2, False, CHECKS),
         'ready_for_interruption': (3, 2, True, CHECKS + ['process_restart', 'raw_snapshot_process_restart',
-                                                    'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified']),
+                                                    'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified',
+                                                    'uncommitted_personal_migration_prepared']),
         'passed': (3, 3, False, CHECKS + ['process_restart', 'raw_snapshot_process_restart',
-                                      'interrupted_migration_rollback', 'migration_retry_committed', 'raw_snapshot_interruption_recovery']),
+                                      'interrupted_migration_rollback', 'migration_retry_committed', 'raw_snapshot_interruption_recovery',
+                                      'personal_migration_interruption_rollback', 'personal_migration_atomic_commit', 'personal_migration_connection_reopen']),
     }
     if status not in phases:
         raise RuntimeError('Unknown native audit phase')
     version, committed, transaction_open, checks = phases[status]
     expected = {
-        'schemaVersion': 3, 'runId': run_id, 'attempt': attempt,
+        'schemaVersion': 4, 'runId': run_id, 'attempt': attempt,
         'platform': platform,
         'database': f'cv2_sqlite_audit_{run_id}_{attempt}_{platform}',
         'databaseVersion': version, 'committedVersion': committed,
