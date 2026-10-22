@@ -28,6 +28,11 @@ export type MigratedPersonalStorage = Readonly<{
   snapshot: PersonalStorageSnapshot
 }>
 
+export type PersonalSqliteChange = Readonly<{
+  key: typeof PERSONAL_STORAGE_KEYS[number]
+  raw: string | null
+}>
+
 class MigrationError extends Error {
   constructor(message: string) { super('Personal SQLite migration: ' + message) }
 }
@@ -169,7 +174,125 @@ export function createPersonalSqliteMigrationRepository(db: SnapshotSqliteConnec
       'preserved original does not match the migration marker')
   }
 
+  function validateChanges(input: unknown, expectedRevision: number): readonly PersonalSqliteChange[] {
+    requireValue(Number.isSafeInteger(expectedRevision) && expectedRevision >= 0, 'invalid expected revision')
+    requireValue(Array.isArray(input) && input.length > 0 && input.length <= PERSONAL_STORAGE_KEYS.length, 'invalid write batch')
+    const seen = new Set<string>()
+    let totalUnits = 0
+    const copied = Array.from(input, value => {
+      const entry = row(value)
+      const requested = entry.key, raw = entry.raw
+      const key = PERSONAL_STORAGE_KEYS.find(candidate => candidate === requested)
+      requireValue(Object.keys(entry).length === 2 && Object.hasOwn(entry, 'key') && Object.hasOwn(entry, 'raw') && key !== undefined &&
+        !seen.has(key) && (raw === null || typeof raw === 'string'), 'invalid or repeated personal write key')
+      seen.add(key)
+      const text = JSON.stringify(raw)
+      totalUnits += text.length
+      requireValue(totalUnits <= MAX_UNITS, 'write batch exceeds the supported size')
+      splitPersonalSqliteText(text)
+      return Object.freeze({key, raw})
+    })
+    return Object.freeze(copied)
+  }
+
+  function prepareWrite(input: unknown, expectedRevision: number) {
+    return exclusive(async () => {
+      // Copy every caller-owned value synchronously, before hashing or native I/O.
+      const changes = validateChanges(input, expectedRevision)
+      const encoded = []
+      for (const entry of changes) {
+        const text = JSON.stringify(entry.raw)
+        encoded.push({...entry, text, chunks: splitPersonalSqliteText(text), hash: await digestPersonalSqliteText(text)})
+      }
+      let owned = false
+      try {
+        // This separate read never joins or ends another owner's transaction.
+        const original = await createPersonalSqliteSnapshotRepository(db).read()
+        requireValue(original !== null, 'preserved original is missing; refusing personal writes')
+        const sourceHash = await digestPersonalSqliteText(serializePersonalStorageSnapshot(original))
+        requireValue((await db.isTransactionActive()).result === false, 'another transaction is already active')
+        await db.beginTransaction()
+        owned = true
+        requireValue((await db.isTransactionActive()).result === true, 'write transaction did not begin')
+        const before = await readInside()
+        requireValue(before !== null, 'migration is not complete; refusing personal writes')
+        requireValue(before.sourceSha256 === sourceHash, 'preserved original does not match the migration marker')
+        requireValue(before.revision === expectedRevision, 'stale personal revision; read the committed database before retrying')
+        const changed = encoded.filter(entry => before.snapshot.entries[PERSONAL_STORAGE_KEYS.indexOf(entry.key)].raw !== entry.raw)
+        const snapshot = validatePersonalStorageSnapshot({...before.snapshot, entries: before.snapshot.entries.map(entry => {
+          const update = changed.find(value => value.key === entry.key)
+          return update ? {key: entry.key, raw: update.raw} : entry
+        })})
+        const serialized = serializePersonalStorageSnapshot(snapshot)
+        splitPersonalSqliteText(serialized)
+        const currentHash = await digestPersonalSqliteText(serialized)
+        requireValue(changed.length === 0 || expectedRevision < Number.MAX_SAFE_INTEGER, 'personal revision would overflow')
+        const revision = expectedRevision + (changed.length ? 1 : 0)
+        for (const value of changed) {
+          const slot = PERSONAL_STORAGE_KEYS.indexOf(value.key)
+          await db.run(`DELETE FROM main.${CHUNKS} WHERE slot = ?`, [slot], false)
+          await db.run(`UPDATE main.${VALUES} SET chunk_count = ?, utf16_length = ?, sha256 = ? WHERE slot = ? AND value_key = ?`,
+            [value.chunks.length, value.text.length, value.hash, slot, value.key], false)
+          for (let ordinal = 0; ordinal < value.chunks.length; ordinal++) {
+            await db.run(`INSERT INTO main.${CHUNKS} (slot, ordinal, payload) VALUES (?, ?, ?)`, [slot, ordinal, value.chunks[ordinal]], false)
+          }
+        }
+        if (changed.length) {
+          requireValue(serializePersonalStorageSnapshot(await readValues()) === serialized, 'personal write read-back mismatch')
+          // Compare-and-swap is checked by reading the receipt, not by assuming
+          // a particular plugin-specific affected-row response shape.
+          await db.run(`UPDATE main.${RECEIPT} SET current_sha256 = ?, revision = ? WHERE id = ? AND revision = ? AND current_sha256 = ? AND source_sha256 = ?`,
+            [currentHash, revision, 1, expectedRevision, before.currentSha256, sourceHash], false)
+        }
+        const matches = (state: MigratedPersonalStorage | null): state is MigratedPersonalStorage =>
+          state !== null && state.sourceSha256 === sourceHash && state.currentSha256 === currentHash && state.revision === revision
+        const pending = await readReceipt()
+        requireValue(pending.sourceSha256 === sourceHash && pending.currentSha256 === currentHash && pending.revision === revision,
+          'personal revision update was not applied')
+        requireValue((await db.isTransactionActive()).result === true, 'prepared write lost its transaction')
+        const ticket = Object.freeze({})
+        owner = ticket
+        return Object.freeze({
+          baseRevision: expectedRevision, revision, currentSha256: currentHash,
+          changedKeys: Object.freeze(changed.map(entry => entry.key)),
+          commit(): Promise<MigratedPersonalStorage> {
+            return exclusive(async () => {
+              try {
+                requireValue((await db.isTransactionActive()).result === true, 'prepared write is no longer active')
+                requireValue(matches(await readInside()), 'prepared personal write changed before commit')
+                await db.commitTransaction()
+                requireValue((await db.isTransactionActive()).result === false, 'personal write transaction did not commit')
+                owned = false
+                owner = null
+                const committed = await transaction(readInside)
+                requireValue(matches(committed), 'committed personal write read-back mismatch')
+                await verifyOriginal(committed)
+                return committed
+              } catch (error) { return abort(error, owned) }
+            }, ticket)
+          },
+          rollback(): Promise<void> {
+            return exclusive(async () => {
+              try {
+                requireValue((await db.isTransactionActive()).result === true, 'prepared write is no longer active')
+                await db.rollbackTransaction()
+                requireValue((await db.isTransactionActive()).result === false, 'prepared personal write did not roll back')
+                owned = false
+                owner = null
+              } catch (error) { return abort(error, owned) }
+            }, ticket)
+          },
+        })
+      } catch (error) { return abort(error, owned) }
+    })
+  }
+
   return Object.freeze({
+    prepareWrite,
+    async writeBatch(input: unknown, expectedRevision: number): Promise<MigratedPersonalStorage> {
+      const prepared = await prepareWrite(input, expectedRevision)
+      return prepared.commit()
+    },
     read(): Promise<MigratedPersonalStorage | null> {
       return exclusive(async () => {
         try {

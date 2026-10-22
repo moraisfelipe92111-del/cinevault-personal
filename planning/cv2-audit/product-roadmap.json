@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-22",
+  "assessedSourceCommit": "9790468cb753513ca913bfccf85563026e893696",
+  "brand": {
+    "chosenName": "Sintonema",
+    "previousName": "CineVault",
+    "applicationRebrandApplied": false,
+    "nameDecision": "Selected with the owner; formal brand and domain availability checks are a separate release task."
+  },
+  "purpose": "Ajudar cada pessoa a escolher o que assistir conforme gosto, momento e tempo disponível, organizar sua trajetória audiovisual e encontrar opções oficiais para assistir.",
+  "scope": {
+    "formats": [
+      "filmes",
+      "séries",
+      "animes",
+      "reality shows",
+      "documentários",
+      "novelas",
+      "animações",
+      "curtas",
+      "especiais e outros programas audiovisuais"
+    ],
+    "classification": "Separate structural kind (movie, series, short, special) from genre, animation medium, audience and origin. Anime and documentary may describe either a film or series; classify one canonical record rather than duplicating it.",
+    "playback": "Discovery and personal organization with outbound official viewing links; complete films and episodes remain with their licensed providers.",
+    "personalization": "Keep recommendations based on declared tastes, curated evidence and personal behavior. Do not fabricate personal ratings for newly imported titles."
+  },
+  "verifiedBaseline": {
+    "stableMovieIds": 1000,
+    "originalPersonalSelectionsPreserved": 317,
+    "newMoviesWithoutInventedPersonalRatings": 683,
+    "otherFormatsImported": false,
+    "personalSqliteActivatedAtStartup": false,
+    "lastNativeAudit": {
+      "runId": 39703429975,
+      "protocol": 4,
+      "androidChecks": 15,
+      "iosSimulatorChecks": 15,
+      "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39703429975"
+    },
+    "iosRealDeviceAndAppStoreReleaseValidated": false,
+    "affiliateProgramApproved": false
+  },
+  "identityAndCompatibility": [
+    "Preserve all existing local movie IDs 1-1000 and their associated personal data.",
+    "Use source plus media type plus external ID for imported identities; the same numerical TMDb ID for a movie and TV series must never collide.",
+    "Represent seasons and episodes explicitly. Series progress distinguishes want-to-watch, watching, completed, paused and abandoned.",
+    "Version personal storage and backup changes. Keep legacy and v1-v4 import compatibility, preferences and unmapped records without destructive normalization.",
+    "Keep the six existing storage key names and native package identity through the current persistence preparation; a display-name change does not justify abandoning installed personal data."
+  ],
+  "whereToWatch": {
+    "initialCountry": "BR",
+    "enabled": false,
+    "offerKinds": [
+      "subscription",
+      "rent",
+      "buy",
+      "free"
+    ],
+    "requirements": [
+      "Licensed data and images for the intended commercial use.",
+      "Country, offer type, source and verification time; distinguish an unavailable lookup from a verified absence of offers.",
+      "Prefer verified title-specific official destinations; label subscription offers when the destination is not that title.",
+      "Preserve offline personal-library access and avoid presenting outdated availability as a guarantee."
+    ],
+    "affiliatePolicy": "Use only approved programs and valid issued tracking links. Clearly label remunerated recommendations. Do not assume that a click or playback earns commission or that one network permits combining another tracking identifier.",
+    "potentialPartner": "Amazon Associados Brasil is a researched candidate, not an approved integration or a revenue guarantee.",
+    "commercialAndStoreReview": "Confirm data rights, partner approval, disclosures and the concrete Android/iOS outbound-purchase flow before publishing.",
+    "referenceSources": [
+      "https://developer.themoviedb.org/docs/faq",
+      "https://developer.themoviedb.org/reference/movie-watch-providers",
+      "https://developer.themoviedb.org/reference/tv-series-watch-providers",
+      "https://partners.justwatch.com/",
+      "https://apis.justwatch.com/docs/content_partner/",
+      "https://associados.amazon.com.br/help/operating/policies/",
+      "https://support.google.com/googleplay/android-developer/answer/9899034?hl=pt-br",
+      "https://developer.apple.com/app-store/review/guidelines/"
+    ]
+  },
+  "deliveryOrder": [
+    {
+      "phase": 1,
+      "name": "Persistência confiável",
+      "status": "in_progress",
+      "exit": "Validate atomic mutable writes natively, then integrate migration before React startup and asynchronous durable UI writers with explicit recovery and backup preservation."
+    },
+    {
+      "phase": 2,
+      "name": "Modelo audiovisual e backups",
+      "status": "planned",
+      "exit": "Introduce typed identities, series/season/episode progress and a versioned compatibility path without changing the 1000 existing movie IDs."
+    },
+    {
+      "phase": 3,
+      "name": "Piloto de catálogo variado",
+      "status": "planned",
+      "exit": "Import a small verified pilot across formats, check identities and metadata, and validate progress and recommendations before adding thousands."
+    },
+    {
+      "phase": 4,
+      "name": "Experiência Sintonema",
+      "status": "planned",
+      "exit": "Apply the approved display brand, useful filters and recommendations that distinguish episode time, film length and complete-series duration."
+    },
+    {
+      "phase": 5,
+      "name": "Onde assistir e indicações remuneradas",
+      "status": "planned",
+      "exit": "Enable Brazilian offers after licensing and approved affiliate configuration; validate destinations, disclosure and store-specific purchase rules."
+    },
+    {
+      "phase": 6,
+      "name": "Crescimento do catálogo",
+      "status": "planned",
+      "exit": "Expand verified records in batches with paginated loading, indexes and measured search, startup, memory and scrolling performance on the owner device."
+    }
+  ],
+  "growthPolicy": "Thousands of titles is a supported product direction, not a claim that new formats already exist in the current app. Add verified content in batches only after the typed model, backups and measured performance are ready."
+}

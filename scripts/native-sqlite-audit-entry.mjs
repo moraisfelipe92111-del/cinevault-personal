@@ -21,13 +21,13 @@ async function run() {
   const report = await runNativeSqliteAudit({
     sqlite: new SQLiteConnection(CapacitorSQLite), previous, ...context,
   })
-  if (report.status === 'ready_for_restart' || report.status === 'ready_for_interruption') await write(marker, report)
+  if (['ready_for_restart', 'ready_for_interruption', 'ready_for_write_restart', 'ready_for_write_interruption'].includes(report.status)) await write(marker, report)
   await write(result, report)
   console.log('CINEVAULT_SQLITE_AUDIT ' + JSON.stringify(report))
 }
 
 run().catch(async error => {
-  const report = { schemaVersion: 4, ...context, status: 'failed', message: String(error?.message ?? error) }
+  const report = { schemaVersion: 5, ...context, status: 'failed', message: String(error?.message ?? error) }
   console.error('CINEVAULT_SQLITE_AUDIT ' + JSON.stringify(report))
   try { await write(result, report) } catch (writeError) { console.error(String(writeError)) }
 })

@@ -3,6 +3,7 @@ import { createPersonalSqliteSnapshotRepository } from '../src/personalSqliteSna
 import { PERSONAL_STORAGE_KEYS, serializePersonalStorageSnapshot } from '../src/personalStorageSnapshot.ts'
 import { createPersonalStorageCoordinator } from '../src/personalStorage.ts'
 import { createPersonalSqliteMigrationRepository } from '../src/personalSqliteMigration.ts'
+import { digestPersonalSqliteText } from '../src/personalSqliteEncoding.ts'
 
 export const AUDIT_CHECKS = Object.freeze([
   'parameterized_unicode_crud', 'explicit_commit', 'explicit_rollback',
@@ -13,15 +14,32 @@ const UPDATED = TEXT + '\nAtualizado sem alterar os caracteres.'
 const PENDING = 'Uncommitted change that must disappear after process interruption'
 const RECOVERY_SCHEMA = 'CREATE TABLE audit_recovery_schema (id INTEGER PRIMARY KEY, state TEXT NOT NULL);'
 
+const MIGRATION_CHECKS = [...AUDIT_CHECKS, 'process_restart', 'raw_snapshot_process_restart',
+  'interrupted_migration_rollback', 'migration_retry_committed', 'raw_snapshot_interruption_recovery',
+  'personal_migration_interruption_rollback', 'personal_migration_atomic_commit', 'personal_migration_connection_reopen']
+const WRITE_CHECKS = ['personal_write_atomic_batch', 'personal_write_noop', 'personal_write_stale_revision_rejected',
+  'personal_write_connection_reopen', 'personal_write_process_restart',
+  'personal_write_interruption_rollback', 'personal_write_retry_committed']
+const WRITE_A = [[1, '  {"history":[999999],"note":"ação 🎬"}\r\n\u0000\ud800'],
+  [2, '{"999999":"future poster"}'], [5, '  {"volume":0.25,"future":true}\r\n']]
+const WRITE_B = [[1, null], [2, 'null'], [5, '']]
+const writeBatch = values => values.map(([slot, raw]) => ({key: PERSONAL_STORAGE_KEYS[slot], raw}))
+const withWrites = (snapshot, values) => ({...snapshot, entries: snapshot.entries.map(entry =>
+  writeBatch(values).find(change => change.key === entry.key) || entry)})
+
 const PHASES = {
-  ready_for_restart: { databaseVersion: 2, committedVersion: 2, transactionOpen: false, checks: [...AUDIT_CHECKS] },
-  ready_for_interruption: { databaseVersion: 3, committedVersion: 2, transactionOpen: true,
+  ready_for_restart: { databaseVersion: 2, committedVersion: 2, transactionOpen: false,
+    personalRevision: null, committedPersonalRevision: null, checks: [...AUDIT_CHECKS] },
+  ready_for_interruption: { databaseVersion: 3, committedVersion: 2, transactionOpen: true, personalRevision: 0, committedPersonalRevision: null,
     checks: [...AUDIT_CHECKS, 'process_restart', 'raw_snapshot_process_restart',
       'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified', 'uncommitted_personal_migration_prepared'] },
+  ready_for_write_restart: { databaseVersion: 3, committedVersion: 3, transactionOpen: false,
+    personalRevision: 1, committedPersonalRevision: 1, checks: [...MIGRATION_CHECKS, ...WRITE_CHECKS.slice(0, 4)] },
+  ready_for_write_interruption: { databaseVersion: 3, committedVersion: 3, transactionOpen: true,
+    personalRevision: 2, committedPersonalRevision: 1,
+    checks: [...MIGRATION_CHECKS, ...WRITE_CHECKS.slice(0, 5), 'uncommitted_personal_write_prepared'] },
   passed: { databaseVersion: 3, committedVersion: 3, transactionOpen: false,
-    checks: [...AUDIT_CHECKS, 'process_restart', 'raw_snapshot_process_restart',
-      'interrupted_migration_rollback', 'migration_retry_committed', 'raw_snapshot_interruption_recovery',
-      'personal_migration_interruption_rollback', 'personal_migration_atomic_commit', 'personal_migration_connection_reopen'] },
+    personalRevision: 2, committedPersonalRevision: 2, checks: [...MIGRATION_CHECKS, ...WRITE_CHECKS] },
 }
 
 function requireValue(condition, message) {
@@ -39,17 +57,18 @@ export function validateAuditReport(report, context, status) {
   const database = auditIdentity(context)
   requireValue(Object.hasOwn(PHASES, status), 'invalid expected state')
   const expected = PHASES[status]
-  requireValue(report?.schemaVersion === 4 && report.status === status, 'unexpected report state')
+  requireValue(report?.schemaVersion === 5 && report.status === status, 'unexpected report state')
   requireValue(report.runId === context.runId && report.attempt === context.attempt &&
     report.platform === context.platform && report.database === database, 'report identity mismatch')
   requireValue(report.databaseVersion === expected.databaseVersion &&
     report.committedVersion === expected.committedVersion && report.transactionOpen === expected.transactionOpen &&
+    report.personalRevision === expected.personalRevision && report.committedPersonalRevision === expected.committedPersonalRevision &&
     JSON.stringify(report.checks) === JSON.stringify(expected.checks), 'incomplete checks')
   return report
 }
 
 function makeReport(context, status) {
-  return {schemaVersion: 4, runId: context.runId, attempt: context.attempt,
+  return {schemaVersion: 5, runId: context.runId, attempt: context.attempt,
     platform: context.platform, database: auditIdentity(context), status, ...PHASES[status], checks: [...PHASES[status].checks]}
 }
 
@@ -109,10 +128,18 @@ function verifyPersonalMigration(state, expected) {
     'personal migration marker or exact values changed')
 }
 
+async function verifyPersonalWrite(state, expected, revision, original) {
+  requireValue(state?.schemaVersion === 1 && state.revision === revision &&
+    state.sourceSha256 === await digestPersonalSqliteText(serializePersonalStorageSnapshot(original)) &&
+    state.currentSha256 === await digestPersonalSqliteText(serializePersonalStorageSnapshot(expected)) &&
+    serializePersonalStorageSnapshot(state.snapshot) === serializePersonalStorageSnapshot(expected),
+    'personal write revision or exact values changed')
+}
+
 export async function runNativeSqliteAudit({ sqlite, previous = null, ...context }) {
   const database = auditIdentity(context)
   if (previous !== null) {
-    requireValue(previous.status === 'ready_for_restart' || previous.status === 'ready_for_interruption', 'cannot resume this state')
+    requireValue(Object.hasOwn(PHASES, previous.status) && previous.status !== 'passed', 'cannot resume this state')
     validateAuditReport(previous, context, previous.status)
   }
   const source = syntheticSource(), rawSnapshot = source.snapshot
@@ -203,7 +230,7 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
       // this fresh audit application's process before the next launch.
       awaitingInterruption = true
       return makeReport(context, 'ready_for_interruption')
-    } else {
+    } else if (previous.status === 'ready_for_interruption') {
       let db = await open(2)
       await verifyData(db)
       await verifyRawSnapshot(db, rawSnapshot)
@@ -220,7 +247,53 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
       db = await open(3)
       await verifyRecovery(db)
       await verifyRawSnapshot(db, rawSnapshot)
-      verifyPersonalMigration(await createPersonalSqliteMigrationRepository(db).read(), rawSnapshot)
+      const writes = createPersonalSqliteMigrationRepository(db)
+      verifyPersonalMigration(await writes.read(), rawSnapshot)
+      const expected = withWrites(rawSnapshot, WRITE_A)
+      await verifyPersonalWrite(await writes.writeBatch(writeBatch(WRITE_A), 0), expected, 1, rawSnapshot)
+      await verifyPersonalWrite(await writes.writeBatch(writeBatch(WRITE_A), 1), expected, 1, rawSnapshot)
+      let staleRejected = false
+      try { await writes.writeBatch(writeBatch(WRITE_B), 0) }
+      catch (error) { staleRejected = /stale personal revision/.test(String(error?.message ?? error)) }
+      requireValue(staleRejected, 'stale personal revision was accepted')
+      await close()
+      db = await open(3)
+      await verifyPersonalWrite(await createPersonalSqliteMigrationRepository(db).read(), expected, 1, rawSnapshot)
+      await verifyRawSnapshot(db, rawSnapshot)
+      requireValue((await db.isTransactionActive()).result === false, 'committed writes left a transaction open')
+      await close()
+      return makeReport(context, 'ready_for_write_restart')
+    } else if (previous.status === 'ready_for_write_restart') {
+      const db = await open(3), writes = createPersonalSqliteMigrationRepository(db)
+      await verifyRecovery(db)
+      await verifyRawSnapshot(db, rawSnapshot)
+      await verifyPersonalWrite(await writes.read(), withWrites(rawSnapshot, WRITE_A), 1, rawSnapshot)
+      const prepared = await writes.prepareWrite(writeBatch(WRITE_B), 1)
+      const receipt = (await db.query('SELECT revision, current_sha256 FROM main.cv_personal_migration WHERE id = ?', [1])).values
+      requireValue(prepared.baseRevision === 1 && prepared.revision === 2 && prepared.changedKeys.length === 3 &&
+        receipt?.length === 1 && receipt[0].revision === 2 && receipt[0].current_sha256 === prepared.currentSha256,
+        'pending personal write revision is incomplete')
+      for (const [slot, raw] of WRITE_B) {
+        const chunks = (await db.query('SELECT payload FROM main.cv_personal_value_chunk WHERE slot = ? ORDER BY ordinal', [slot])).values
+        requireValue(chunks?.length === 1 && chunks[0].payload === JSON.stringify(raw), 'pending personal batch was not applied')
+      }
+      requireValue((await db.isTransactionActive()).result === true, 'write interruption requires an open transaction')
+      awaitingInterruption = true
+      return makeReport(context, 'ready_for_write_interruption')
+    } else {
+      let db = await open(3), writes = createPersonalSqliteMigrationRepository(db)
+      await verifyRecovery(db)
+      await verifyRawSnapshot(db, rawSnapshot)
+      // A committed B here is a failed interruption test, never a reason to skip it.
+      await verifyPersonalWrite(await writes.read(), withWrites(rawSnapshot, WRITE_A), 1, rawSnapshot)
+      const expected = withWrites(withWrites(rawSnapshot, WRITE_A), WRITE_B)
+      await verifyPersonalWrite(await writes.writeBatch(writeBatch(WRITE_B), 1), expected, 2, rawSnapshot)
+      await close()
+      db = await open(3)
+      await verifyRecovery(db)
+      await verifyRawSnapshot(db, rawSnapshot)
+      await verifyPersonalWrite(await createPersonalSqliteMigrationRepository(db).read(), expected, 2, rawSnapshot)
+      requireValue((await db.isTransactionActive()).result === false, 'write retry left a transaction open')
       await close()
       return makeReport(context, 'passed')
     }

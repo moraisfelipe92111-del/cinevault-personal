@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "assessedSourceCommit": "cb2da8c01296bdb78f1bb542e9728cb46b9d2914",
-  "stage": "transactional_personal_migration_prepared",
+  "assessedSourceCommit": "9790468cb753513ca913bfccf85563026e893696",
+  "stage": "atomic_revisioned_personal_writes_prepared",
   "applicationStorageMigrationEnabled": false,
   "snapshotModule": "src/personalStorageSnapshot.ts",
-  "applicationStartupIntegration": "shared_legacy_access_integrated; transactional_migration_prepared_but_not_activated_at_startup",
+  "applicationStartupIntegration": "shared_legacy_access_integrated; migration_and_revisioned_writes_prepared_but_not_activated",
   "currentWriters": [
     {
       "file": "src/App.tsx",
@@ -65,27 +65,26 @@
     "newSnapshotIsReplacementForUserBackup": false
   },
   "activationGates": [
-    "Declare production database ownership and path selection, and hold every source-writer lock across snapshot capture, preparation, source verification and commit; instance guards are not cross-tab or cross-process locks.",
-    "Integrate the bootstrap before App and ExperienceLayer parse, normalize or write personal state.",
-    "Use the raw snapshot repository during the pre-render migration and retain its immutable first copy before preparing target rows.",
-    "Pass Android and iOS protocol 4 tests for the namespaced version-1 migration, including process interruption with its completion marker still uncommitted.",
-    "Implement and validate the future mutable SQLite write repository with atomic batch updates and revision checks before switching application writers.",
-    "Use the verified database completion marker and current committed revision as startup authority; never silently restore stale localStorage after database writes.",
-    "Preserve raw values and report any later rejected, filtered, normalized or unmapped record instead of silently overwriting the database with sanitized defaults.",
-    "Maintain legacy and v1-v4 backup compatibility and define preference preservation in the future backup export contract.",
-    "Test disk failures, retries, bootstrap recovery UX and external source writers with the full startup and mutable-write integration before activating migration."
+    "Pass Android and iOS protocol 5 tests for atomic mutable batches, revision conflicts, committed process restart, interrupted updates and exact recovery before enabling writers.",
+    "Declare production database ownership and path selection and coordinate every source context; repository guards are not cross-tab or cross-process locks.",
+    "Integrate bootstrap before App and ExperienceLayer parse, normalize or write personal state; pause every legacy writer during capture, preparation, final source comparison and commit.",
+    "Retain the immutable first raw copy and use the valid SQLite completion marker and latest committed revision as authority. Never silently fall back to stale legacy storage after cutover.",
+    "Integrate asynchronous durable writes into the UI, maps, preferences and validated backup imports; acknowledge persistence only after successful SQLite commit, and define retry and conflict recovery without dropping pending user changes.",
+    "Preserve raw values and explicitly report rejected, filtered, normalized or unmapped records instead of replacing them with sanitized defaults.",
+    "Maintain legacy and v1-v4 backup imports and define preference preservation and typed-title identity in a future versioned export contract.",
+    "Validate disk failures, concurrent external source writers, startup recovery UX and app interruption through the complete bootstrap and UI integration on real devices before activating migration."
   ],
   "scope": "Local-first native preparation; no account or backend required.",
   "lastValidatedWeb": {
-    "sourceCommit": "cb2da8c01296bdb78f1bb542e9728cb46b9d2914",
-    "runId": 39697755376,
+    "sourceCommit": "9790468cb753513ca913bfccf85563026e893696",
+    "runId": 39703429975,
     "runAttempt": 1,
-    "jobId": 119559189183,
-    "testsPassed": 193,
-    "pythonTestsPassed": 26,
+    "jobId": 119577756798,
+    "testsPassed": 221,
+    "pythonTestsPassed": 27,
     "typeScript": "passed",
     "build": "passed",
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39697755376"
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39703429975"
   },
   "coordinatorContract": {
     "module": "src/personalStorage.ts",
@@ -154,54 +153,102 @@
     "ownershipLimit": "The in-memory operation guard protects one repository instance; callers must own the entire native connection and coordinate other contexts. This repository is not the future migrated-data repository or migration completion marker.",
     "databaseSchemaVersion": "Does not change PRAGMA user_version or touch unrelated tables.",
     "productionStartupIntegration": "not_activated",
-    "nativeValidation": "passed_at_cb2da8c_protocol_3; shared_text_codec_refactor_revalidated_by_pending_protocol_4",
+    "nativeValidation": "passed_at_9790468_protocol_4_including_shared_text_codec",
     "encodingModule": "src/personalSqliteEncoding.ts"
   },
   "preparedNativeAudit": {
-    "schemaVersion": 4,
-    "source": "generated synthetic values with a paused in-memory coordinator only",
-    "payload": "Same greater-than-2-Mi-UTF-16-unit six-key fixture, including malformed JSON, missing keys, empty and JSON-null text, unknown IDs, CRLF, NUL, Unicode, lone surrogates and preferences.",
-    "expectedFinalChecks": 15,
-    "newChecks": [
-      "personal_migration_interruption_rollback",
-      "personal_migration_atomic_commit",
-      "personal_migration_connection_reopen"
+    "schemaVersion": 5,
+    "source": "generated synthetic values and a paused in-memory source only",
+    "payload": "Greater than 2 Mi UTF-16 units, all six exact raw values, invalid JSON, absence, empty and JSON-null text, future IDs, Unicode, NUL, CRLF, lone surrogates and preferences.",
+    "expectedFinalChecks": 22,
+    "expectedDistinctProcesses": 5,
+    "phases": [
+      {
+        "launch": 1,
+        "status": "ready_for_restart",
+        "personalRevision": null,
+        "committedPersonalRevision": null,
+        "transactionOpen": false
+      },
+      {
+        "launch": 2,
+        "status": "ready_for_interruption",
+        "personalRevision": 0,
+        "committedPersonalRevision": null,
+        "transactionOpen": true
+      },
+      {
+        "launch": 3,
+        "status": "ready_for_write_restart",
+        "personalRevision": 1,
+        "committedPersonalRevision": 1,
+        "transactionOpen": false
+      },
+      {
+        "launch": 4,
+        "status": "ready_for_write_interruption",
+        "personalRevision": 2,
+        "committedPersonalRevision": 1,
+        "transactionOpen": true
+      },
+      {
+        "launch": 5,
+        "status": "passed",
+        "personalRevision": 2,
+        "committedPersonalRevision": 2,
+        "transactionOpen": false
+      }
     ],
-    "interruption": "Launch 2 calls the actual personal migration prepare() API, leaving its target values, schema and completion marker inside an open transaction. It also prepares the earlier audit record/schema and raw-chunk changes. Kill only the verified audit app.",
-    "recovery": "Launch 3 verifies no personal target schema or completion marker survived, then retries the actual migration and commits through its source guard. Reopen the native connection and compare all six exact values and the version-1 marker.",
-    "activation": "CI generated bundle only; production application entry remains on the existing shared legacy facade.",
-    "nativeEvidence": "pending"
+    "newChecks": [
+      "personal_write_atomic_batch",
+      "personal_write_noop",
+      "personal_write_stale_revision_rejected",
+      "personal_write_connection_reopen",
+      "personal_write_process_restart",
+      "personal_write_interruption_rollback",
+      "personal_write_retry_committed"
+    ],
+    "migrationInterruption": "Keep the actual migration schema, values and completion marker uncommitted in launch 2. Interrupt only the verified fresh audit app; launch 3 requires rollback and commits a guarded retry.",
+    "mutableWriteRestart": "Launch 3 updates several keys with the actual writeBatch API, requires revision 1, verifies an identical no-op and rejects a stale expected revision. Reopen the native connection, then launch 4 verifies the same committed values in a fresh process.",
+    "mutableWriteInterruption": "Launch 4 uses actual prepareWrite, verifies changed chunks and receipt revision 2 while the transaction remains open. After interruption, launch 5 must recover all revision-1 values, then retry and durably reopen revision 2 with the immutable original unchanged.",
+    "activation": "CI generated bundle only; production entry, six storage keys, package identity and installed app version are unchanged.",
+    "nativeEvidence": "pending_after_this_package_is_applied"
   },
   "migrationModule": "src/personalSqliteMigration.ts",
   "lastValidatedNative": {
-    "sourceCommit": "cb2da8c01296bdb78f1bb542e9728cb46b9d2914",
-    "runId": 39697755376,
+    "sourceCommit": "9790468cb753513ca913bfccf85563026e893696",
+    "runId": 39703429975,
     "runAttempt": 1,
     "overallConclusion": "success",
-    "reportSchemaVersion": 3,
+    "reportSchemaVersion": 4,
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39703429975",
+    "scope": "Synthetic six-key data only; migration preparation and its native recovery passed. Production personal SQLite startup remains disabled.",
     "android": {
-      "jobId": 119559355222,
-      "checksPassed": 12,
+      "jobId": 119577964496,
+      "checksPassed": 15,
       "processIds": [
-        "2043",
-        "3979",
-        "4429"
+        "2079",
+        "3919",
+        "4551"
       ],
-      "forcedInterruption": "am_force_stop"
+      "forcedInterruption": "am_force_stop",
+      "transactionOpenConfirmed": true,
+      "finalTransactionOpen": false,
+      "committedVersion": 3
     },
     "ios": {
-      "jobId": 119559355148,
-      "checksPassed": 12,
+      "jobId": 119577964469,
+      "checksPassed": 15,
       "processIds": [
-        "10102",
-        "10750",
-        "10918"
+        "15807",
+        "16830",
+        "16930"
       ],
-      "forcedInterruption": "SIGKILL_verified_simulator_app"
-    },
-    "rawSnapshot": "Greater than 2 Mi UTF-16 units. Exact six-key round trip, reopen, process restart and original recovery after an uncommitted chunk mutation all passed.",
-    "scope": "Synthetic data in the dedicated CI audit database; no personal migration activation.",
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39697755376"
+      "forcedInterruption": "SIGKILL_verified_simulator_app",
+      "transactionOpenConfirmed": true,
+      "finalTransactionOpen": false,
+      "committedVersion": 3
+    }
   },
   "transactionalMigrationContract": {
     "module": "src/personalSqliteMigration.ts",
@@ -223,8 +270,26 @@
     "repeatMigration": "A completed database is authoritative. A second preparation is refused before any mutation, including when legacy storage is older than a newer committed database revision.",
     "failurePolicy": "Never automatically resume or close the legacy facade. Roll back only this operation's transaction, retain the primary sanitized error, poison uncertain repositories, and require a fresh connection after failures.",
     "ownershipLimit": "The caller must own the entire connection for the lifetime of the repository and prepared lease, and coordinate every source context. Synchronous rechecks detect observed source changes; they are not a cross-store atomic lock.",
-    "productionMutableWrites": "not_implemented_in_this_step",
+    "productionMutableWrites": "explicit_revisioned_API_prepared_in_this_change; not_connected_to_production_writers",
     "productionStartupIntegration": "not_activated",
-    "nativeValidation": "pending_new_android_and_ios_protocol_4_runs"
+    "nativeValidation": "passed_at_9790468_protocol_4_on_android_and_ios"
+  },
+  "mutableWriteContract": {
+    "module": "src/personalSqliteMigration.ts",
+    "API": [
+      "prepareWrite(changes, expectedRevision)",
+      "writeBatch(changes, expectedRevision)"
+    ],
+    "activation": "Explicit on an already open, exclusively owned migrated connection; not used by production startup or existing synchronous legacy writers.",
+    "batch": "One to six unique allowlisted key/raw entries. Null means absence; strings retain exact UTF-16 including malformed inner JSON. Validate and detach caller inputs before the first await; reject excess size without truncation.",
+    "revision": "Require the caller expected revision to match the authoritative receipt inside the write transaction. A changed batch increments once using a bound compare-and-swap guarded by the previous revision and current/source digests, with mandatory read-back.",
+    "noOp": "An identical batch leaves the revision and every row unchanged. Transaction acknowledgements and integrity still require validation.",
+    "atomicity": "Update changed headers/chunks and the current digest/revision in one explicit transaction. Prepared writes remain uncommitted until their current lease commits; rollback and process interruption recover the entire prior revision.",
+    "original": "The immutable initial snapshot and source digest never change. Reads and commits validate the original as well as the current state; no automatic recreation or stale-source fallback.",
+    "boundedNativeCalls": "One SQL statement per execute/run, bound values and chunks of at most 16384 UTF-16 units. Never split valid surrogate pairs. Same 32 Mi UTF-16 total envelope bound.",
+    "ownership": "A prepared lease blocks other methods on the instance; stale leases cannot end later work. Refuse foreign transactions without committing or rolling them back. Caller ownership of the entire connection is required.",
+    "failures": "Rollback only owned work, preserve sanitized primary errors, and refuse repository reuse after storage uncertainty. A lost commit acknowledgement is an error requiring connection reopen and a read of the actual committed revision before retry.",
+    "schemaVersion": "Uses existing namespace schema version 1; does not change PRAGMA user_version, unrelated tables, legacy keys or backups.",
+    "remainingIntegration": "Pre-render bootstrap, source-context coordination, asynchronous UI persistence, backup imports/exports, recovery UX and real-device end-to-end checks."
   }
 }

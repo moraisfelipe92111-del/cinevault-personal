@@ -14,6 +14,21 @@ CHECKS = [
     'parameterized_unicode_crud', 'explicit_commit', 'explicit_rollback',
     'failed_batch_atomicity', 'migration_v1_v2', 'connection_reopen', 'raw_snapshot_exact_round_trip',
 ]
+MIGRATION_CHECKS = CHECKS + ['process_restart', 'raw_snapshot_process_restart',
+                           'interrupted_migration_rollback', 'migration_retry_committed', 'raw_snapshot_interruption_recovery',
+                           'personal_migration_interruption_rollback', 'personal_migration_atomic_commit', 'personal_migration_connection_reopen']
+WRITE_CHECKS = ['personal_write_atomic_batch', 'personal_write_noop', 'personal_write_stale_revision_rejected',
+                'personal_write_connection_reopen', 'personal_write_process_restart',
+                'personal_write_interruption_rollback', 'personal_write_retry_committed']
+PHASES = {
+    'ready_for_restart': (2, 2, False, None, None, CHECKS),
+    'ready_for_interruption': (3, 2, True, 0, None, CHECKS + ['process_restart', 'raw_snapshot_process_restart',
+                                                         'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified',
+                                                         'uncommitted_personal_migration_prepared']),
+    'ready_for_write_restart': (3, 3, False, 1, 1, MIGRATION_CHECKS + WRITE_CHECKS[:4]),
+    'ready_for_write_interruption': (3, 3, True, 2, 1, MIGRATION_CHECKS + WRITE_CHECKS[:5] + ['uncommitted_personal_write_prepared']),
+    'passed': (3, 3, False, 2, 2, MIGRATION_CHECKS + WRITE_CHECKS),
+}
 
 
 def command(args, *, check=True, timeout=90):
@@ -24,31 +39,24 @@ def command(args, *, check=True, timeout=90):
 
 
 def validate(report, platform, run_id, attempt, status):
-    phases = {
-        'ready_for_restart': (2, 2, False, CHECKS),
-        'ready_for_interruption': (3, 2, True, CHECKS + ['process_restart', 'raw_snapshot_process_restart',
-                                                    'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified',
-                                                    'uncommitted_personal_migration_prepared']),
-        'passed': (3, 3, False, CHECKS + ['process_restart', 'raw_snapshot_process_restart',
-                                      'interrupted_migration_rollback', 'migration_retry_committed', 'raw_snapshot_interruption_recovery',
-                                      'personal_migration_interruption_rollback', 'personal_migration_atomic_commit', 'personal_migration_connection_reopen']),
-    }
-    if status not in phases:
+    if status not in PHASES:
         raise RuntimeError('Unknown native audit phase')
-    version, committed, transaction_open, checks = phases[status]
+    version, committed, transaction_open, revision, committed_revision, checks = PHASES[status]
     expected = {
-        'schemaVersion': 4, 'runId': run_id, 'attempt': attempt,
+        'schemaVersion': 5, 'runId': run_id, 'attempt': attempt,
         'platform': platform,
         'database': f'cv2_sqlite_audit_{run_id}_{attempt}_{platform}',
         'databaseVersion': version, 'committedVersion': committed,
+        'personalRevision': revision, 'committedPersonalRevision': committed_revision,
         'transactionOpen': transaction_open, 'status': status, 'checks': checks,
     }
-    if any(report.get(key) != value for key, value in expected.items()):
+    if not isinstance(report, dict) or any(key not in report or type(report[key]) is not type(value) or report[key] != value
+                                          for key, value in expected.items()):
         raise RuntimeError('Invalid or incomplete native report: ' + json.dumps(report))
 
 
 def wait_report(read, platform, run_id, attempt, status):
-    phases = ['ready_for_restart', 'ready_for_interruption', 'passed']
+    phases = list(PHASES)
     if status not in phases:
         raise RuntimeError('Unknown expected native audit phase')
     deadline = time.monotonic() + 120
@@ -177,14 +185,30 @@ def android(run_id, attempt):
             if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
                 raise RuntimeError('Android process did not stop during the interruption test')
             launch_android(prefix)
-            report = wait_report(read, 'android', run_id, attempt, 'passed')
+            wait_report(read, 'android', run_id, attempt, 'ready_for_write_restart')
             pid_after = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
-            pids = [pid_before, pid_pending, pid_after]
-            if any(not re.fullmatch(r'[1-9]\d*', pid) for pid in pids) or len(set(pids)) != 3:
-                raise RuntimeError('Could not verify three distinct Android processes')
+            command(prefix + ['shell', 'am', 'force-stop', APP])
+            if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
+                raise RuntimeError('Android process did not stop before the write restart test')
+            launch_android(prefix)
+            write_pending = wait_report(read, 'android', run_id, attempt, 'ready_for_write_interruption')
+            pid_write_pending = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
+            print('Uncommitted personal values and revision prepared; force-stopping only the audit app.', flush=True)
+            command(prefix + ['shell', 'am', 'force-stop', APP])
+            if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
+                raise RuntimeError('Android process did not stop during the write interruption test')
+            launch_android(prefix)
+            report = wait_report(read, 'android', run_id, attempt, 'passed')
+            pid_final = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
+            pids = [pid_before, pid_pending, pid_after, pid_write_pending, pid_final]
+            if any(not re.fullmatch(r'[1-9]\d*', pid) for pid in pids) or len(set(pids)) != 5:
+                raise RuntimeError('Could not verify five distinct Android processes')
             return {**report, 'processRestart': {'before': pid_before, 'after': pid_pending},
                     'forcedInterruption': {'before': pid_pending, 'after': pid_after,
                                            'method': 'am_force_stop', 'transactionOpenConfirmed': pending['transactionOpen']},
+                    'writeProcessRestart': {'before': pid_after, 'after': pid_write_pending},
+                    'writeForcedInterruption': {'before': pid_write_pending, 'after': pid_final,
+                                                'method': 'am_force_stop', 'transactionOpenConfirmed': write_pending['transactionOpen']},
                     'phaseOne': first['status']}
         except Exception:
             android_diagnostics(prefix, log_path)
@@ -256,12 +280,23 @@ def ios(run_id, attempt):
     print('Uncommitted schema and record writes prepared; interrupting verified simulator app.', flush=True)
     interrupt_ios_audit_app(device, pid_pending)
     pid_after = launch()
+    wait_report(read, 'ios', run_id, attempt, 'ready_for_write_restart')
+    command(['xcrun', 'simctl', 'terminate', device, APP])
+    pid_write_pending = launch()
+    write_pending = wait_report(read, 'ios', run_id, attempt, 'ready_for_write_interruption')
+    print('Uncommitted personal values and revision prepared; interrupting verified simulator app.', flush=True)
+    interrupt_ios_audit_app(device, pid_write_pending)
+    pid_final = launch()
     report = wait_report(read, 'ios', run_id, attempt, 'passed')
-    if len({pid_before, pid_pending, pid_after}) != 3:
-        raise RuntimeError('Could not verify three distinct iOS processes')
+    pids = [pid_before, pid_pending, pid_after, pid_write_pending, pid_final]
+    if any(not re.fullmatch(r'[1-9]\d*', pid) for pid in pids) or len(set(pids)) != 5:
+        raise RuntimeError('Could not verify five distinct iOS processes')
     return {**report, 'processRestart': {'before': pid_before, 'after': pid_pending},
             'forcedInterruption': {'before': pid_pending, 'after': pid_after,
                                    'method': 'SIGKILL_verified_simulator_app', 'transactionOpenConfirmed': pending['transactionOpen']},
+            'writeProcessRestart': {'before': pid_after, 'after': pid_write_pending},
+            'writeForcedInterruption': {'before': pid_write_pending, 'after': pid_final,
+                                       'method': 'SIGKILL_verified_simulator_app', 'transactionOpenConfirmed': write_pending['transactionOpen']},
             'phaseOne': first['status']}
 
 

@@ -44,6 +44,7 @@ class HostSQLite {
       },
       async run(sql, values = []) {
         if (owner.broken === 'missing-recovery-marker' && /^INSERT INTO audit_recovery_schema\b/.test(sql)) return
+        if (owner.broken === 'missing-personal-write-receipt' && sql.startsWith('UPDATE main.cv_personal_migration ')) return
         this.db.prepare(sql).run(...values)
       },
       async query(sql, values = []) {
@@ -84,6 +85,27 @@ function rootFor(t) {
   return root
 }
 
+async function finishWritePhases(root, previous, mode = '') {
+  validateAuditReport(previous, context, 'ready_for_write_restart')
+  const manager = new HostSQLite(root, mode)
+  const pending = await runNativeSqliteAudit({sqlite: manager, previous, ...context})
+  validateAuditReport(pending, context, 'ready_for_write_interruption')
+  assert.equal(manager.connections.get(pending.database).db.isTransaction, true)
+  await manager.closeConnection(pending.database)
+  const result = await runNativeSqliteAudit({sqlite: new HostSQLite(root, mode), previous: pending, ...context})
+  validateAuditReport(result, context, 'passed')
+  return result
+}
+
+async function committedWriteFixture(t) {
+  const root = rootFor(t), first = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
+  const manager = new HostSQLite(root), pending = await runNativeSqliteAudit({sqlite: manager, previous: first, ...context})
+  await manager.closeConnection(pending.database)
+  const previous = await runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context})
+  validateAuditReport(previous, context, 'ready_for_write_restart')
+  return {root, previous}
+}
+
 test('audit accepts only bounded CI identities and native platforms', () => {
   assert.equal(auditIdentity(context), 'cv2_sqlite_audit_123456789_1_android')
   for (const changed of [{runId: '../personal'}, {attempt: '0'}, {platform: 'web'}, {runId: 123}, {attempt: '1234567'}])
@@ -117,11 +139,15 @@ test('host SQLite: interrupted schema and record writes roll back, then migratio
   const pending = await runNativeSqliteAudit({sqlite: manager, previous: first, ...context})
   // Host-side close rolls back the open transaction. Native CI uses process kill.
   await manager.closeConnection(pending.database)
-  const result = await runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context})
-  validateAuditReport(result, context, 'passed')
+  const written = await runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context})
+  const result = await finishWritePhases(root, written)
   assert.equal(result.databaseVersion, 3)
   assert.ok(result.checks.includes('interrupted_migration_rollback'))
   assert.ok(result.checks.includes('migration_retry_committed'))
+  assert.ok(result.checks.includes('personal_write_interruption_rollback'))
+  assert.equal(result.personalRevision, 2)
+  assert.equal(result.committedPersonalRevision, 2)
+  assert.equal(result.checks.length, 22)
 })
 
 test('host SQLite: recovery succeeds when native execute accepts one statement per call', async t => {
@@ -131,8 +157,8 @@ test('host SQLite: recovery succeeds when native execute accepts one statement p
   const manager = new HostSQLite(root, mode)
   const pending = await runNativeSqliteAudit({sqlite: manager, previous: first, ...context})
   await manager.closeConnection(pending.database)
-  const result = await runNativeSqliteAudit({sqlite: new HostSQLite(root, mode), previous: pending, ...context})
-  validateAuditReport(result, context, 'passed')
+  const written = await runNativeSqliteAudit({sqlite: new HostSQLite(root, mode), previous: pending, ...context})
+  const result = await finishWritePhases(root, written, mode)
   const db = new DatabaseSync(path.join(root, result.database + '.sqlite'))
   try {
     assert.deepEqual(db.prepare('SELECT id, state FROM audit_recovery_schema').all().map(row => ({...row})),
@@ -242,10 +268,52 @@ test('audit refuses a partial personal schema after interruption instead of repa
   await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context}), /unexpected migration schema/)
 })
 
+test('audit refuses an allegedly interrupted personal write that actually committed', async t => {
+  const {root, previous} = await committedWriteFixture(t), manager = new HostSQLite(root)
+  const pending = await runNativeSqliteAudit({sqlite: manager, previous, ...context})
+  validateAuditReport(pending, context, 'ready_for_write_interruption')
+  await manager.connections.get(pending.database).commitTransaction()
+  await manager.closeConnection(pending.database)
+  await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context}), /personal write revision or exact values changed/)
+})
+
+test('audit refuses partial personal values that survived the write interruption instead of repairing them', async t => {
+  const {root, previous} = await committedWriteFixture(t), manager = new HostSQLite(root)
+  const pending = await runNativeSqliteAudit({sqlite: manager, previous, ...context})
+  await manager.closeConnection(pending.database)
+  const db = new DatabaseSync(path.join(root, pending.database + '.sqlite'))
+  db.prepare('UPDATE cv_personal_value_chunk SET payload = ? WHERE slot = ? AND ordinal = ?').run('null', 1, 0)
+  db.close()
+  await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context}), /integrity mismatch/)
+})
+
+test('audit cannot authorize a write interruption without its prepared revision receipt', async t => {
+  const {root, previous} = await committedWriteFixture(t), manager = new HostSQLite(root, 'missing-personal-write-receipt')
+  await assert.rejects(runNativeSqliteAudit({sqlite: manager, previous, ...context}), /state digest mismatch|revision update/)
+  assert.equal(manager.connections.size, 0)
+  const reader = new HostSQLite(root), db = await reader.createConnection(previous.database, false, 'no-encryption', 3, false)
+  await db.open()
+  try { assert.equal((await createPersonalSqliteMigrationRepository(db).read()).revision, 1) }
+  finally { await reader.closeConnection(previous.database) }
+})
+
+test('write reports require the exact prepared and committed revisions and all earlier migration checks', async t => {
+  const {root, previous} = await committedWriteFixture(t)
+  for (const change of [{schemaVersion: 4}, {personalRevision: 0}, {committedPersonalRevision: 0}, {transactionOpen: true},
+    {checks: previous.checks.filter(check => check !== 'personal_write_stale_revision_rejected')}])
+    assert.throws(() => validateAuditReport({...previous, ...change}, context, previous.status))
+  const manager = new HostSQLite(root), pending = await runNativeSqliteAudit({sqlite: manager, previous, ...context})
+  try {
+    for (const change of [{personalRevision: 1}, {committedPersonalRevision: 2}, {transactionOpen: false},
+      {checks: pending.checks.filter(check => check !== 'uncommitted_personal_write_prepared')}])
+      assert.throws(() => validateAuditReport({...pending, ...change}, context, pending.status))
+  } finally { await manager.closeConnection(pending.database) }
+})
+
 test('audit rejects stale identity and incomplete markers before opening any database', async t => {
   const previous = await runNativeSqliteAudit({sqlite: new HostSQLite(rootFor(t)), ...context})
   const sqlite = { createConnection() { throw Error('database must not be opened') } }
-  for (const changed of [{runId: '999'}, {database: 'personal'}, {checks: []}, {databaseVersion: 1}, {status: 'passed'}, {schemaVersion: 1}, {schemaVersion: 2}, {schemaVersion: 3}])
+  for (const changed of [{runId: '999'}, {database: 'personal'}, {checks: []}, {databaseVersion: 1}, {status: 'passed'}, {schemaVersion: 1}, {schemaVersion: 2}, {schemaVersion: 3}, {schemaVersion: 4}, {personalRevision: 0}])
     await assert.rejects(runNativeSqliteAudit({sqlite, previous: {...previous, ...changed}, ...context}), /SQLite audit:/)
 })
 
