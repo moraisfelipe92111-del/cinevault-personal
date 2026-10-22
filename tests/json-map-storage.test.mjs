@@ -153,30 +153,19 @@ test('backup invalido nao chega a gravacao nem libera mapas', () => {
   assert.equal(db.mutations, 0)
 })
 
-test('App usa a protecao nas leituras, gravacoes e restauracao', () => {
-  const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
-  assert.ok(app.includes('useState(()=>createJsonMapStorage(()=>personalStorage))'))
-
-  for (const [key, type, state] of [
-    ['POSTER_KEY', 'string', 'posters'],
-    ['META_KEY', 'PosterMeta', 'posterMeta'],
-    ['UNRESOLVED_KEY', 'string', 'unresolved'],
-  ]) {
-    assert.ok(app.includes('posterStorage.read<' + type + '>(' + key + ')'))
-    assert.ok(app.includes('posterStorage.write(' + key + ',' + state + ')'))
-    assert.ok(!app.includes('localStorage.setItem(' + key + ','))
-  }
-
-  const body = app.slice(app.indexOf('const importBackup='))
-  assert.ok(body.indexOf('posterStorage.restore([') >= 0)
-  assert.ok(body.indexOf('parseBackup(raw,') < body.indexOf('posterStorage.restore(['))
-  assert.ok(body.indexOf('posterStorage.restore([') < body.indexOf('blockedStorage.current.saved=false'))
-
-  const exporting = app.slice(app.indexOf('const exportBackup='), app.indexOf('const importBackup='))
-  assert.ok(exporting.includes('blockedStorage.current.saved||blockedStorage.current.pulse||posterStorage.hasBlocked()'))
-  assert.ok(exporting.indexOf('return') < exporting.indexOf('await exportJsonBackup('))
-
-  const auto = app.slice(app.indexOf('const autoPosters='), app.indexOf('const [sortMode'))
-  assert.ok(auto.indexOf('posterStorage.hasBlocked()') >= 0)
-  assert.ok(auto.indexOf('posterStorage.hasBlocked()') < auto.indexOf('await autoIdentify('))
+test('App uses guarded async poster batches and awaits restores before reporting success', () => {
+ const app=readFileSync(new URL('../src/App.tsx',import.meta.url),'utf8')
+ assert.ok(app.includes('createAsyncJsonMapStorage(persistence)'))
+ assert.ok(!app.includes('posterStorage.write('))
+ assert.ok(!app.includes('personalStorage.setItem('))
+ const importing=app.slice(app.indexOf('const importBackup='),app.indexOf('const cards='))
+ assert.ok(importing.includes('await posterStorage.restore(['))
+ assert.ok(importing.includes('await posterStorage.restoreSnapshot(raw)'))
+ assert.ok(importing.indexOf('parseBackup(raw,')<importing.indexOf('await posterStorage.restore(['))
+ assert.ok(importing.indexOf('await posterStorage.restore([')<importing.indexOf('Backup restaurado:'))
+ const exporting=app.slice(app.indexOf('const exportBackup='),app.indexOf('const importBackup='))
+ assert.ok(exporting.indexOf('await persistence.flush()')<exporting.indexOf('await exportJsonBackup('))
+ const auto=app.slice(app.indexOf('const autoPosters='),app.indexOf('const [sortMode'))
+ assert.ok(auto.indexOf('posterStorage.hasBlocked()')<auto.indexOf('await autoIdentify('))
+ assert.ok(auto.includes('await posterStorage.update([POSTER_KEY,META_KEY,UNRESOLVED_KEY]'))
 })

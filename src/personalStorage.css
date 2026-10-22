@@ -1,0 +1,8 @@
+.cv-storage-screen{min-height:100dvh;display:grid;place-items:center;padding:28px;background:#090a0d;color:#eee4d6;font-family:system-ui}
+.cv-storage-screen section{width:min(100%,440px);line-height:1.6}
+.cv-storage-screen h1{color:#e6bf7b;font-size:1.65rem;line-height:1.25;margin-bottom:22px}
+.cv-storage-screen button{display:block;width:100%;margin:12px 0;padding:14px 18px;border:1px solid #5e503d;border-radius:12px;background:#d4ac70;color:#15120f;font-size:1rem;font-weight:700}
+.cv-storage-screen button+button{background:transparent;color:#e6bf7b}
+.cv-storage-screen button:disabled{opacity:.55}
+.cv-storage-screen small{display:block;color:#b7b0a5;font-size:.85rem}
+.cv-storage-status{padding:10px 14px;border:1px solid #5e503d;border-radius:10px;color:#e6bf7b;font-size:.85rem}

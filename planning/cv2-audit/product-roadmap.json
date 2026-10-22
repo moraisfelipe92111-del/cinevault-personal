@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-10-22",
-  "assessedSourceCommit": "9790468cb753513ca913bfccf85563026e893696",
+  "assessedSourceCommit": "5108f3da821d73c499be42229a8c9018f7c7f1fa",
   "brand": {
     "chosenName": "Sintonema",
     "previousName": "CineVault",
@@ -81,7 +81,7 @@
     {
       "phase": 1,
       "name": "Persistência confiável",
-      "status": "in_progress",
+      "status": "native_bootstrap_and_UI_integrated_pending_native_CI",
       "exit": "Validate atomic mutable writes natively, then integrate migration before React startup and asynchronous durable UI writers with explicit recovery and backup preservation."
     },
     {
@@ -115,5 +115,14 @@
       "exit": "Expand verified records in batches with paginated loading, indexes and measured search, startup, memory and scrolling performance on the owner device."
     }
   ],
-  "growthPolicy": "Thousands of titles is a supported product direction, not a claim that new formats already exist in the current app. Add verified content in batches only after the typed model, backups and measured performance are ready."
+  "growthPolicy": "Thousands of titles is a supported product direction, not a claim that new formats already exist in the current app. Add verified content in batches only after the typed model, backups and measured performance are ready.",
+  "preparedPersistenceIntegration": {
+    "sourceBase": "5108f3da821d73c499be42229a8c9018f7c7f1fa",
+    "nativeStartupEnabledInCode": true,
+    "newAPKPublished": false,
+    "nextNativeProtocol": 6,
+    "expectedNativeChecks": 28,
+    "browserBackend": "shared localStorage",
+    "releaseGate": "native CI and real-device startup/edit/backup/recovery validation before a new APK release"
+  }
 }

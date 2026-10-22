@@ -52,14 +52,14 @@ function host(t) {
   return api
 }
 
-test('SQLite snapshot import and construction are lazy and production startup does not activate the repository', () => {
+test('SQLite snapshot import and construction are lazy without selecting a database or reading personal values', () => {
   const repository = createPersonalSqliteSnapshotRepository(new Proxy({}, {get() { assert.fail('no database access during construction') }}))
   assert.ok(Object.isFrozen(repository))
   const moduleUrl = new URL('../src/personalSqliteSnapshot.ts', import.meta.url).href
   const script = `Object.defineProperty(globalThis,'localStorage',{get(){throw Error('storage touched')}}); Object.defineProperty(globalThis,'crypto',{get(){throw Error('crypto touched')}}); const m = await import(${JSON.stringify(moduleUrl)}); m.createPersonalSqliteSnapshotRepository(new Proxy({},{get(){throw Error('database touched')}}));`
   const imported = spawnSync(process.execPath, ['--experimental-strip-types', '--input-type=module', '-e', script], {encoding: 'utf8'})
   assert.equal(imported.status, 0, imported.stderr)
-  for (const file of fs.readdirSync(new URL('../src', import.meta.url)).filter(name => /\.(tsx?|mjs)$/.test(name) && !['personalSqliteSnapshot.ts', 'personalSqliteMigration.ts'].includes(name))) {
+  for (const file of fs.readdirSync(new URL('../src', import.meta.url)).filter(name => /\.(tsx?|mjs)$/.test(name) && !['personalSqliteSnapshot.ts', 'personalSqliteMigration.ts', 'personalStorageBootstrap.ts'].includes(name))) {
     const text = fs.readFileSync(new URL('../src/' + file, import.meta.url), 'utf8')
     assert.ok(!text.includes('personalSqliteSnapshot'), file + ' must not activate SQLite migration')
   }

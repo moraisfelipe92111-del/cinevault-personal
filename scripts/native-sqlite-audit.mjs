@@ -4,6 +4,8 @@ import { PERSONAL_STORAGE_KEYS, serializePersonalStorageSnapshot } from '../src/
 import { createPersonalStorageCoordinator } from '../src/personalStorage.ts'
 import { createPersonalSqliteMigrationRepository } from '../src/personalSqliteMigration.ts'
 import { digestPersonalSqliteText } from '../src/personalSqliteEncoding.ts'
+import { createPersonalStorageBootstrap } from '../src/personalStorageBootstrap.ts'
+import { acquirePersonalStorageLock } from '../src/personalStorageLock.ts'
 
 export const AUDIT_CHECKS = Object.freeze([
   'parameterized_unicode_crud', 'explicit_commit', 'explicit_rollback',
@@ -20,9 +22,15 @@ const MIGRATION_CHECKS = [...AUDIT_CHECKS, 'process_restart', 'raw_snapshot_proc
 const WRITE_CHECKS = ['personal_write_atomic_batch', 'personal_write_noop', 'personal_write_stale_revision_rejected',
   'personal_write_connection_reopen', 'personal_write_process_restart',
   'personal_write_interruption_rollback', 'personal_write_retry_committed']
+const BOOT_CHECKS = ['native_context_owner_lock', 'bootstrap_sqlite_authority', 'bootstrap_legacy_closed',
+  'session_commit_before_publish', 'session_reopen_exact_values', 'bootstrap_authority_marker']
 const WRITE_A = [[1, '  {"history":[999999],"note":"ação 🎬"}\r\n\u0000\ud800'],
   [2, '{"999999":"future poster"}'], [5, '  {"volume":0.25,"future":true}\r\n']]
 const WRITE_B = [[1, null], [2, 'null'], [5, '']]
+const SESSION_JSON = [
+  {key: PERSONAL_STORAGE_KEYS[1], value: {queue: [1], history: [], notes: {1: 'sessão 🎬'}, recent: [1], dailyOffset: 2}},
+  {key: PERSONAL_STORAGE_KEYS[5], value: {intro: false, sound: false, updates: false, sonic: 'signature', volume: 0.25}},
+]
 const writeBatch = values => values.map(([slot, raw]) => ({key: PERSONAL_STORAGE_KEYS[slot], raw}))
 const withWrites = (snapshot, values) => ({...snapshot, entries: snapshot.entries.map(entry =>
   writeBatch(values).find(change => change.key === entry.key) || entry)})
@@ -39,7 +47,7 @@ const PHASES = {
     personalRevision: 2, committedPersonalRevision: 1,
     checks: [...MIGRATION_CHECKS, ...WRITE_CHECKS.slice(0, 5), 'uncommitted_personal_write_prepared'] },
   passed: { databaseVersion: 3, committedVersion: 3, transactionOpen: false,
-    personalRevision: 2, committedPersonalRevision: 2, checks: [...MIGRATION_CHECKS, ...WRITE_CHECKS] },
+    personalRevision: 3, committedPersonalRevision: 3, checks: [...MIGRATION_CHECKS, ...WRITE_CHECKS, ...BOOT_CHECKS] },
 }
 
 function requireValue(condition, message) {
@@ -57,7 +65,7 @@ export function validateAuditReport(report, context, status) {
   const database = auditIdentity(context)
   requireValue(Object.hasOwn(PHASES, status), 'invalid expected state')
   const expected = PHASES[status]
-  requireValue(report?.schemaVersion === 5 && report.status === status, 'unexpected report state')
+  requireValue(report?.schemaVersion === 6 && report.status === status, 'unexpected report state')
   requireValue(report.runId === context.runId && report.attempt === context.attempt &&
     report.platform === context.platform && report.database === database, 'report identity mismatch')
   requireValue(report.databaseVersion === expected.databaseVersion &&
@@ -68,7 +76,7 @@ export function validateAuditReport(report, context, status) {
 }
 
 function makeReport(context, status) {
-  return {schemaVersion: 5, runId: context.runId, attempt: context.attempt,
+  return {schemaVersion: 6, runId: context.runId, attempt: context.attempt,
     platform: context.platform, database: auditIdentity(context), status, ...PHASES[status], checks: [...PHASES[status].checks]}
 }
 
@@ -136,7 +144,7 @@ async function verifyPersonalWrite(state, expected, revision, original) {
     'personal write revision or exact values changed')
 }
 
-export async function runNativeSqliteAudit({ sqlite, previous = null, ...context }) {
+export async function runNativeSqliteAudit({ sqlite, authority, lockManager = globalThis.navigator?.locks, previous = null, ...context }) {
   const database = auditIdentity(context)
   if (previous !== null) {
     requireValue(Object.hasOwn(PHASES, previous.status) && previous.status !== 'passed', 'cannot resume this state')
@@ -147,6 +155,7 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
   let connected = false
   let awaitingInterruption = false
   let primaryError = null
+  let ownerLock = null
   const open = async version => {
     const db = await sqlite.createConnection(database, false, 'no-encryption', version, false)
     connected = true
@@ -288,11 +297,41 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
       await verifyPersonalWrite(await writes.read(), withWrites(rawSnapshot, WRITE_A), 1, rawSnapshot)
       const expected = withWrites(withWrites(rawSnapshot, WRITE_A), WRITE_B)
       await verifyPersonalWrite(await writes.writeBatch(writeBatch(WRITE_B), 1), expected, 2, rawSnapshot)
+      ownerLock = await acquirePersonalStorageLock(lockManager)
+      let secondOwnerRefused = false
+      try { const unexpected = await acquirePersonalStorageLock(lockManager); await unexpected.release() }
+      catch (error) { secondOwnerRefused = /outra janela/.test(String(error?.message ?? error)) }
+      requireValue(secondOwnerRefused, 'native context owner lock did not exclude a second owner')
+      let legacyReads = 0
+      const legacy = createPersonalStorageCoordinator(() => ({
+        getItem() { legacyReads++; throw Error('stale legacy source must not be read') },
+        setItem() { throw Error('legacy must not be written') }, removeItem() { throw Error('legacy must not be removed') },
+      }))
+      requireValue(authority !== undefined, 'dedicated audit authority store is missing')
+      const session = await createPersonalStorageBootstrap(legacy, authority).open(db)
+      requireValue(legacyReads === 0 && legacy.phase === 'closed', 'bootstrap selected legacy data instead of authoritative SQLite')
+      let closedLegacyRefused = false
+      try { legacy.store.getItem(PERSONAL_STORAGE_KEYS[0]) } catch { closedLegacyRefused = true }
+      requireValue(closedLegacyRefused && legacyReads === 0, 'closed legacy reader remained accessible')
+      requireValue((await authority.read())?.sourceSha256 === await digestPersonalSqliteText(serializePersonalStorageSnapshot(rawSnapshot)),
+        'independent storage authority receipt was not preserved')
+      const finalSnapshot = withWrites(expected, SESSION_JSON.map(change => [PERSONAL_STORAGE_KEYS.indexOf(change.key), JSON.stringify(change.value)]))
+      let partialPublished = false
+      session.subscribe(() => {
+        if (session.getStatus().version > 0 && serializePersonalStorageSnapshot(session.captureSnapshot()) !== serializePersonalStorageSnapshot(finalSnapshot)) partialPublished = true
+      })
+      const saving = session.commitJson(SESSION_JSON)
+      requireValue(session.reader.getItem(PERSONAL_STORAGE_KEYS[1]) === null && session.getStatus().version === 0 &&
+        session.getStatus().phase === 'saving', 'session published data before commit')
+      await saving
+      requireValue(!partialPublished && session.getStatus().version === 1 && session.getStatus().phase === 'ready' &&
+        serializePersonalStorageSnapshot(session.captureSnapshot()) === serializePersonalStorageSnapshot(finalSnapshot), 'session did not publish the full committed batch')
+      await session.close()
       await close()
       db = await open(3)
       await verifyRecovery(db)
       await verifyRawSnapshot(db, rawSnapshot)
-      await verifyPersonalWrite(await createPersonalSqliteMigrationRepository(db).read(), expected, 2, rawSnapshot)
+      await verifyPersonalWrite(await createPersonalSqliteMigrationRepository(db).read(), finalSnapshot, 3, rawSnapshot)
       requireValue((await db.isTransactionActive()).result === false, 'write retry left a transaction open')
       await close()
       return makeReport(context, 'passed')
@@ -307,5 +346,6 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
         else throw error
       }
     }
+    if (ownerLock) await ownerLock.release()
   }
 }

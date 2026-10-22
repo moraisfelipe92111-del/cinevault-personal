@@ -1,5 +1,6 @@
-import { personalStorage } from './personalStorage'
-import { useEffect, useRef, useState } from 'react'
+import type { PersonalPersistence } from './personalPersistence'
+import { readPersonalJsonModel, updatePersonalJsonModel } from './personalJsonModel'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { BellRing, Check, ChevronRight, Download, Eye, Film, Headphones, RotateCw, Settings2, ShieldCheck, Sparkles, Volume2, VolumeX, X } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { fetchLatestRelease, LOCAL_RELEASE, type Release } from './release'
@@ -10,20 +11,24 @@ import './experience.css'
 const PREF_KEY='cinevault.experience.v1'
 type Preferences={intro:boolean,sound:boolean,updates:boolean,sonic:SonicStyle,volume:number}
 const defaults:Preferences={intro:true,sound:true,updates:true,sonic:'signature',volume:.60}
-function preferences():Preferences {
- try {const parsed:unknown=JSON.parse(personalStorage.getItem(PREF_KEY)||'null');return parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?{
+function decodePreferences(parsed:unknown):Preferences {
+ return parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?{
  intro:(parsed as Partial<Preferences>).intro!==false,
  sound:(parsed as Partial<Preferences>).sound!==false,
  updates:(parsed as Partial<Preferences>).updates!==false,
  sonic:(['signature','noir','impacto'] as string[]).includes(String((parsed as Partial<Preferences>).sonic)) ? (parsed as Preferences).sonic : (parsed as Preferences).sonic==='aura'?'noir':'signature',
  volume:typeof (parsed as Partial<Preferences>).volume==='number' && Number.isFinite((parsed as Preferences).volume)?Math.min(1,Math.max(.15,(parsed as Preferences).volume)):.65
- }:defaults}catch{return defaults}
+ }:defaults
 }
 /** Playback may fail under browser autoplay policy, never block startup. */
 export const playBrandTone = playBrandAudio
 
-export function ExperienceLayer(){
- const [prefs,setPrefs]=useState<Preferences>(preferences)
+export function ExperienceLayer({persistence}:{persistence:PersonalPersistence}){
+ const status=useSyncExternalStore(persistence.subscribe,persistence.getStatus,persistence.getStatus)
+ const model=useMemo(()=>readPersonalJsonModel(persistence.reader,PREF_KEY,decodePreferences,()=>({...defaults})),[persistence,status.version])
+ const prefs=model.value
+ const [volumeDraft,setVolumeDraft]=useState<number|null>(null)
+ const displayVolume=volumeDraft??Math.round(prefs.volume*100)
  const [splash,setSplash]=useState(()=>prefs.intro)
  const [settings,setSettings]=useState(false)
  const [update,setUpdate]=useState<Release|null>(null)
@@ -39,7 +44,8 @@ export function ExperienceLayer(){
  const introPlayed = useRef(false)
  const openingTimer = useRef<number|null>(null)
  const reduced=typeof window!=='undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
- function save(p:Preferences){setPrefs(p);try{personalStorage.setItem(PREF_KEY,JSON.stringify(p))}catch{/* Persistence is best-effort; never block app */}}
+ function save(patch:Partial<Preferences>,confirmed?:()=>void){const copied={...patch};void persistence.update(reader=>updatePersonalJsonModel(reader,PREF_KEY,decodePreferences,()=>({...defaults}),previous=>({...previous,...copied}))).then(()=>confirmed?.()).catch(error=>setSoundMsg(error instanceof Error?error.message:'Não foi possível salvar as preferências.'))}
+ function commitVolume(){if(volumeDraft!==null){const value=volumeDraft;save({volume:value/100},()=>setVolumeDraft(current=>current===value?null:current))}}
  function closeSplash(){if(openingTimer.current!==null){window.clearTimeout(openingTimer.current);openingTimer.current=null}stopBrandAudio();setSplash(false)}
  function replaySplash(){stopBrandAudio();setSettings(false);setAutoSoundBlocked(false);setSplash(true);if(prefs.sound)void playBrandTone(prefs.sonic,prefs.volume).then(ok=>{if(!ok)setAutoSoundBlocked(true)});if(openingTimer.current!==null)window.clearTimeout(openingTimer.current);openingTimer.current=window.setTimeout(()=>{openingTimer.current=null;setSplash(false)},reduced?380:2570)}
  async function check(manual:boolean){
@@ -137,10 +143,11 @@ fill="url(#cvF3Gold)"/>
   {settings&&<div className="cv10-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setSettings(false)}}>
    <section role="dialog" aria-modal="true" aria-label="Configurações da experiência" className="cv10-panel">
     <header><div><span className="cv10-kicker"><Sparkles size={14}/> SIGNATURE EXPERIENCE · 1.3.2</span><h2>Uma experiência sua.</h2></div><button className="cv10-x" onClick={()=>setSettings(false)} aria-label="Fechar configurações"><X/></button></header>
-    <div className="cv10-pref"><span><Film/><b>Abertura cinematográfica</b><small>Exibir o símbolo ao iniciar</small></span><input type="checkbox" aria-label="Ativar abertura cinematográfica" checked={prefs.intro} onChange={e=>save({...prefs,intro:e.target.checked})}/></div>
-    <div className="cv10-pref"><span>{prefs.sound?<Volume2/>:<VolumeX/>}<b>Assinatura sonora</b><small>Escolha o timbre e o volume; o aparelho pode bloquear reprodução automática</small></span><input type="checkbox" aria-label="Ativar som de abertura" checked={prefs.sound} onChange={e=>save({...prefs,sound:e.target.checked})}/></div>
-    <div className="cv11-sound-controls" aria-label="Estilo do som de abertura"><div className="cv11-modes">{([{key:'signature',name:'Signature'},{key:'noir',name:'Noir'},{key:'impacto',name:'Impacto'}] as const).map(choice=><button key={choice.key} aria-pressed={prefs.sonic===choice.key} onClick={()=>save({...prefs,sonic:choice.key,sound:true})}>{choice.name}</button>)}</div><label htmlFor="cv11-volume">Volume <strong>{Math.round(prefs.volume*100)}%</strong></label><input id="cv11-volume" type="range" min="15" max="100" step="5" value={Math.round(prefs.volume*100)} onChange={e=>save({...prefs,volume:Number(e.target.value)/100})}/></div>
-    <div className="cv10-pref"><span><BellRing/><b>Verificar atualizações</b><small>Avisos automáticos no APK ao abrir e quando voltar ao aplicativo</small></span><input type="checkbox" aria-label="Verificar atualizações ao abrir" checked={prefs.updates} onChange={e=>save({...prefs,updates:e.target.checked})}/></div>
+    {model.blocked&&<div className="cv10-message" role="alert"><p>As preferências originais foram preservadas. Exporte uma cópia completa para revisá-las antes de alterar as configurações.</p><button onClick={()=>{if(window.confirm('Substituir somente as preferências pelos padrões? Guarde uma cópia completa antes de continuar se quiser conservar as configurações anteriores.'))void persistence.commitJson([{key:PREF_KEY,value:defaults}]).then(()=>setSoundMsg('Preferências padrão salvas.')).catch(error=>setSoundMsg(error instanceof Error?error.message:'Não foi possível salvar as preferências.'))}}>Usar preferências padrão</button></div>}
+    <div className="cv10-pref"><span><Film/><b>Abertura cinematográfica</b><small>Exibir o símbolo ao iniciar</small></span><input type="checkbox" aria-label="Ativar abertura cinematográfica" checked={prefs.intro} onChange={e=>save({intro:e.target.checked})}/></div>
+    <div className="cv10-pref"><span>{prefs.sound?<Volume2/>:<VolumeX/>}<b>Assinatura sonora</b><small>Escolha o timbre e o volume; o aparelho pode bloquear reprodução automática</small></span><input type="checkbox" aria-label="Ativar som de abertura" checked={prefs.sound} onChange={e=>save({sound:e.target.checked})}/></div>
+    <div className="cv11-sound-controls" aria-label="Estilo do som de abertura"><div className="cv11-modes">{([{key:'signature',name:'Signature'},{key:'noir',name:'Noir'},{key:'impacto',name:'Impacto'}] as const).map(choice=><button key={choice.key} aria-pressed={prefs.sonic===choice.key} onClick={()=>save({sonic:choice.key,sound:true})}>{choice.name}</button>)}</div><label htmlFor="cv11-volume">Volume <strong>{displayVolume}%</strong></label><input id="cv11-volume" type="range" min="15" max="100" step="5" value={displayVolume} onChange={e=>setVolumeDraft(Number(e.target.value))} onPointerUp={commitVolume} onKeyUp={commitVolume} onBlur={commitVolume}/></div>
+    <div className="cv10-pref"><span><BellRing/><b>Verificar atualizações</b><small>Avisos automáticos no APK ao abrir e quando voltar ao aplicativo</small></span><input type="checkbox" aria-label="Verificar atualizações ao abrir" checked={prefs.updates} onChange={e=>save({updates:e.target.checked})}/></div>
     <div className="cv10-actions"><button onClick={replaySplash}><Eye size={17}/> Rever abertura</button><button onClick={()=>void playBrandTone(prefs.sonic,prefs.volume).then(ok=>setSoundMsg(ok?'Assinatura sonora reproduzida.':'O áudio foi bloqueado pelo sistema.'))}><Headphones size={17}/> Ouvir som</button></div>
     {soundMsg&&<small className="cv10-message" role="status">{soundMsg}</small>}
     <div className="cv10-release"><span className="cv10-kicker"><ShieldCheck size={15}/> ATUALIZAÇÕES</span><p>Versão desta compilação: <strong>{LOCAL_RELEASE.version} (build {LOCAL_RELEASE.build})</strong></p><button className="cv10-check" disabled={checkState==='checking'} onClick={()=>void check(true)}><RotateCw size={16}/> {checkState==='checking'?'Consultando…':'Buscar atualização agora'}</button>{checkState==='none'&&<small>Não há uma versão mais recente confirmada ou não foi possível consultar agora.</small>}<button className="cv10-demo" onClick={()=>{setSettings(false);setPreview(true)}}>Visualizar o aviso de atualização <ChevronRight size={15}/></button></div>

@@ -1,5 +1,6 @@
-import { personalStorage } from './personalStorage'
-import { Suspense, lazy, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { isCompletePersonalBackup, type PersonalPersistence, type PersonalReader } from './personalPersistence'
+import { readPersonalJsonModel, updatePersonalJsonModel } from './personalJsonModel'
+import { Suspense, lazy, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Search, Home, Clapperboard, Heart, Shuffle, ChartNoAxesColumn, Star, X, Check, Sparkles, ListOrdered, ListPlus, ArrowUp, ArrowDown, BookOpen, ChevronRight, Download, Upload, SlidersHorizontal, ChevronLeft, ImagePlus, RefreshCw, PauseCircle, WifiOff, HardDrive, Trash2, ShieldCheck } from 'lucide-react'
 import filmsData from './films.json'
 import offlineBundledData from './offlineBundled.json'
@@ -14,28 +15,26 @@ import { parseBackup } from './backupValidation'
 import { ExperienceLayer } from './experience'
 import { Cv2FilmDetails } from './Cv2FilmDetails'
 import { PULSE_KEY, EMPTY_PULSE, parsePulse, toggleQueue, moveQueue, markWatched, visitFilm, saveNote, pickDaily, localDay, watchStats, type PulseState } from './pulse'
-import { createJsonMapStorage } from './jsonMapStorage'
+import { createAsyncJsonMapStorage } from './jsonMapStorage'
 const FilmTrailer = lazy(() => import('./FilmTrailer').then(module => ({default: module.FilmTrailer})))
 
 type Film = typeof filmsData[number]
 type Saved = { favorites:number[]; watched:number[]; ratings:Record<string,number> }
 const KEY='cinevault.personal.v2'
 const PAGE_SIZE=30
-const empty:Saved={favorites:[],watched:[],ratings:{}}
-function load(onInvalid:()=>void):Saved {
- try {
-  const raw=personalStorage.getItem(KEY)
-  if(raw===null)return empty
-  const x:unknown=JSON.parse(raw)
-  if(!x||typeof x!=='object'||Array.isArray(x))throw Error('Dados inválidos')
-  const record=x as Record<string,unknown>
-  if(!Array.isArray(record.favorites)||!Array.isArray(record.watched)||!record.ratings||typeof record.ratings!=='object'||Array.isArray(record.ratings))throw Error('Dados inválidos')
-  const valid=(value:unknown):value is number=>typeof value==='number'&&Number.isInteger(value)&&films.some(f=>f.id===value)
-  const ratings:Record<string,number>={}
-  for(const [id,rating] of Object.entries(record.ratings))if(valid(Number(id))&&typeof rating==='number'&&Number.isInteger(rating)&&rating>=1&&rating<=5)ratings[id]=rating
-  return {favorites:[...new Set(record.favorites.filter(valid))],watched:[...new Set(record.watched.filter(valid))],ratings}
- } catch {onInvalid();return empty}
+function decodeSaved(x:unknown):Saved {
+ if(!x||typeof x!=='object'||Array.isArray(x))throw Error('Dados inválidos')
+ const record=x as Record<string,unknown>
+ if(!Array.isArray(record.favorites)||!Array.isArray(record.watched)||!record.ratings||typeof record.ratings!=='object'||Array.isArray(record.ratings))throw Error('Dados inválidos')
+ const valid=(value:unknown):value is number=>typeof value==='number'&&Number.isInteger(value)&&filmsById.has(value)
+ const ratings:Record<string,number>={}
+ for(const [id,rating] of Object.entries(record.ratings))if(valid(Number(id))&&typeof rating==='number'&&Number.isInteger(rating)&&rating>=1&&rating<=5)ratings[id]=rating
+ return {favorites:[...new Set(record.favorites.filter(valid))],watched:[...new Set(record.watched.filter(valid))],ratings}
 }
+const emptySaved=():Saved=>({favorites:[],watched:[],ratings:{}})
+const emptyPulse=():PulseState=>({...EMPTY_PULSE,queue:[],history:[],notes:{},recent:[]})
+const readSaved=(reader:PersonalReader)=>readPersonalJsonModel(reader,KEY,decodeSaved,emptySaved)
+const readPulse=(reader:PersonalReader)=>readPersonalJsonModel(reader,PULSE_KEY,value=>parsePulse(value,new Set(filmsById.keys())),emptyPulse)
 const films=filmsData as Film[]
 const filmsById = new Map<number,Film>(films.map(f=>[f.id,f] as const))
 const priorities=['Todas','S','A','B','C','D','N']
@@ -64,22 +63,21 @@ function FilmArt({film,large=false,poster,fallbackPoster}:{film:Film,large?:bool
  return <div className={'cv-art '+(large?'cv-art-large':'')}>{source&&!failed?<img loading={large?'eager':'lazy'} decoding="async" fetchPriority={large?'high':'auto'} className="cv-poster-img" src={source} alt={`Pôster de ${film.title}`} onError={onImageError}/>:<><span className="cv-art-glow"/><Clapperboard size={large?52:28}/><span className="cv-art-title">{large?'CINEMA':film.title}</span><span className="cv-art-year">{film.year}</span></>}</div>
 }
 
-export default function App(){
- const blockedStorage=useRef({saved:false,pulse:false})
- const [posterStorage]=useState(()=>createJsonMapStorage(()=>personalStorage))
-  const [saved,setSaved]=useState<Saved>(()=>load(()=>{blockedStorage.current.saved=true}))
-  const [pulse,setPulse]=useState<PulseState>(()=>{
-   try{
-    const raw=personalStorage.getItem(PULSE_KEY)
-    return raw===null?{...EMPTY_PULSE}:parsePulse(JSON.parse(raw),new Set(films.map(f=>f.id)))
-   }
-   catch{blockedStorage.current.pulse=true;return {...EMPTY_PULSE}}
-  })
+export default function App({persistence}:{persistence:PersonalPersistence}){
+ const status=useSyncExternalStore(persistence.subscribe,persistence.getStatus,persistence.getStatus)
+ const [posterStorage]=useState(()=>createAsyncJsonMapStorage(persistence))
+ const savedModel=useMemo(()=>readSaved(persistence.reader),[persistence,status.version])
+ const pulseModel=useMemo(()=>readPulse(persistence.reader),[persistence,status.version])
+ const saved=savedModel.value,pulse=pulseModel.value
+ const reportSaveError=(error:unknown)=>setNotice(error instanceof Error?error.message:'Não foi possível confirmar o salvamento.')
+ const setPulse=(update:(previous:PulseState)=>PulseState,confirmed?:()=>void)=>{
+  void persistence.update(reader=>updatePersonalJsonModel(reader,PULSE_KEY,value=>parsePulse(value,new Set(filmsById.keys())),emptyPulse,update)).then(()=>confirmed?.()).catch(reportSaveError)
+ }
  const [noteDraft,setNoteDraft]=useState('')
- const [posters,setPosters]=useState<Record<string,string>>(()=>posterStorage.read<string>(POSTER_KEY))
+ const posters=useMemo(()=>posterStorage.read<string>(POSTER_KEY),[posterStorage,status.version])
  const [catalogPosters,setCatalogPosters]=useState<Record<string,string>>({})
- const [posterMeta,setPosterMeta]=useState<Record<string,PosterMeta>>(()=>posterStorage.read<PosterMeta>(META_KEY))
- const [unresolved,setUnresolved]=useState<Record<string,string>>(()=>posterStorage.read<string>(UNRESOLVED_KEY))
+ const posterMeta=useMemo(()=>posterStorage.read<PosterMeta>(META_KEY),[posterStorage,status.version])
+ const unresolved=useMemo(()=>posterStorage.read<string>(UNRESOLVED_KEY),[posterStorage,status.version])
  const [tmdbToken,setTmdbToken]=useState('')
  // Browsers keep these files under the local origin, without storing an API token.
  // URLs oficiais para os novos filmes; imagens realmente empacotadas tem precedencia.
@@ -116,21 +114,6 @@ export default function App(){
  const [autoProgress,setAutoProgress]=useState({running:false, done:0,total:0,matched:0,missed:0,current:''})
  const stopPosterRun=useRef(false)
  const runningPosters=useRef(false)
- useEffect(()=>{
-  try {
-   if(!posterStorage.write(POSTER_KEY,posters))setNotice('Não foi possível ler os dados locais das capas. Gravação suspensa; importe um backup válido para recuperar.')
-  } catch {setNotice('Não foi possível salvar os vínculos dos pôsteres.')}
- },[posters,posterStorage])
- useEffect(()=>{
-  try {
-   if(!posterStorage.write(META_KEY,posterMeta))setNotice('Não foi possível ler os dados locais das capas. Gravação suspensa; importe um backup válido para recuperar.')
-  } catch {setNotice('Não foi possível salvar os metadados TMDb.')}
- },[posterMeta,posterStorage])
- useEffect(()=>{
-  try {
-   if(!posterStorage.write(UNRESOLVED_KEY,unresolved))setNotice('Não foi possível ler os dados locais das capas. Gravação suspensa; importe um backup válido para recuperar.')
-  } catch {setNotice('Não foi possível salvar os itens pendentes.')}
- },[unresolved,posterStorage])
  const autoPosters=async(retryPending=false)=>{
   if(runningPosters.current)return
   if(posterStorage.hasBlocked()){setNotice('Não foi possível ler os dados locais das capas. Importe um backup válido antes de identificar novos pôsteres.');return}
@@ -146,14 +129,17 @@ export default function App(){
    setAutoProgress(p=>({...p,current:f.title}))
    try {
     const result=await autoIdentify(f,tmdbToken.trim())
+    if(stopPosterRun.current)break
     if(result.meta){
      const m=result.meta
-     setPosters(old=>({...old,[f.id]:`https://image.tmdb.org/t/p/w500${m.posterPath}`}))
-     setPosterMeta(old=>({...old,[f.id]:m}))
-     setUnresolved(old=>{const next={...old};delete next[f.id];return next})
+     await posterStorage.update([POSTER_KEY,META_KEY,UNRESOLVED_KEY],maps=>{
+      const pending={...maps[UNRESOLVED_KEY]};delete pending[f.id]
+      return [{key:POSTER_KEY,value:{...maps[POSTER_KEY],[f.id]:`https://image.tmdb.org/t/p/w500${m.posterPath}`}},
+       {key:META_KEY,value:{...maps[META_KEY],[f.id]:m}},{key:UNRESOLVED_KEY,value:pending}]
+     })
      matched++
     }else{
-     setUnresolved(old=>({...old,[f.id]:result.reason||'Não identificado'}))
+     await posterStorage.update([UNRESOLVED_KEY],maps=>[{key:UNRESOLVED_KEY,value:{...maps[UNRESOLVED_KEY],[f.id]:result.reason||'Não identificado'}}])
      missed++
     }
    }catch(err){
@@ -189,9 +175,9 @@ export default function App(){
   return ()=>{active=false}
  },[])
  useEffect(()=>{const onFocus=()=>setToday(new Date());window.addEventListener('focus',onFocus);return()=>window.removeEventListener('focus',onFocus)},[])
- useEffect(()=>{if(blockedStorage.current.pulse){setNotice('Diário local inválido: conteúdo original preservado. Importe um backup válido para recuperar.');return}try{personalStorage.setItem(PULSE_KEY,JSON.stringify(pulse))}catch{setNotice('Sem espaço para registrar o diário. Exporte um backup.')}},[pulse])
+ useEffect(()=>{if(savedModel.blocked||pulseModel.blocked||posterStorage.hasBlocked())setNotice('Há dados preservados que precisam de revisão. Exporte uma cópia completa antes de restaurar um backup válido.')},[savedModel.blocked,pulseModel.blocked,posterStorage,status.version])
+ useEffect(()=>()=>{stopPosterRun.current=true},[])
  useEffect(()=>{if(selected){setNoteDraft(pulse.notes[String(selected.id)]||'');setPulse(old=>visitFilm(old,selected.id))}},[selected?.id])
- useEffect(()=>{if(blockedStorage.current.saved){setNotice('Lista local inválida: os dados originais foram preservados. Importe um backup válido.');return}try{personalStorage.setItem(KEY,JSON.stringify(saved))}catch{setNotice('Não foi possível salvar os dados neste navegador. Exporte um backup.')}},[saved])
  useEffect(()=>{void refreshOffline()},[posters,bundledPosters])
  useEffect(()=>{setLimit(PAGE_SIZE)},[query,priority,genre,hideWatched,onlyFavorites,sortMode])
  useEffect(()=>{if(!selected)return;const previous=document.activeElement as HTMLElement|null;closeRef.current?.focus();const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')setSelected(null);if(event.key==='Tab'&&dialogRef.current){const elements=[...dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled])')];if(!elements.length)return;const first=elements[0],last=elements[elements.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}};document.addEventListener('keydown',onKey);const previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.removeEventListener('keydown',onKey);document.body.style.overflow=previousOverflow;previous?.focus()}},[selected])
@@ -235,53 +221,60 @@ export default function App(){
  const featured=curatedFilms.find(f=>!saved.watched.includes(f.id))||curatedFilms[0]
  const favorites=new Set(saved.favorites), watched=new Set(saved.watched)
  const toggle=(key:'favorites'|'watched',id:number)=>{
-  const becomingWatched=key==='watched'&&!saved.watched.includes(id)
-  setSaved(old=>({...old,[key]:old[key].includes(id)?old[key].filter(n=>n!==id):[...old[key],id]}))
-  if(key==='watched')setPulse(old=>markWatched(old,id,becomingWatched,new Date().toISOString()))
+  void persistence.update(reader=>{
+   const current=readSaved(reader).value,becomingWatched=key==='watched'&&!current.watched.includes(id)
+   const changes=[...updatePersonalJsonModel(reader,KEY,decodeSaved,emptySaved,old=>({...old,[key]:old[key].includes(id)?old[key].filter(n=>n!==id):[...old[key],id]}))]
+   if(key==='watched')changes.push(...updatePersonalJsonModel(reader,PULSE_KEY,value=>parsePulse(value,new Set(filmsById.keys())),emptyPulse,old=>markWatched(old,id,becomingWatched,new Date().toISOString())))
+   return changes
+  }).catch(reportSaveError)
  }
- const rate=(id:number,n:number)=>setSaved(old=>({...old,ratings:{...old.ratings,[id]:n}}))
+ const rate=(id:number,n:number)=>{void persistence.update(reader=>updatePersonalJsonModel(reader,KEY,decodeSaved,emptySaved,old=>({...old,ratings:{...old.ratings,[id]:n}}))).catch(reportSaveError)}
+ const queueFilm=(id:number)=>{void persistence.update(reader=>updatePersonalJsonModel(reader,PULSE_KEY,value=>parsePulse(value,new Set(filmsById.keys())),emptyPulse,old=>toggleQueue(old,id,new Set(readSaved(reader).value.watched)))).catch(reportSaveError)}
  const sessionPicks=useMemo(()=>selectSession(curatedFilms,saved,{mood,duration:sessionDuration,round:sessionRound}),[saved,mood,sessionDuration,sessionRound])
  const choose=()=>{setSessionRound(n=>sessionReady?n+1:0);setSessionReady(true)}
  const exportPending=()=>{const pendingFilms=films.filter(f=>!posters[f.id]);const report={generatedAt:new Date().toISOString(),total:pendingFilms.length,films:pendingFilms.map(f=>({id:f.id,title:f.title,year:f.year,reason:unresolved[f.id]||'Ainda não processado'}))};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cinevault-filmes-pendentes.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setNotice('Relatório de pendentes preparado para download.')}
- const exportBackup=async()=>{
-  if(blockedStorage.current.saved||blockedStorage.current.pulse||posterStorage.hasBlocked()){
-   setNotice('Há dados locais que não puderam ser lidos. A exportação foi interrompida para evitar um backup incompleto.')
-   return
-  }
-  try {
-   await exportJsonBackup({version:4,exportedAt:new Date().toISOString(),...saved,posters,posterMeta,unresolved,pulse})
-   setNotice(Capacitor.isNativePlatform()?'Escolha um destino no compartilhamento para guardar seu backup.':'Backup preparado para download.')
-  } catch {
-   setNotice('Não foi possível exportar o backup. Tente novamente ou confira as permissões de compartilhamento.')
-  }
+ const exportCompleteBackup=async()=>{
+  try{await persistence.flush();await exportJsonBackup(persistence.captureSnapshot(),'complete');setNotice('Cópia completa preparada, incluindo preferências e dados preservados.')}
+  catch{setNotice('Não foi possível preparar a cópia completa. Reabra seus dados e tente novamente.')}
  }
-const importBackup=async(file?:File)=>{
+ const exportBackup=async()=>{
+  try {
+   await persistence.flush()
+   const currentSaved=readSaved(persistence.reader),currentPulse=readPulse(persistence.reader)
+   const currentPosters=posterStorage.read<string>(POSTER_KEY),currentMeta=posterStorage.read<PosterMeta>(META_KEY),currentUnresolved=posterStorage.read<string>(UNRESOLVED_KEY)
+   if(currentSaved.blocked||currentPulse.blocked||posterStorage.hasBlocked()){
+    setNotice('Há dados preservados que não cabem no backup de biblioteca. Use Exportar cópia completa.');return
+   }
+   await exportJsonBackup({version:4,exportedAt:new Date().toISOString(),...currentSaved.value,posters:currentPosters,posterMeta:currentMeta,unresolved:currentUnresolved,pulse:currentPulse.value})
+   setNotice(Capacitor.isNativePlatform()?'Escolha um destino no compartilhamento para guardar seu backup.':'Backup preparado para download.')
+  } catch {setNotice('Não foi possível exportar o backup. Reabra seus dados e tente novamente.')}
+ }
+ const importBackup=async(file?:File)=>{
   if(!file)return
+  stopPosterRun.current=true
   try{
-   if(file.size>5*1024*1024)throw new Error('Arquivo de backup muito grande.')
+   if(file.size>96*1024*1024)throw new Error('Arquivo de backup muito grande.')
    const raw:unknown=JSON.parse(await file.text())
+   if(!window.confirm('Restaurar este backup? Os dados presentes no arquivo substituirão os correspondentes da sua biblioteca. Exporte uma cópia completa antes de continuar se quiser guardar o estado atual.'))return
+   if(isCompletePersonalBackup(raw)){
+    await posterStorage.restoreSnapshot(raw)
+    setNotice('Cópia completa restaurada. Dados não interpretados continuam preservados para revisão.');return
+   }
+   if(file.size>5*1024*1024)throw new Error('Arquivo de backup de biblioteca muito grande.')
    const result=parseBackup(raw,new Set(films.map(f=>f.id)))
-    // Validate, then persist the import as a rollback-protected batch.
-    // No silent overwrite of malformed personal state on startup.
-    posterStorage.restore([
-      {key:KEY,value:result.saved},
-      ...(result.pulse?[{key:PULSE_KEY,value:result.pulse}]:[]),
-      ...(result.posters?[{key:POSTER_KEY,value:result.posters}]:[]),
-      ...(result.posterMeta?[{key:META_KEY,value:result.posterMeta}]:[]),
-      ...(result.unresolved?[{key:UNRESOLVED_KEY,value:result.unresolved}]:[]),
-    ])
-    blockedStorage.current.saved=false
-    if(result.pulse)blockedStorage.current.pulse=false
-    setSaved(result.saved)
-   if(result.pulse)setPulse(result.pulse)
-   if(result.posters)setPosters(result.posters)
-   if(result.posterMeta)setPosterMeta(result.posterMeta)
-   if(result.unresolved)setUnresolved(result.unresolved)
+   await posterStorage.restore([
+    {key:KEY,value:result.saved},
+    ...(result.pulse?[{key:PULSE_KEY,value:result.pulse}]:[]),
+    ...(result.posters?[{key:POSTER_KEY,value:result.posters}]:[]),
+    ...(result.posterMeta?[{key:META_KEY,value:result.posterMeta}]:[]),
+    ...(result.unresolved?[{key:UNRESOLVED_KEY,value:result.unresolved}]:[]),
+   ])
    setNotice(`Backup restaurado: ${Object.keys(result.posters||{}).length} vínculos de capas identificados. Confira a Biblioteca.`)
   }catch(err){setNotice(err instanceof Error?`Falha ao importar: ${err.message}`:'Não foi possível importar: backup inválido.')}
  }
  const cards=(items:Film[])=><div className="film-grid">{items.map(f=><button key={f.id} className="film-card" onClick={()=>setSelected(f)}><FilmArt film={f} poster={bundledPosters[f.id]||posters[f.id]}/><div className="film-info"><span className="rating"><Star size={12} fill="currentColor"/> #{f.id} · {f.priority==='N'?'NOVO · SEM NOTA PESSOAL':`PRIORIDADE ${f.priority}`}</span><strong>{f.title}</strong><small>{f.year} · {f.genre}</small>{watched.has(f.id)&&<span className="watched-label"><Check size={12}/> Assistido</span>}</div></button>)}</div>
- return <div className="app cv-v2 cv-v021 cv-v08 cv-v09 cv-v10" translate="no"><header className="top"><div><span className="eyebrow">SUA EXPERIÊNCIA DE CINEMA</span><h1>CINE<span>VAULT</span><i>.</i></h1></div><div className="cv10-header-tools"><ExperienceLayer/><button className="avatar" aria-label="Abrir minha lista" onClick={()=>setTab('Minha lista')}>CV</button></div></header><main>
+ return <div className="app cv-v2 cv-v021 cv-v08 cv-v09 cv-v10" translate="no"><header className="top"><div><span className="eyebrow">SUA EXPERIÊNCIA DE CINEMA</span><h1>CINE<span>VAULT</span><i>.</i></h1></div><div className="cv10-header-tools"><ExperienceLayer persistence={persistence}/><button className="avatar" aria-label="Abrir minha lista" onClick={()=>setTab('Minha lista')}>CV</button></div></header><main>
+ {status.phase==='saving'&&<p className="cv-storage-status" role="status">Salvando suas alterações…</p>}
  {tab==='Início'&&<><section className="cv-pulse-welcome" aria-label="Seu cinema de hoje">
   <div className="cv-pulse-welcome__orbit" aria-hidden="true"><Clapperboard size={35}/></div>
   <span className="cv-pulse-eyebrow">CINEVAULT · LIVING CINEMA</span>
@@ -291,16 +284,16 @@ const importBackup=async(file?:File)=>{
 </section>
 <section className="cv-pulse-daily" aria-label="Recomendação do dia">
   <div className="cv-pulse-daily__title"><div><span className="cv-pulse-eyebrow">UMA ESCOLHA QUE MUDA COM VOCÊS</span><h3>Filme do dia</h3></div><span className="cv-pulse-date">{todayDisplay}</span></div>
-  {dailyFilm ? <div className="cv-pulse-daily__card"><button className="cv-pulse-daily__movie" onClick={()=>setSelected(dailyFilm)}><FilmArt film={dailyFilm} poster={bundledPosters[dailyFilm.id]||posters[dailyFilm.id]}/><span><b>{dailyFilm.title}</b><small>{dailyFilm.genre} · {dailyFilm.duration}</small><em>Prioridade {dailyFilm.priority} · Ver por que combina</em></span><ChevronRight size={19}/></button><div className="cv-pulse-daily__buttons"><button onClick={()=>setPulse(old=>({...old,dailyOffset:old.dailyOffset+1}))}><RefreshCw size={15}/> Outra sugestão</button><button onClick={()=>setPulse(old=>toggleQueue(old,dailyFilm.id,watched))}><ListPlus size={15}/>{pulse.queue.includes(dailyFilm.id)?'Remover da fila':'Adicionar à fila'}</button></div></div> : <p className="cv-pulse-empty">Vocês já exploraram toda a biblioteca. Hora de revisitar seus favoritos!</p>}
+  {dailyFilm ? <div className="cv-pulse-daily__card"><button className="cv-pulse-daily__movie" onClick={()=>setSelected(dailyFilm)}><FilmArt film={dailyFilm} poster={bundledPosters[dailyFilm.id]||posters[dailyFilm.id]}/><span><b>{dailyFilm.title}</b><small>{dailyFilm.genre} · {dailyFilm.duration}</small><em>Prioridade {dailyFilm.priority} · Ver por que combina</em></span><ChevronRight size={19}/></button><div className="cv-pulse-daily__buttons"><button onClick={()=>setPulse(old=>({...old,dailyOffset:old.dailyOffset+1}))}><RefreshCw size={15}/> Outra sugestão</button><button onClick={()=>queueFilm(dailyFilm.id)}><ListPlus size={15}/>{pulse.queue.includes(dailyFilm.id)?'Remover da fila':'Adicionar à fila'}</button></div></div> : <p className="cv-pulse-empty">Vocês já exploraram toda a biblioteca. Hora de revisitar seus favoritos!</p>}
 </section><div className="section-heading"><span>ESCOLHA DA NOITE</span><span className="gold">✦ PARA VOCÊS</span></div><section className="hero cv-f2-hero-enter"><div className="hero-art"><FilmArt film={featured} large poster={bundledPosters[featured.id] || (posterMeta[featured.id]?.backdropPath?`https://image.tmdb.org/t/p/w780${posterMeta[featured.id].backdropPath}`:posters[featured.id])} fallbackPoster={bundledPosters[featured.id]||posters[featured.id]}/></div><div className="hero-shade"/><div className="hero-content"><span className="pill">#{featured.id} NO RANKING · {featured.priority}</span><h2>{featured.title}</h2><div className="hero-meta">{featured.year} · {featured.genre}</div><p>{featured.reason}</p><button className="primary" onClick={e=>{e.stopPropagation();setSelected(featured)}}>Ver detalhes</button></div></section><div className="cv-home-summary"><div><strong>{films.length-saved.watched.length}</strong><span>Para descobrir</span></div><div><strong>{saved.favorites.length}</strong><span>Favoritos</span></div><div><strong>{Math.round(100*saved.watched.length/films.length)}%</strong><span>Assistidos</span></div></div><div className="cv-home-atelier"><div className="cv-home-atelier__top"><span>CURADORIA EM TEMPO REAL</span><b>SESSÃO PERSONALIZADA</b></div><h2>Seu próximo grande filme</h2><p>Três escolhas do ranking, atualizadas conforme seus favoritos, avaliações e filmes assistidos.</p><div className="cv-home-atelier__list">{homePicks.map((film,i)=><button className="cv-home-atelier__film" key={film.id} onClick={()=>setSelected(film)}><FilmArt film={film} poster={bundledPosters[film.id]||posters[film.id]}/><span><strong>{film.title}</strong><small>#{i+1} para hoje · prioridade {film.priority}</small></span><ChevronLeft className="cv-home-atelier__arrow" style={{transform:'rotate(180deg)'}} size={16}/></button>)}</div><button className="cv-home-atelier__cta" onClick={()=>{setTab('Escolher');window.scrollTo(0,0)}}><Shuffle size={17}/> Montar uma noite de cinema</button></div><div className="section-title"><div><span className="eyebrow">CURADORIA PERSONALIZADA</span><h2>Prioridade máxima</h2></div><span className="count">{films.filter(f=>f.priority==='S').length} filmes</span></div>{cards(films.filter(f=>f.priority==='S'&&!watched.has(f.id)).slice(0,8))}<button className="cv-wide" onClick={()=>{setTab('Biblioteca');setPriority('S');window.scrollTo(0,0)}}>Ver todos da prioridade S →</button><div className="section-title"><div><span className="eyebrow">CINEVAULT 2.0 · DESCOBERTAS</span><h2>683 filmes para explorar</h2></div><span className="count">Sem nota pessoal</span></div>{cards(films.filter(f=>f.priority==='N').slice(0,6))}<button className="cv-wide" onClick={()=>{setTab('Biblioteca');setPriority('N');window.scrollTo(0,0)}}>Explorar os novos filmes →</button></>}
  {tab==='Biblioteca'&&<><div className="section-title"><div><span className="eyebrow">CATÁLOGO COMPLETO</span><h2>Biblioteca de filmes</h2></div><span className="count">{visible.length} / {films.length}</span></div><div className="search"><Search size={18}/><input aria-label="Buscar filmes" placeholder="Buscar filme, diretor, ator ou ano..." value={query} onChange={e=>setQuery(e.target.value)}/>{query&&<button onClick={()=>setQuery('')} aria-label="Limpar"><X size={17}/></button>}</div><div className="cv-filter-label"><SlidersHorizontal size={16}/> Prioridade</div><div className="chips">{priorities.map(p=><button key={p} className={priority===p?'active':''} aria-pressed={priority===p} onClick={()=>setPriority(p)}>{p==='N'?'Novos · sem nota':p}</button>)}</div><div className="cv-filter-label">Gênero</div><select className="cv-select" value={genre} onChange={e=>setGenre(e.target.value)}>{genres.map(g=><option key={g}>{g}</option>)}</select><label className="cv-check"><input type="checkbox" checked={hideWatched} onChange={e=>setHideWatched(e.target.checked)}/> Ocultar filmes já assistidos</label><div className="cv-library-tools"><label className="cv-fav-filter"><input type="checkbox" checked={onlyFavorites} onChange={e=>setOnlyFavorites(e.target.checked)}/><Heart size={15}/> Apenas favoritos</label><label className="cv-sort-label">Ordenar<select aria-label="Ordenar filmes" value={sortMode} onChange={e=>setSortMode(e.target.value as SortMode)}>{sortOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label></div>{(query||priority!=='Todas'||genre!=='Todos'||hideWatched||onlyFavorites||sortMode!=='ranking')&&<div className="cv-filter-footer"><span>{visible.length} filmes encontrados</span><button onClick={()=>{setQuery('');setPriority('Todas');setGenre('Todos');setHideWatched(false);setOnlyFavorites(false);setSortMode('ranking')}}>Limpar filtros <X size={13}/></button></div>}{cards(visible.slice(0,limit))}{visible.length>limit&&<button className="cv-wide" onClick={()=>setLimit(n=>n+PAGE_SIZE)}>Carregar mais filmes ({Math.min(PAGE_SIZE,visible.length-limit)} de {visible.length-limit} restantes)</button>}{!visible.length&&<p className="empty">Nenhum filme encontrado. Ajuste os filtros.</p>}</>}
  {tab==='Minha lista'&&<><div className="section-title"><div><span className="eyebrow">SEU ESPAÇO</span><h2>Minha lista</h2></div></div><div className="chips">{(['Favoritos','Assistidos','Fila'] as const).map(m=><button key={m} className={listMode===m?'active':''} aria-pressed={listMode===m} onClick={()=>setListMode(m)}>{m} ({m==='Fila'?pulse.queue.length:saved[m==='Favoritos'?'favorites':'watched'].length})</button>)}</div>{listMode==='Fila' ? <section className="cv-pulse-queue" aria-label="Fila de filmes">
   <div className="cv-pulse-queue__intro"><span className="cv-pulse-eyebrow">ESCOLHAS QUE NÃO SE PERDEM</span><h3>Fila da próxima sessão</h3><p>Separe filmes interessantes e organize a ordem sem perder nada da biblioteca.</p></div>
   {queueFilms.length ? queueFilms.map((film,i)=><article className="cv-pulse-queue__row" key={film.id}>
     <button className="cv-pulse-queue__film" onClick={()=>setSelected(film)}><span className="cv-pulse-queue__position">{String(i+1).padStart(2,'0')}</span><FilmArt film={film} poster={bundledPosters[film.id]||posters[film.id]}/><span><strong>{film.title}</strong><small>{film.duration} · Prioridade {film.priority}</small></span></button>
-    <div className="cv-pulse-queue__controls"><button disabled={i===0} aria-label={`Subir ${film.title} na fila`} onClick={()=>setPulse(old=>moveQueue(old,film.id,-1))}><ArrowUp size={17}/></button><button disabled={i===queueFilms.length-1} aria-label={`Descer ${film.title} na fila`} onClick={()=>setPulse(old=>moveQueue(old,film.id,1))}><ArrowDown size={17}/></button><button aria-label={`Remover ${film.title} da fila`} onClick={()=>setPulse(old=>toggleQueue(old,film.id,watched))}><X size={17}/></button></div>
+    <div className="cv-pulse-queue__controls"><button disabled={i===0} aria-label={`Subir ${film.title} na fila`} onClick={()=>setPulse(old=>moveQueue(old,film.id,-1))}><ArrowUp size={17}/></button><button disabled={i===queueFilms.length-1} aria-label={`Descer ${film.title} na fila`} onClick={()=>setPulse(old=>moveQueue(old,film.id,1))}><ArrowDown size={17}/></button><button aria-label={`Remover ${film.title} da fila`} onClick={()=>queueFilm(film.id)}><X size={17}/></button></div>
   </article>) : <div className="cv-pulse-empty"><Clapperboard size={30}/><p>Sua fila está esperando o primeiro filme.</p><button onClick={()=>{setTab('Escolher');window.scrollTo(0,0)}}>Encontrar uma boa escolha →</button></div>}
-</section> : <>{cards(films.filter(f=>(listMode==='Favoritos'?favorites:watched).has(f.id)))}{!(listMode==='Favoritos'?saved.favorites:saved.watched).length&&<p className="empty">Sua lista está vazia. Abra um filme e marque como {listMode==='Favoritos'?'favorito':'assistido'}.</p>}</>}<h3>Segurança dos seus dados</h3><p className="muted">Os dados ficam neste navegador. Exporte um backup para não perder suas marcações ao limpar os dados do Chrome ou trocar de celular.</p><div className="cv-backup"><button onClick={()=>void exportBackup()}><Download size={17}/> Exportar backup</button><label><Upload size={17}/> Importar backup<input type="file" accept="application/json,.json" onChange={e=>{void importBackup(e.target.files?.[0]);e.target.value=''}}/></label></div></>}
+</section> : <>{cards(films.filter(f=>(listMode==='Favoritos'?favorites:watched).has(f.id)))}{!(listMode==='Favoritos'?saved.favorites:saved.watched).length&&<p className="empty">Sua lista está vazia. Abra um filme e marque como {listMode==='Favoritos'?'favorito':'assistido'}.</p>}</>}<h3>Segurança dos seus dados</h3><p className="muted">{persistence.kind==='sqlite'?'Seus dados são salvos no aparelho. Exporte uma cópia completa para guardar também suas preferências e qualquer dado preservado.':'Os dados ficam neste navegador. Exporte uma cópia completa antes de limpar o navegador ou trocar de celular.'}</p><div className="cv-backup"><button onClick={()=>void exportCompleteBackup()}><ShieldCheck size={17}/> Exportar cópia completa</button><button onClick={()=>void exportBackup()}><Download size={17}/> Exportar backup</button><label><Upload size={17}/> Importar backup<input type="file" accept="application/json,.json" onChange={e=>{void importBackup(e.target.files?.[0]);e.target.value=''}}/></label></div></>}
 {tab==='Escolher'&&<section className="cv-session"><header className="cv-session__intro"><span className="cv-session__kicker">CINEVAULT · CURADORIA PESSOAL</span><h2>A noite é sua.<br/>O filme também.</h2><p>Escolha o clima e quanto tempo vocês têm. O CineVault cruza o ranking, o histórico e seus gostos para sugerir três filmes diferentes.</p></header><div className="cv-session__config"><label>Que tipo de noite vocês querem?<select value={mood} onChange={e=>{setMood(e.target.value as SessionMood);setSessionReady(false);setSessionRound(0)}}><option value="Todos">Surpreenda-nos</option>{moods.map(([name])=><option key={name} value={name}>{name}</option>)}</select></label><fieldset><legend>Tempo disponível</legend><div className="cv-session__durations">{([{value:'Qualquer',label:'Sem limite'},{value:'110',label:'Até 1h50'},{value:'140',label:'Até 2h20'}] as const).map(option=><button key={option.value} type="button" aria-pressed={sessionDuration===option.value} onClick={()=>{setSessionDuration(option.value);setSessionRound(0);setSessionReady(false)}}>{option.label}</button>)}</div></fieldset></div><button className="cv-session__submit" onClick={choose}><Shuffle size={19}/> {sessionReady?'Descobrir outros três filmes':'Criar minha sessão'}</button><p className="cv-session__count">Sem filmes repetidos, sem conteúdo já assistido e sem conexão necessária para recomendar.</p>{sessionReady&&<section className="cv-session__results" aria-live="polite"><span className="cv-session__kicker">PREPARADO PARA VOCÊS</span><h3>Três filmes. Uma noite memorável.</h3><p>Seleção explicável com base exclusivamente nos dados da sua biblioteca.</p>{sessionPicks.length>0?<div className="cv-session__cards">{sessionPicks.map((film,i)=><article key={film.id} className="cv-session__card"><FilmArt film={film} poster={bundledPosters[film.id]||posters[film.id]}/><div className="cv-session__card-content"><small>ESCOLHA {String(i+1).padStart(2,'0')}</small><strong>{film.title}</strong><p>{sessionReason(film,mood)}</p><button onClick={()=>setSelected(film)}>Explorar filme →</button></div></article>)}</div>:<div className="cv-session__empty">Não há filmes disponíveis com esses filtros. Experimente aumentar o tempo ou escolher outro clima.</div>}</section>}</section>}
  {tab==='Estatísticas'&&<><div className="section-title"><div><span className="eyebrow">SEU HISTÓRICO</span><h2>Estatísticas</h2></div></div><div className="stats"><div><strong>{films.length}</strong><span>Na biblioteca</span></div><div><strong>{saved.watched.length}</strong><span>Assistidos</span></div><div><strong>{saved.favorites.length}</strong><span>Favoritos</span></div></div><div className="cv-progress"><div style={{width:`${100*saved.watched.length/films.length}%`}}/></div><p className="muted">{Math.round(100*saved.watched.length/films.length)}% da biblioteca assistida · {Object.keys(saved.ratings).length} avaliações pessoais</p><section className="cv-pulse-journey"><div className="cv-pulse-journey__head"><span className="cv-pulse-eyebrow">SEU DIÁRIO DE CINEMA</span><h3>Uma história construída filme a filme</h3><p>As datas são registradas somente a partir desta versão. Seus assistidos antigos continuam preservados.</p></div>
 <div className="cv-pulse-journey__stats"><div><strong>{journey.recorded}</strong><span>sessões com data</span></div><div><strong>{journey.thisMonth}</strong><span>neste mês</span></div><div><strong>{Object.keys(pulse.notes).length}</strong><span>anotações</span></div></div>
@@ -321,7 +314,7 @@ const importBackup=async(file?:File)=>{
   <div className="cv-pulse-detail__title"><BookOpen size={19}/><h3>Seu diário de cinema</h3></div>
   <p>Uma lembrança, uma opinião ou o que vocês querem observar quando assistirem. Só vocês veem estas anotações.</p>
   <textarea aria-label="Anotação pessoal sobre o filme" maxLength={500} rows={3} placeholder="O que fez esse filme chamar sua atenção?" value={noteDraft} onChange={e=>setNoteDraft(e.target.value)}/>
-  <div className="cv-pulse-detail__buttons"><button onClick={()=>{setPulse(old=>saveNote(old,selected.id,noteDraft));setNotice('Anotação salva no seu diário. Exporte um novo backup quando puder.')}}><Check size={16}/> Salvar anotação</button><button disabled={watched.has(selected.id)} aria-pressed={pulse.queue.includes(selected.id)} onClick={()=>setPulse(old=>toggleQueue(old,selected.id,watched))}><ListPlus size={16}/>{pulse.queue.includes(selected.id)?'Retirar da fila':'Colocar na fila'}</button></div>
+  <div className="cv-pulse-detail__buttons"><button onClick={()=>setPulse(old=>saveNote(old,selected.id,noteDraft),()=>setNotice('Anotação salva no seu diário. Exporte um novo backup quando puder.'))}><Check size={16}/> Salvar anotação</button><button disabled={watched.has(selected.id)} aria-pressed={pulse.queue.includes(selected.id)} onClick={()=>queueFilm(selected.id)}><ListPlus size={16}/>{pulse.queue.includes(selected.id)?'Retirar da fila':'Colocar na fila'}</button></div>
   {pulse.history.some(h=>h.filmId===selected.id)&&<small className="cv-pulse-detail__watched">Sessão registrada em {new Date(pulse.history.find(h=>h.filmId===selected.id)!.watchedAt).toLocaleDateString('pt-BR')}</small>}
 </section><div className="actions"><button onClick={()=>toggle('favorites',selected.id)}><Heart size={18} fill={favorites.has(selected.id)?'currentColor':'none'}/>{favorites.has(selected.id)?'Favoritado':'Favoritar'}</button><button onClick={()=>toggle('watched',selected.id)}>{watched.has(selected.id)?'✓ Assistido':'Marcar assistido'}</button></div><section className="cv-related"><h3>Na mesma linha</h3><p>Outros filmes do seu ranking que podem combinar com esta escolha.</p><div className="cv-related-list">{related.map(f=><button key={f.id} onClick={()=>setSelected(f)}><FilmArt film={f} poster={bundledPosters[f.id]||posters[f.id]}/><span>{f.title}</span><small>#{f.id} · {f.priority}</small></button>)}</div></section><button className="cv-wide" onClick={()=>setSelected(null)}><ChevronLeft size={16}/> Voltar</button></div></div>}
  {notice&&<button className="cv-toast" role="status" onClick={()=>setNotice('')}>{notice} · Fechar</button>}

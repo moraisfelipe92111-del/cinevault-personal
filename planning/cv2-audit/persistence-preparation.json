@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "assessedSourceCommit": "9790468cb753513ca913bfccf85563026e893696",
-  "stage": "atomic_revisioned_personal_writes_prepared",
-  "applicationStorageMigrationEnabled": false,
+  "assessedSourceCommit": "5108f3da821d73c499be42229a8c9018f7c7f1fa",
+  "stage": "native_bootstrap_and_async_ui_integrated_pending_native_validation",
+  "applicationStorageMigrationEnabled": true,
   "snapshotModule": "src/personalStorageSnapshot.ts",
-  "applicationStartupIntegration": "shared_legacy_access_integrated; migration_and_revisioned_writes_prepared_but_not_activated",
+  "applicationStartupIntegration": "Native bootstrap and independent authority receipt verified before dynamic App import; UI receives the confirmed persistence session explicitly.",
   "currentWriters": [
     {
       "file": "src/App.tsx",
@@ -12,7 +12,7 @@
         "cinevault.personal.v2",
         "cinevault.pulse.v1"
       ],
-      "method": "independent React effects through the shared personalStorage facade"
+      "method": "Queued updates derive from the last committed state; watched-list and dated journal changes share one batch. UI publication follows commit acknowledgement."
     },
     {
       "file": "src/jsonMapStorage.ts",
@@ -21,14 +21,14 @@
         "cinevault.posterMeta.v2",
         "cinevault.posterUnresolved.v1"
       ],
-      "method": "poster effects and validated import batch through the shared personalStorage facade"
+      "method": "Guarded async map updates; one atomic batch per identified poster and its metadata/pending entry. Restore clears guards only after commit."
     },
     {
       "file": "src/experience.tsx",
       "keys": [
         "cinevault.experience.v1"
       ],
-      "method": "preferences save callback through the shared personalStorage facade"
+      "method": "Same injected persistence session. Partial preference updates derive from current committed values. Volume uses a local drag draft and persists on release, key-up or blur."
     }
   ],
   "snapshotContract": {
@@ -62,33 +62,40 @@
     ],
     "currentExportVersion": 4,
     "preferencesInCurrentV4Backup": false,
-    "newSnapshotIsReplacementForUserBackup": false
+    "newSnapshotIsReplacementForUserBackup": false,
+    "completeRawExport": {
+      "format": "cinevault.personal-storage-snapshot",
+      "version": 1,
+      "includesPreferences": true,
+      "includesUninterpretedData": true,
+      "userBackupFilePrefix": "cinevault-dados-integrais",
+      "libraryV4ExportRetained": true,
+      "restore": "All six keys in one native transaction; immutable migration source is not overwritten."
+    }
   },
   "activationGates": [
-    "Pass Android and iOS protocol 5 tests for atomic mutable batches, revision conflicts, committed process restart, interrupted updates and exact recovery before enabling writers.",
-    "Declare production database ownership and path selection and coordinate every source context; repository guards are not cross-tab or cross-process locks.",
-    "Integrate bootstrap before App and ExperienceLayer parse, normalize or write personal state; pause every legacy writer during capture, preparation, final source comparison and commit.",
-    "Retain the immutable first raw copy and use the valid SQLite completion marker and latest committed revision as authority. Never silently fall back to stale legacy storage after cutover.",
-    "Integrate asynchronous durable writes into the UI, maps, preferences and validated backup imports; acknowledge persistence only after successful SQLite commit, and define retry and conflict recovery without dropping pending user changes.",
-    "Preserve raw values and explicitly report rejected, filtered, normalized or unmapped records instead of replacing them with sanitized defaults.",
-    "Maintain legacy and v1-v4 backup imports and define preference preservation and typed-title identity in a future versioned export contract.",
-    "Validate disk failures, concurrent external source writers, startup recovery UX and app interruption through the complete bootstrap and UI integration on real devices before activating migration."
+    "Pass the new protocol-6 Android and iOS audit, including a real native owner lock, authoritative bootstrap, closed legacy access, session publication after commit, durable revision-3 reopen and an independent authority file in the private Data directory.",
+    "Generate a new monotonically versioned APK only after native CI passes. This package changes audit-branch source and is not an APK release.",
+    "Validate installation/update, startup, edits, backup export/import, failure recovery and representative data sizes on real Android and iOS devices before public store submission.",
+    "Measure startup, pending-write latency and memory on real devices; the synthetic process-interruption audit does not establish hardware power-loss guarantees.",
+    "Verify the target system/WebView exposes the required Web Locks API. Unsupported contexts remain on the recovery screen; native data never silently falls back to localStorage.",
+    "Complete the separate future typed audiovisual/backup model and store/affiliate requirements before expanding the catalogue or monetizing links."
   ],
   "scope": "Local-first native preparation; no account or backend required.",
   "lastValidatedWeb": {
-    "sourceCommit": "9790468cb753513ca913bfccf85563026e893696",
-    "runId": 39703429975,
+    "sourceCommit": "5108f3da821d73c499be42229a8c9018f7c7f1fa",
+    "runId": 39781383331,
     "runAttempt": 1,
-    "jobId": 119577756798,
-    "testsPassed": 221,
-    "pythonTestsPassed": 27,
+    "jobId": 119833231113,
+    "testsPassed": 245,
+    "pythonTestsPassed": 33,
     "typeScript": "passed",
     "build": "passed",
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39703429975"
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39781383331"
   },
   "coordinatorContract": {
     "module": "src/personalStorage.ts",
-    "backend": "localStorage; no SQLite cutover in this change",
+    "backend": "Shared legacy backend for browser only. Native bootstrap pauses it before reads and permanently closes it after the database and independent receipt are verified.",
     "allowedKeys": "the same six keys as the raw snapshot registry",
     "phases": [
       "active",
@@ -100,8 +107,8 @@
     "capture": "only the current pause owner can capture or compare raw values; observed external changes abort comparison",
     "pauseOwnership": "stale handles cannot resume or close another pause; failed captures retain the pause",
     "closedLegacyAccess": "once closed, the facade refuses reads as well as writes and has no reopen method",
-    "cutoverAuthority": "a future bootstrap must first verify the durable database completion marker and new repository before closing legacy access; the in-memory phase is not that marker",
-    "startup": "creating the shared coordinator performs no storage access; production startup does not request a pause or capture yet",
+    "cutoverAuthority": "Strict SQLite completion receipt and immutable source copy, plus a private independent filesystem authority receipt. No cached in-memory phase can authorize a legacy fallback.",
+    "startup": "Construction remains lazy. Native open() explicitly pauses the shared coordinator before capture; App and ExperienceLayer are not imported/rendered until bootstrap completes.",
     "nativeValidation": {
       "sourceCommit": "aa95f767a1d2c1645cc42582ac53dec899e8d44c",
       "runId": 39693957063,
@@ -152,15 +159,15 @@
     "failurePolicy": "No empty-default fallback. Roll back only a transaction begun by this operation, preserve primary failure, hide native errors that may echo private values, and refuse reuse after uncertain database operations until the owner closes/reopens.",
     "ownershipLimit": "The in-memory operation guard protects one repository instance; callers must own the entire native connection and coordinate other contexts. This repository is not the future migrated-data repository or migration completion marker.",
     "databaseSchemaVersion": "Does not change PRAGMA user_version or touch unrelated tables.",
-    "productionStartupIntegration": "not_activated",
-    "nativeValidation": "passed_at_9790468_protocol_4_including_shared_text_codec",
+    "productionStartupIntegration": "integrated_through_explicit_native_bootstrap_before_App_import",
+    "nativeValidation": "passed_at_5108f3d_protocol_5; new_bootstrap_integration_requires_protocol_6",
     "encodingModule": "src/personalSqliteEncoding.ts"
   },
   "preparedNativeAudit": {
-    "schemaVersion": 5,
-    "source": "generated synthetic values and a paused in-memory source only",
-    "payload": "Greater than 2 Mi UTF-16 units, all six exact raw values, invalid JSON, absence, empty and JSON-null text, future IDs, Unicode, NUL, CRLF, lone surrogates and preferences.",
-    "expectedFinalChecks": 22,
+    "schemaVersion": 6,
+    "source": "Generated synthetic data only; injected CI document suppresses the production bootstrap and never opens cinevault_personal.",
+    "payload": "The existing greater-than-2-Mi-UTF-16-unit six-key fixture retains malformed JSON, absence, empty/JSON-null text, future IDs, NUL, CRLF, lone surrogates and preferences.",
+    "expectedFinalChecks": 28,
     "expectedDistinctProcesses": 5,
     "phases": [
       {
@@ -194,60 +201,59 @@
       {
         "launch": 5,
         "status": "passed",
-        "personalRevision": 2,
-        "committedPersonalRevision": 2,
+        "personalRevision": 3,
+        "committedPersonalRevision": 3,
         "transactionOpen": false
       }
     ],
     "newChecks": [
-      "personal_write_atomic_batch",
-      "personal_write_noop",
-      "personal_write_stale_revision_rejected",
-      "personal_write_connection_reopen",
-      "personal_write_process_restart",
-      "personal_write_interruption_rollback",
-      "personal_write_retry_committed"
+      "native_context_owner_lock",
+      "bootstrap_sqlite_authority",
+      "bootstrap_legacy_closed",
+      "session_commit_before_publish",
+      "session_reopen_exact_values",
+      "bootstrap_authority_marker"
     ],
-    "migrationInterruption": "Keep the actual migration schema, values and completion marker uncommitted in launch 2. Interrupt only the verified fresh audit app; launch 3 requires rollback and commits a guarded retry.",
-    "mutableWriteRestart": "Launch 3 updates several keys with the actual writeBatch API, requires revision 1, verifies an identical no-op and rejects a stale expected revision. Reopen the native connection, then launch 4 verifies the same committed values in a fresh process.",
-    "mutableWriteInterruption": "Launch 4 uses actual prepareWrite, verifies changed chunks and receipt revision 2 while the transaction remains open. After interruption, launch 5 must recover all revision-1 values, then retry and durably reopen revision 2 with the immutable original unchanged.",
-    "activation": "CI generated bundle only; production entry, six storage keys, package identity and installed app version are unchanged.",
+    "lastLaunch": "After the prior interruption/retry reaches revision 2, acquire the real native context lock and reject a second owner. Run the actual bootstrap against the synthetic DB with a deliberately unreadable stale source. Verify zero legacy reads, closed legacy access and an independent receipt in private Data under the audit DB identity. Save pulse/preferences through the actual session, require unchanged cache before acknowledgement, publish the full committed batch and reopen revision 3 exactly.",
+    "controller": "Both Node and Python require protocol 6, exact checks, transaction state, personal/committed revisions and five distinct app processes.",
     "nativeEvidence": "pending_after_this_package_is_applied"
   },
   "migrationModule": "src/personalSqliteMigration.ts",
   "lastValidatedNative": {
-    "sourceCommit": "9790468cb753513ca913bfccf85563026e893696",
-    "runId": 39703429975,
-    "runAttempt": 1,
+    "sourceCommit": "5108f3da821d73c499be42229a8c9018f7c7f1fa",
+    "runId": 39781383331,
+    "overallRunAttempt": 2,
     "overallConclusion": "success",
-    "reportSchemaVersion": 4,
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39703429975",
-    "scope": "Synthetic six-key data only; migration preparation and its native recovery passed. Production personal SQLite startup remains disabled.",
+    "reportSchemaVersion": 5,
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39781383331",
+    "scope": "Atomic revisioned repository with synthetic data; bootstrap/UI integration in the prepared change is not covered by this earlier run.",
     "android": {
-      "jobId": 119577964496,
-      "checksPassed": 15,
+      "jobId": 119845841295,
+      "reportAttempt": "2",
+      "checksPassed": 22,
       "processIds": [
-        "2079",
-        "3919",
-        "4551"
+        "1925",
+        "3559",
+        "4334",
+        "5088",
+        "5242"
       ],
-      "forcedInterruption": "am_force_stop",
-      "transactionOpenConfirmed": true,
-      "finalTransactionOpen": false,
-      "committedVersion": 3
+      "committedPersonalRevision": 2,
+      "finalTransactionOpen": false
     },
     "ios": {
-      "jobId": 119577964469,
-      "checksPassed": 15,
+      "jobId": 119833685245,
+      "reportAttempt": "1",
+      "checksPassed": 22,
       "processIds": [
-        "15807",
-        "16830",
-        "16930"
+        "7344",
+        "8759",
+        "8933",
+        "9410",
+        "9788"
       ],
-      "forcedInterruption": "SIGKILL_verified_simulator_app",
-      "transactionOpenConfirmed": true,
-      "finalTransactionOpen": false,
-      "committedVersion": 3
+      "committedPersonalRevision": 2,
+      "finalTransactionOpen": false
     }
   },
   "transactionalMigrationContract": {
@@ -270,9 +276,9 @@
     "repeatMigration": "A completed database is authoritative. A second preparation is refused before any mutation, including when legacy storage is older than a newer committed database revision.",
     "failurePolicy": "Never automatically resume or close the legacy facade. Roll back only this operation's transaction, retain the primary sanitized error, poison uncertain repositories, and require a fresh connection after failures.",
     "ownershipLimit": "The caller must own the entire connection for the lifetime of the repository and prepared lease, and coordinate every source context. Synchronous rechecks detect observed source changes; they are not a cross-store atomic lock.",
-    "productionMutableWrites": "explicit_revisioned_API_prepared_in_this_change; not_connected_to_production_writers",
-    "productionStartupIntegration": "not_activated",
-    "nativeValidation": "passed_at_9790468_protocol_4_on_android_and_ios"
+    "productionMutableWrites": "injected_async_session_and_UI_writers_integrated; no_initial_effect_writes",
+    "productionStartupIntegration": "integrated_native_bootstrap; next_compiled_app_only",
+    "nativeValidation": "repository_passed_at_5108f3d_protocol_5; integrated_startup_pending_protocol_6"
   },
   "mutableWriteContract": {
     "module": "src/personalSqliteMigration.ts",
@@ -280,7 +286,7 @@
       "prepareWrite(changes, expectedRevision)",
       "writeBatch(changes, expectedRevision)"
     ],
-    "activation": "Explicit on an already open, exclusively owned migrated connection; not used by production startup or existing synchronous legacy writers.",
+    "activation": "Native UI uses a confirmed injected SQLite session. Browser UI uses the shared legacy adapter with its synchronous rollback guard.",
     "batch": "One to six unique allowlisted key/raw entries. Null means absence; strings retain exact UTF-16 including malformed inner JSON. Validate and detach caller inputs before the first await; reject excess size without truncation.",
     "revision": "Require the caller expected revision to match the authoritative receipt inside the write transaction. A changed batch increments once using a bound compare-and-swap guarded by the previous revision and current/source digests, with mandatory read-back.",
     "noOp": "An identical batch leaves the revision and every row unchanged. Transaction acknowledgements and integrity still require validation.",
@@ -290,6 +296,45 @@
     "ownership": "A prepared lease blocks other methods on the instance; stale leases cannot end later work. Refuse foreign transactions without committing or rolling them back. Caller ownership of the entire connection is required.",
     "failures": "Rollback only owned work, preserve sanitized primary errors, and refuse repository reuse after storage uncertainty. A lost commit acknowledgement is an error requiring connection reopen and a read of the actual committed revision before retry.",
     "schemaVersion": "Uses existing namespace schema version 1; does not change PRAGMA user_version, unrelated tables, legacy keys or backups.",
-    "remainingIntegration": "Pre-render bootstrap, source-context coordination, asynchronous UI persistence, backup imports/exports, recovery UX and real-device end-to-end checks."
+    "remainingIntegration": "Protocol-6 native validation and real-device end-to-end/performance verification before release. Account/cloud synchronization remains outside this local-first scope."
+  },
+  "activationScope": "Enabled in the next compiled native app source. This package does not replace the installed APK. Browser builds keep the shared localStorage backend.",
+  "bootstrapContract": {
+    "modules": [
+      "src/nativePersonalStorage.ts",
+      "src/personalStorageBootstrap.ts",
+      "src/personalStorageLock.ts",
+      "src/personalStorageAuthority.ts",
+      "src/main.tsx"
+    ],
+    "database": "cinevault_personal",
+    "nativeDatabaseVersion": 1,
+    "personalNamespaceSchemaVersion": 1,
+    "ownership": "Native platform adapter privately owns the entire connection. A same-origin exclusive Web Lock is acquired before opening it and held until the owner closes the session/connection. No global close-all-connections operation.",
+    "startup": "Read the independent receipt, then verify SQLite. An initialized valid DB is authoritative without reading legacy values. Otherwise capture all six exact raw values under the coordinator pause, preserve the immutable copy, prepare and source-guard the atomic migration.",
+    "independentReceipt": "cinevault_personal-authority.json in native Directory.Data. Stores only format/version, DB identity and immutable source SHA-256. Written through an owned same-directory .pending file and rename, then read back. It is not a user-data backup or mutable revision counter.",
+    "missingDatabase": "An existing independent receipt with absent personal schema blocks re-migration from stale localStorage, including after a fresh process starts.",
+    "receiptRecovery": "If the DB commit succeeded before receipt acknowledgement, retry reads the committed DB and idempotently confirms the same receipt. Invalid, unreadable or mismatched receipts are never treated as absent or overwritten.",
+    "failure": "Keep legacy writers paused or closed, expose recovery without a reset/delete action, and require closing/reopening the owned session/connection before retry. Do not substitute six empty defaults.",
+    "CIIsolation": "The generated audit script remains alongside the actual app entry. main detects that dedicated document before start(), and the probe uses only its scoped synthetic DB/authority file.",
+    "WebLocksReference": "https://webkit.org/blog/12445/new-webkit-features-in-safari-15-4/"
+  },
+  "uiPersistenceContract": {
+    "module": "src/personalPersistence.ts",
+    "committedCache": "Native read cache advances only after a verified committed repository result. Queued transformations read the preceding committed state, not captured React state.",
+    "failures": "Failed/uncertain backend acknowledgement stops queued writers and opens recovery. Reopen closes only the owned connection and reads the actual durable revision. Exports from that screen are labelled as the last confirmed copy.",
+    "readModels": "No load-time save effects. Semantically reduced models containing unknown IDs/fields, malformed JSON, invalid numbers or normalized legacy values are readable but blocked from silent replacement; other valid keys remain writable.",
+    "backupCompatibility": "Legacy/v1-v4 imports remain validated. Complete snapshot version 1 preserves all six raw strings/null values and preferences separately from the existing library-v4 format. Explicit restores are confirmed by the user, awaited, and published only after success.",
+    "preferenceRecovery": "Unreadable/future preferences remain unchanged until explicit full restore or a confirmed reset of preferences only.",
+    "posterUpdates": "Each identified poster, metadata and pending-entry removal share one batch; progress counts a result after its commit. A stopped/in-flight fetch cannot overwrite a subsequent explicit restore.",
+    "browser": "Retains localStorage via the same coordinator and rollback behavior; does not load or initialize the native SQLite plugin."
+  },
+  "preparedChangeValidation": {
+    "localNodeTestsPassed": 276,
+    "localPythonTestsPassed": 33,
+    "typeScriptAndProductionBuild": "passed_locally",
+    "browserQA": "passed: no startup writes, durable UI edits/preferences, exact complete backup/restore, quota recovery/reopen, unmapped/broken data preservation and explicit v4 restore. Synthetic values only.",
+    "nativeProtocol6": "pending_CI_after_apply",
+    "realDeviceAPK": "not_released_in_this_change"
   }
 }

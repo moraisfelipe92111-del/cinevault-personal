@@ -143,12 +143,12 @@ test('the final comparison detects changed or newly present values in every pers
   }
 })
 
-test('importing snapshot preparation does not read browser storage or activate it in the app', () => {
+test('importing snapshot preparation does not read browser storage at module import', () => {
   const module = new URL('../src/personalStorageSnapshot.ts', import.meta.url).href
   const child = spawnSync(process.execPath, ['--experimental-strip-types', '--input-type=module', '-e',
     'Object.defineProperty(globalThis,"localStorage",{get(){throw Error("storage must not be read on import")}}); await import(' + JSON.stringify(module) + ');'], {encoding: 'utf8'})
   assert.equal(child.status, 0, child.stderr)
-  for (const name of ['main.tsx', 'App.tsx', 'experience.tsx']) {
+  for (const name of ['App.tsx', 'experience.tsx']) {
     const source = fs.readFileSync(new URL('../src/' + name, import.meta.url), 'utf8')
     assert.ok(!source.includes('personalStorageSnapshot'))
   }

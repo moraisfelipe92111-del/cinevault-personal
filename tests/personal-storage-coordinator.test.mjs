@@ -206,27 +206,25 @@ test('a snapshot is refused if its pause ownership ends during the final source 
   assert.equal(coordinator.phase, 'active')
 })
 
-test('App, maps and preferences use the same facade without activating migration at startup', () => {
-  const app = fs.readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
-  const experience = fs.readFileSync(new URL('../src/experience.tsx', import.meta.url), 'utf8')
-  for (const source of [app, experience]) {
-    assert.ok(source.includes("import { personalStorage } from './personalStorage'"))
-    assert.ok(!/\blocalStorage\b/.test(source))
-    assert.ok(!source.includes('pauseWrites('))
-  }
-  assert.ok(app.includes('createJsonMapStorage(()=>personalStorage)'))
-  assert.ok(app.includes('personalStorage.setItem(PULSE_KEY,'))
-  assert.ok(app.includes('personalStorage.setItem(KEY,'))
-  assert.ok(experience.includes('personalStorage.setItem(PREF_KEY,'))
-  const main = fs.readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8')
-  assert.ok(!main.includes('pauseWrites('))
-  for (const name of fs.readdirSync(new URL('../src/', import.meta.url)).filter(name => /\.(ts|tsx|mjs)$/.test(name))) {
-    if (name === 'personalStorage.ts') continue
-    const source = fs.readFileSync(new URL('../src/' + name, import.meta.url), 'utf8')
-    assert.ok(!/\blocalStorage\s*\??\.\s*(getItem|setItem|removeItem|clear)\b/.test(source),
-      name + ' bypasses the shared personal store')
-    assert.ok(!/=>\s*localStorage\b/.test(source), name + ' exposes an independent storage provider')
-  }
+test('App and preferences share injected persistence without bypassing legacy coordination', () => {
+ const app=fs.readFileSync(new URL('../src/App.tsx',import.meta.url),'utf8')
+ const experience=fs.readFileSync(new URL('../src/experience.tsx',import.meta.url),'utf8')
+ for(const source of [app,experience]){
+  assert.ok(source.includes('persistence'))
+  assert.ok(!/\blocalStorage\b/.test(source))
+  assert.ok(!source.includes('personalStorage.setItem('))
+  assert.ok(!source.includes('pauseWrites('))
+ }
+ assert.ok(app.includes('<ExperienceLayer persistence={persistence}/>'))
+ const main=fs.readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8')
+ assert.ok(main.indexOf('opened=await openPersonalStorage()')<main.indexOf("await import('./App.tsx')"))
+ assert.ok(main.includes('cv2-native-sqlite-audit.js'))
+ for(const name of fs.readdirSync(new URL('../src/',import.meta.url)).filter(name=>/\.(ts|tsx|mjs)$/.test(name))){
+  if(name==='personalStorage.ts')continue
+  const source=fs.readFileSync(new URL('../src/'+name,import.meta.url),'utf8')
+  assert.ok(!/\blocalStorage\s*\??\.\s*(getItem|setItem|removeItem|clear)\b/.test(source),name)
+  assert.ok(!/=>\s*localStorage\b/.test(source),name)
+ }
 })
 
 test('importing the shared coordinator performs no browser storage access', () => {

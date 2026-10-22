@@ -53,12 +53,12 @@ async function migrate(fixture, input = source()) {
   return {repository, input, prepared, state: await prepared.commit(input.guard)}
 }
 
-test('migration import and construction perform no global storage, crypto or database access and startup stays inactive', () => {
+test('migration import and construction perform no global storage, crypto or database access and the platform bootstrap is the only production entry', () => {
   const url = new URL('../src/personalSqliteMigration.ts', import.meta.url).href
   const code = `Object.defineProperty(globalThis,'localStorage',{get(){throw Error('storage touched')}}); Object.defineProperty(globalThis,'crypto',{get(){throw Error('crypto touched')}}); const m=await import(${JSON.stringify(url)}); m.createPersonalSqliteMigrationRepository(new Proxy({},{get(){throw Error('database touched')}}));`
   const result = spawnSync(process.execPath, ['--experimental-strip-types', '--input-type=module', '-e', code], {encoding: 'utf8'})
   assert.equal(result.status, 0, result.stderr)
-  for (const name of fs.readdirSync(new URL('../src', import.meta.url)).filter(name => /\.(tsx?|mjs)$/.test(name) && name !== 'personalSqliteMigration.ts')) {
+  for (const name of fs.readdirSync(new URL('../src', import.meta.url)).filter(name => /\.(tsx?|mjs)$/.test(name) && !['personalSqliteMigration.ts','personalStorageBootstrap.ts','personalPersistence.ts'].includes(name))) {
     assert.ok(!fs.readFileSync(new URL('../src/' + name, import.meta.url), 'utf8').includes('personalSqliteMigration'), name)
   }
 })

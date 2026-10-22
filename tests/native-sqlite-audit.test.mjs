@@ -5,13 +5,25 @@ import os from 'node:os'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { DatabaseSync } from 'node:sqlite'
-import { AUDIT_CHECKS, auditIdentity, runNativeSqliteAudit, validateAuditReport } from '../scripts/native-sqlite-audit.mjs'
+import { AUDIT_CHECKS, auditIdentity, runNativeSqliteAudit as runProbe, validateAuditReport } from '../scripts/native-sqlite-audit.mjs'
 import { injectNativeAudit } from '../scripts/build-native-sqlite-audit.mjs'
 import { createPersonalSqliteSnapshotRepository } from '../src/personalSqliteSnapshot.ts'
 import { createPersonalSqliteMigrationRepository } from '../src/personalSqliteMigration.ts'
+import { createPersonalAuthorityStore } from '../src/personalStorageAuthority.ts'
 
 // Host SQLite checks the probe and its SQL; this is not evidence of native execution.
 const context = {runId: '123456789', attempt: '1', platform: 'android'}
+function runNativeSqliteAudit(options){
+ const name=auditIdentity(options),filename=options.sqlite.root?path.join(options.sqlite.root,name+'-authority.json'):null
+ let memory=null
+ const authority=createPersonalAuthorityStore(name,{
+  async read(){return filename?(fs.existsSync(filename)?fs.readFileSync(filename,'utf8'):null):memory},
+  async write(text){if(filename)fs.writeFileSync(filename,text,{flag:'wx'});else memory=text},
+ })
+ let held=false
+ const lockManager={async request(name,options,callback){if(held)return callback(null);held=true;try{return await callback({name})}finally{held=false}}}
+ return runProbe({...options,authority,lockManager})
+}
 
 class HostSQLite {
   constructor(root, broken = '') { this.root = root; this.broken = broken; this.upgrades = new Map(); this.connections = new Map() }
@@ -145,9 +157,9 @@ test('host SQLite: interrupted schema and record writes roll back, then migratio
   assert.ok(result.checks.includes('interrupted_migration_rollback'))
   assert.ok(result.checks.includes('migration_retry_committed'))
   assert.ok(result.checks.includes('personal_write_interruption_rollback'))
-  assert.equal(result.personalRevision, 2)
-  assert.equal(result.committedPersonalRevision, 2)
-  assert.equal(result.checks.length, 22)
+  assert.equal(result.personalRevision, 3)
+  assert.equal(result.committedPersonalRevision, 3)
+  assert.equal(result.checks.length, 28)
 })
 
 test('host SQLite: recovery succeeds when native execute accepts one statement per call', async t => {

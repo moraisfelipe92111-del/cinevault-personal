@@ -94,10 +94,10 @@ class RecoveryControllerTests(unittest.TestCase):
                                                                          'uncommitted_personal_migration_prepared']),
             'ready_for_write_restart': (3, 3, False, 1, 1, migration + writes[:4]),
             'ready_for_write_interruption': (3, 3, True, 2, 1, migration + writes[:5] + ['uncommitted_personal_write_prepared']),
-            'passed': (3, 3, False, 2, 2, migration + writes),
+            'passed': (3, 3, False, 3, 3, migration + writes + ['native_context_owner_lock', 'bootstrap_sqlite_authority', 'bootstrap_legacy_closed', 'session_commit_before_publish', 'session_reopen_exact_values', 'bootstrap_authority_marker']),
         }
         version, committed, active, revision, committed_revision, checks = phases[status]
-        return {'schemaVersion': 5, 'runId': '123', 'attempt': '1', 'platform': 'ios',
+        return {'schemaVersion': 6, 'runId': '123', 'attempt': '1', 'platform': 'ios',
                 'database': 'cv2_sqlite_audit_123_1_ios', 'databaseVersion': version,
                 'committedVersion': committed, 'transactionOpen': active, 'personalRevision': revision,
                 'committedPersonalRevision': committed_revision, 'status': status, 'checks': checks}
@@ -126,7 +126,7 @@ class RecoveryControllerTests(unittest.TestCase):
         report = self.report('passed')
         checks = report['checks']
         runner.validate(report, 'ios', '123', '1', 'passed')
-        for missing in checks[-10:]:
+        for missing in checks[-16:]:
             with self.assertRaisesRegex(RuntimeError, 'Invalid or incomplete'):
                 runner.validate({**report, 'checks': [check for check in checks if check != missing]}, 'ios', '123', '1', 'passed')
 

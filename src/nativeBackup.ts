@@ -3,9 +3,9 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
 
 /** Share a backup as an actual JSON file on Android; download on the web. */
-export async function exportJsonBackup(payload: unknown): Promise<void> {
+export async function exportJsonBackup(payload: unknown, kind: 'library' | 'complete' = 'library'): Promise<void> {
   const json = JSON.stringify(payload, null, 2)
-  const filename = `cinevault-backup-${new Date().toISOString().slice(0, 10)}.json`
+  const filename = `${kind === 'complete' ? 'cinevault-dados-integrais' : 'cinevault-backup'}-${new Date().toISOString().slice(0, 10)}.json`
   if (Capacitor.isNativePlatform()) {
     const file = await Filesystem.writeFile({
       path: filename,

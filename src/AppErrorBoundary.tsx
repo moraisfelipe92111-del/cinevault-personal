@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
-type Props = { children: ReactNode }
+type Props = { children: ReactNode; onRetry?: () => void }
 type State = { failed: boolean }
 /** Covers React rendering errors; native crashes still require Android instrumentation. */
 export default class AppErrorBoundary extends Component<Props, State> {
@@ -17,7 +17,7 @@ export default class AppErrorBoundary extends Component<Props, State> {
         <h1 style={{color:'#e6bf7b'}}>CineVault</h1>
         <h2>Não foi possível abrir esta tela.</h2>
         <p>Seus dados não foram apagados. Não desinstale o aplicativo; tente reabrir e, se o problema continuar, use seu backup.</p>
-        <button style={{background:'#d4ac70',color:'#15120f',padding:'14px 22px',border:0,borderRadius:12,fontWeight:700}} onClick={() => window.location.reload()}>Tentar novamente</button>
+        <button style={{background:'#d4ac70',color:'#15120f',padding:'14px 22px',border:0,borderRadius:12,fontWeight:700}} onClick={() => this.props.onRetry ? this.props.onRetry() : window.location.reload()}>Tentar novamente</button>
       </section>
     </main>
   }

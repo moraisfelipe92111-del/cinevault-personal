@@ -20,6 +20,8 @@ MIGRATION_CHECKS = CHECKS + ['process_restart', 'raw_snapshot_process_restart',
 WRITE_CHECKS = ['personal_write_atomic_batch', 'personal_write_noop', 'personal_write_stale_revision_rejected',
                 'personal_write_connection_reopen', 'personal_write_process_restart',
                 'personal_write_interruption_rollback', 'personal_write_retry_committed']
+BOOT_CHECKS = ['native_context_owner_lock', 'bootstrap_sqlite_authority', 'bootstrap_legacy_closed',
+               'session_commit_before_publish', 'session_reopen_exact_values', 'bootstrap_authority_marker']
 PHASES = {
     'ready_for_restart': (2, 2, False, None, None, CHECKS),
     'ready_for_interruption': (3, 2, True, 0, None, CHECKS + ['process_restart', 'raw_snapshot_process_restart',
@@ -27,7 +29,7 @@ PHASES = {
                                                          'uncommitted_personal_migration_prepared']),
     'ready_for_write_restart': (3, 3, False, 1, 1, MIGRATION_CHECKS + WRITE_CHECKS[:4]),
     'ready_for_write_interruption': (3, 3, True, 2, 1, MIGRATION_CHECKS + WRITE_CHECKS[:5] + ['uncommitted_personal_write_prepared']),
-    'passed': (3, 3, False, 2, 2, MIGRATION_CHECKS + WRITE_CHECKS),
+    'passed': (3, 3, False, 3, 3, MIGRATION_CHECKS + WRITE_CHECKS + BOOT_CHECKS),
 }
 
 
@@ -43,7 +45,7 @@ def validate(report, platform, run_id, attempt, status):
         raise RuntimeError('Unknown native audit phase')
     version, committed, transaction_open, revision, committed_revision, checks = PHASES[status]
     expected = {
-        'schemaVersion': 5, 'runId': run_id, 'attempt': attempt,
+        'schemaVersion': 6, 'runId': run_id, 'attempt': attempt,
         'platform': platform,
         'database': f'cv2_sqlite_audit_{run_id}_{attempt}_{platform}',
         'databaseVersion': version, 'committedVersion': committed,
