@@ -12,7 +12,7 @@ APP = 'com.cinevault.pessoal'
 RESULT = 'cv2-native-sqlite-result.json'
 CHECKS = [
     'parameterized_unicode_crud', 'explicit_commit', 'explicit_rollback',
-    'failed_batch_atomicity', 'migration_v1_v2', 'connection_reopen',
+    'failed_batch_atomicity', 'migration_v1_v2', 'connection_reopen', 'raw_snapshot_exact_round_trip',
 ]
 
 
@@ -26,14 +26,16 @@ def command(args, *, check=True, timeout=90):
 def validate(report, platform, run_id, attempt, status):
     phases = {
         'ready_for_restart': (2, 2, False, CHECKS),
-        'ready_for_interruption': (3, 2, True, CHECKS + ['process_restart', 'uncommitted_migration_prepared']),
-        'passed': (3, 3, False, CHECKS + ['process_restart', 'interrupted_migration_rollback', 'migration_retry_committed']),
+        'ready_for_interruption': (3, 2, True, CHECKS + ['process_restart', 'raw_snapshot_process_restart',
+                                                    'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified']),
+        'passed': (3, 3, False, CHECKS + ['process_restart', 'raw_snapshot_process_restart',
+                                      'interrupted_migration_rollback', 'migration_retry_committed', 'raw_snapshot_interruption_recovery']),
     }
     if status not in phases:
         raise RuntimeError('Unknown native audit phase')
     version, committed, transaction_open, checks = phases[status]
     expected = {
-        'schemaVersion': 2, 'runId': run_id, 'attempt': attempt,
+        'schemaVersion': 3, 'runId': run_id, 'attempt': attempt,
         'platform': platform,
         'database': f'cv2_sqlite_audit_{run_id}_{attempt}_{platform}',
         'databaseVersion': version, 'committedVersion': committed,

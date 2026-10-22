@@ -1,7 +1,10 @@
 // CI-only probe. It never opens the application's personal storage or database.
+import { createPersonalSqliteSnapshotRepository } from '../src/personalSqliteSnapshot.ts'
+import { PERSONAL_STORAGE_KEYS, capturePersonalStorageSnapshot, serializePersonalStorageSnapshot } from '../src/personalStorageSnapshot.ts'
+
 export const AUDIT_CHECKS = Object.freeze([
   'parameterized_unicode_crud', 'explicit_commit', 'explicit_rollback',
-  'failed_batch_atomicity', 'migration_v1_v2', 'connection_reopen',
+  'failed_batch_atomicity', 'migration_v1_v2', 'connection_reopen', 'raw_snapshot_exact_round_trip',
 ])
 const TEXT = "Sessão de cinema 🎬 — ação, emoção e d'água\n'); DROP TABLE audit_entries; --"
 const UPDATED = TEXT + '\nAtualizado sem alterar os caracteres.'
@@ -11,9 +14,11 @@ const RECOVERY_SCHEMA = 'CREATE TABLE audit_recovery_schema (id INTEGER PRIMARY 
 const PHASES = {
   ready_for_restart: { databaseVersion: 2, committedVersion: 2, transactionOpen: false, checks: [...AUDIT_CHECKS] },
   ready_for_interruption: { databaseVersion: 3, committedVersion: 2, transactionOpen: true,
-    checks: [...AUDIT_CHECKS, 'process_restart', 'uncommitted_migration_prepared'] },
+    checks: [...AUDIT_CHECKS, 'process_restart', 'raw_snapshot_process_restart',
+      'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified'] },
   passed: { databaseVersion: 3, committedVersion: 3, transactionOpen: false,
-    checks: [...AUDIT_CHECKS, 'process_restart', 'interrupted_migration_rollback', 'migration_retry_committed'] },
+    checks: [...AUDIT_CHECKS, 'process_restart', 'raw_snapshot_process_restart',
+      'interrupted_migration_rollback', 'migration_retry_committed', 'raw_snapshot_interruption_recovery'] },
 }
 
 function requireValue(condition, message) {
@@ -31,7 +36,7 @@ export function validateAuditReport(report, context, status) {
   const database = auditIdentity(context)
   requireValue(Object.hasOwn(PHASES, status), 'invalid expected state')
   const expected = PHASES[status]
-  requireValue(report?.schemaVersion === 2 && report.status === status, 'unexpected report state')
+  requireValue(report?.schemaVersion === 3 && report.status === status, 'unexpected report state')
   requireValue(report.runId === context.runId && report.attempt === context.attempt &&
     report.platform === context.platform && report.database === database, 'report identity mismatch')
   requireValue(report.databaseVersion === expected.databaseVersion &&
@@ -41,7 +46,7 @@ export function validateAuditReport(report, context, status) {
 }
 
 function makeReport(context, status) {
-  return {schemaVersion: 2, runId: context.runId, attempt: context.attempt,
+  return {schemaVersion: 3, runId: context.runId, attempt: context.attempt,
     platform: context.platform, database: auditIdentity(context), status, ...PHASES[status], checks: [...PHASES[status].checks]}
 }
 
@@ -71,12 +76,31 @@ async function verifyRecovery(db) {
   await verifyRecoveryMarker(db)
 }
 
+function syntheticRawSnapshot() {
+  // This is generated test data, never values read from the application's store.
+  const values = [
+    JSON.stringify({favorites: [1, 999999, 1], future: {keep: true, text: 'cinema 🎬 ação\r\n'.repeat(150000)}}),
+    "[broken JSON\r\n\u0000\ud800x\udfff\n'); DROP TABLE personal_data; --",
+    null, '', 'null',
+    '  {"intro":false,"sound":true,"volume":0,"sonic":"future-mode","future":{}}\r\n',
+  ]
+  return capturePersonalStorageSnapshot({getItem(key) { return values[PERSONAL_STORAGE_KEYS.indexOf(key)] }})
+}
+
+async function verifyRawSnapshot(db, expected) {
+  const snapshot = await createPersonalSqliteSnapshotRepository(db).read()
+  requireValue(snapshot !== null && serializePersonalStorageSnapshot(snapshot) === serializePersonalStorageSnapshot(expected),
+    'raw snapshot changed or was not durably preserved')
+}
+
 export async function runNativeSqliteAudit({ sqlite, previous = null, ...context }) {
   const database = auditIdentity(context)
   if (previous !== null) {
     requireValue(previous.status === 'ready_for_restart' || previous.status === 'ready_for_interruption', 'cannot resume this state')
     validateAuditReport(previous, context, previous.status)
   }
+  const rawSnapshot = syntheticRawSnapshot()
+  requireValue(serializePersonalStorageSnapshot(rawSnapshot).length > 2 * 1024 * 1024, 'large snapshot fixture is incomplete')
   let connected = false
   let awaitingInterruption = false
   let primaryError = null
@@ -124,6 +148,8 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
       }
       requireValue(constraintRejected, 'batch did not report the expected constraint failure')
       requireValue((await db.query('SELECT id FROM audit_entries WHERE id = ?', [5])).values?.length === 0, 'failed batch left a partial write')
+      requireValue(await createPersonalSqliteSnapshotRepository(db).preserve(rawSnapshot) === 'preserved', 'raw snapshot was not freshly preserved')
+      await verifyRawSnapshot(db, rawSnapshot)
       await close()
 
       await sqlite.addUpgradeStatement(database, [{toVersion: 2, statements: [
@@ -132,21 +158,27 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
       ]}])
       db = await open(2)
       await verifyData(db)
+      await verifyRawSnapshot(db, rawSnapshot)
       await close()
       db = await open(2)
       await verifyData(db)
+      await verifyRawSnapshot(db, rawSnapshot)
       await close()
       return makeReport(context, 'ready_for_restart')
     } else if (previous.status === 'ready_for_restart') {
       const db = await open(2)
       await verifyData(db)
+      await verifyRawSnapshot(db, rawSnapshot)
       await db.beginTransaction()
       await db.run('UPDATE audit_entries SET value = ? WHERE id = ?', [PENDING, 1], false)
       await prepareRecoveryMigration(db)
+      await db.run('UPDATE main.cv_personal_raw_snapshot_chunk SET payload = ? WHERE ordinal = ?', [PENDING, 0], false)
       requireValue((await db.isTransactionActive()).result === true, 'interruption requires an open transaction')
       requireValue((await db.getVersion()).version === 3, 'pending schema version not applied')
       requireValue((await db.query('SELECT value FROM audit_entries WHERE id = ?', [1])).values?.[0]?.value === PENDING, 'pending write not applied')
       await verifyRecoveryMarker(db)
+      requireValue((await db.query('SELECT payload FROM main.cv_personal_raw_snapshot_chunk WHERE ordinal = ?', [0])).values?.[0]?.payload === PENDING,
+        'pending raw snapshot write not applied')
       // Deliberately leave the native connection open. The CI controller kills
       // this fresh audit application's process before the next launch.
       awaitingInterruption = true
@@ -154,15 +186,18 @@ export async function runNativeSqliteAudit({ sqlite, previous = null, ...context
     } else {
       let db = await open(2)
       await verifyData(db)
+      await verifyRawSnapshot(db, rawSnapshot)
       const tables = (await db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", ['audit_recovery_schema'])).values
       requireValue(tables?.length === 0, 'interrupted schema change survived')
       await db.beginTransaction()
       await prepareRecoveryMigration(db)
       await db.commitTransaction()
       await verifyRecovery(db)
+      await verifyRawSnapshot(db, rawSnapshot)
       await close()
       db = await open(3)
       await verifyRecovery(db)
+      await verifyRawSnapshot(db, rawSnapshot)
       await close()
       return makeReport(context, 'passed')
     }

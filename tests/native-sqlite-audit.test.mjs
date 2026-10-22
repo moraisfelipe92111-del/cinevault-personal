@@ -197,10 +197,31 @@ test('audit detects records changed between launches', async t => {
   await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous, ...context}), /records changed/)
 })
 
+test('audit detects a changed raw copy after restarting instead of replacing the preserved source', async t => {
+  const root = rootFor(t)
+  const previous = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
+  const db = new DatabaseSync(path.join(root, previous.database + '.sqlite'))
+  db.prepare('UPDATE cv_personal_raw_snapshot_chunk SET payload = ? WHERE ordinal = ?').run('corrupted', 0)
+  db.close()
+  await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous, ...context}), /snapshot/)
+})
+
+test('audit checks the original raw copy after an interrupted transaction and cannot accept a surviving chunk mutation', async t => {
+  const root = rootFor(t)
+  const previous = await runNativeSqliteAudit({sqlite: new HostSQLite(root), ...context})
+  const manager = new HostSQLite(root)
+  const pending = await runNativeSqliteAudit({sqlite: manager, previous, ...context})
+  await manager.closeConnection(pending.database)
+  const db = new DatabaseSync(path.join(root, pending.database + '.sqlite'))
+  db.prepare('UPDATE cv_personal_raw_snapshot_chunk SET payload = ? WHERE ordinal = ?').run('survived interruption', 0)
+  db.close()
+  await assert.rejects(runNativeSqliteAudit({sqlite: new HostSQLite(root), previous: pending, ...context}), /snapshot/)
+})
+
 test('audit rejects stale identity and incomplete markers before opening any database', async t => {
   const previous = await runNativeSqliteAudit({sqlite: new HostSQLite(rootFor(t)), ...context})
   const sqlite = { createConnection() { throw Error('database must not be opened') } }
-  for (const changed of [{runId: '999'}, {database: 'personal'}, {checks: []}, {databaseVersion: 1}, {status: 'passed'}, {schemaVersion: 1}])
+  for (const changed of [{runId: '999'}, {database: 'personal'}, {checks: []}, {databaseVersion: 1}, {status: 'passed'}, {schemaVersion: 1}, {schemaVersion: 2}])
     await assert.rejects(runNativeSqliteAudit({sqlite, previous: {...previous, ...changed}, ...context}), /SQLite audit:/)
 })
 

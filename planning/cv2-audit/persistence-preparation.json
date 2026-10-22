@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "assessedSourceCommit": "e4fde5e897b9d2b4a988908090719e4a9fc7b730",
-  "stage": "coordinated_legacy_storage",
+  "assessedSourceCommit": "aa95f767a1d2c1645cc42582ac53dec899e8d44c",
+  "stage": "raw_sqlite_snapshot_prepared",
   "applicationStorageMigrationEnabled": false,
   "snapshotModule": "src/personalStorageSnapshot.ts",
   "applicationStartupIntegration": "shared_access_integrated; pre-render_snapshot_and_SQLite_hydration_pending",
@@ -49,7 +49,7 @@
     "serialization": "A JSON envelope escapes NUL and lone surrogates before any future native text storage; the raw values are never normalized.",
     "sourceReads": "Two synchronous passes detect differences between reads. They are not an atomic snapshot across tabs or processes.",
     "sourceWrites": "none",
-    "databaseWrites": "none",
+    "databaseWrites": "Only the explicitly called SQLite snapshot repository writes the preserved envelope. Production startup does not activate it; native CI uses generated synthetic values.",
     "errorPolicy": "Denied or unexpected reads and any observed source change abort capture without substituting empty data. Errors do not include raw values."
   },
   "backupCompatibility": {
@@ -77,14 +77,15 @@
   ],
   "scope": "Local-first native preparation; no account or backend required.",
   "lastValidatedWeb": {
-    "sourceCommit": "e4fde5e897b9d2b4a988908090719e4a9fc7b730",
-    "runId": 39692674753,
-    "jobId": 119542417197,
-    "testsPassed": 155,
+    "sourceCommit": "aa95f767a1d2c1645cc42582ac53dec899e8d44c",
+    "runId": 39693957063,
+    "runAttempt": 1,
+    "jobId": 119546690532,
+    "testsPassed": 170,
     "pythonTestsPassed": 25,
     "typeScript": "passed",
     "build": "passed",
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39692674753"
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39693957063"
   },
   "coordinatorContract": {
     "module": "src/personalStorage.ts",
@@ -102,6 +103,71 @@
     "closedLegacyAccess": "once closed, the facade refuses reads as well as writes and has no reopen method",
     "cutoverAuthority": "a future bootstrap must first verify the durable database completion marker and new repository before closing legacy access; the in-memory phase is not that marker",
     "startup": "creating the shared coordinator performs no storage access; production startup does not request a pause or capture yet",
-    "nativeValidation": "pending_new_android_and_ios_runs_for_the_integrated_facade"
+    "nativeValidation": {
+      "sourceCommit": "aa95f767a1d2c1645cc42582ac53dec899e8d44c",
+      "runId": 39693957063,
+      "overallConclusion": "success",
+      "android": {
+        "attempt": 1,
+        "jobId": 119546806557,
+        "checksPassed": 9,
+        "processIds": [
+          "2020",
+          "3109",
+          "3706"
+        ]
+      },
+      "ios": {
+        "attempt": 2,
+        "jobId": 119550541625,
+        "checksPassed": 9,
+        "processIds": [
+          "8708",
+          "9219",
+          "9306"
+        ]
+      },
+      "priorIosAttempt": {
+        "jobId": 119546806610,
+        "failure": "simctl install exceeded 90 seconds before the app launched",
+        "subsequentResult": "same source passed on attempt 2"
+      },
+      "scope": "The integrated legacy facade and synthetic native SQLite probe passed. Personal storage migration remains disabled."
+    }
+  },
+  "snapshotSqliteModule": "src/personalSqliteSnapshot.ts",
+  "sqliteSnapshotContract": {
+    "formatVersion": 1,
+    "activation": "Explicit API on an already-open, exclusively owned connection; no global storage access or DB selection at import/construction.",
+    "tables": [
+      "cv_personal_raw_snapshot",
+      "cv_personal_raw_snapshot_chunk"
+    ],
+    "rawPreservation": "Canonical JSON envelope preserving all six raw strings or missing keys; stored values are never parsed, sanitized or normalized.",
+    "boundedNativeCalls": "Each text chunk is at most 16384 UTF-16 units. Valid surrogate pairs are never split; JSON escapes NUL and lone surrogates. Each native call contains one statement and each chunk read has one bound ordinal.",
+    "maximumSerializedUtf16Units": 33554432,
+    "oversizePolicy": "Reject before any database access; never truncate or discard values.",
+    "integrity": "SHA-256 over UTF-8 of the complete canonical serialized envelope, exact UTF-16 length, bounded metadata, contiguous chunks and strict schema validation.",
+    "transaction": "Create both tables, metadata and all bound chunks in one explicit transaction; verify before commit and again in a second transaction after commit.",
+    "retries": "An identical copy is idempotent without rewriting; a different snapshot cannot replace the first preserved copy.",
+    "failurePolicy": "No empty-default fallback. Roll back only a transaction begun by this operation, preserve primary failure, hide native errors that may echo private values, and refuse reuse after uncertain database operations until the owner closes/reopens.",
+    "ownershipLimit": "The in-memory operation guard protects one repository instance; callers must own the entire native connection and coordinate other contexts. This repository is not the future migrated-data repository or migration completion marker.",
+    "databaseSchemaVersion": "Does not change PRAGMA user_version or touch unrelated tables.",
+    "productionStartupIntegration": "not_activated",
+    "nativeValidation": "pending_new_android_and_ios_protocol_3_runs"
+  },
+  "preparedNativeAudit": {
+    "schemaVersion": 3,
+    "source": "generated synthetic values only",
+    "payload": "larger than 2 Mi UTF-16 units, including malformed JSON, unknown IDs, absent keys, empty text, JSON null text, Unicode, CRLF, NUL, lone surrogates and experience preferences",
+    "expectedFinalChecks": 12,
+    "newChecks": [
+      "raw_snapshot_exact_round_trip",
+      "raw_snapshot_process_restart",
+      "raw_snapshot_interruption_recovery"
+    ],
+    "interruption": "After verifying the durable copy on launch 2, mutate the first copy chunk inside the same uncommitted transaction as the pending schema and record changes. Kill only the verified audit app and compare the entire original raw copy after launch 3.",
+    "activation": "CI generated bundle only; preserves the real application entry and does not migrate the user data.",
+    "nativeEvidence": "pending"
   }
 }

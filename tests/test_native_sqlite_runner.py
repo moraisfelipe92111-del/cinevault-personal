@@ -82,16 +82,27 @@ class RecoveryControllerTests(unittest.TestCase):
 
     def report(self, status='ready_for_interruption'):
         return {
-            'schemaVersion': 2, 'runId': '123', 'attempt': '1', 'platform': 'ios',
+            'schemaVersion': 3, 'runId': '123', 'attempt': '1', 'platform': 'ios',
             'database': 'cv2_sqlite_audit_123_1_ios', 'databaseVersion': 3,
             'committedVersion': 2, 'transactionOpen': True, 'status': status,
-            'checks': runner.CHECKS + ['process_restart', 'uncommitted_migration_prepared'],
+            'checks': runner.CHECKS + ['process_restart', 'raw_snapshot_process_restart',
+                                      'uncommitted_migration_prepared', 'uncommitted_raw_snapshot_modified'],
         }
 
     def test_pending_report_requires_uncommitted_transaction_evidence(self):
         report = self.report()
         runner.validate(report, 'ios', '123', '1', 'ready_for_interruption')
         for changed in [{'transactionOpen': False}, {'committedVersion': 3}, {'schemaVersion': 1}]:
+            with self.assertRaisesRegex(RuntimeError, 'Invalid or incomplete'):
+                runner.validate({**report, **changed}, 'ios', '123', '1', 'ready_for_interruption')
+
+    def test_old_protocol_or_missing_raw_snapshot_checks_cannot_authorize_interruption(self):
+        report = self.report()
+        for changed in [
+            {'schemaVersion': 2},
+            {'checks': [check for check in report['checks'] if check != 'uncommitted_raw_snapshot_modified']},
+            {'checks': [check for check in report['checks'] if check != 'raw_snapshot_process_restart']},
+        ]:
             with self.assertRaisesRegex(RuntimeError, 'Invalid or incomplete'):
                 runner.validate({**report, **changed}, 'ios', '123', '1', 'ready_for_interruption')
 
