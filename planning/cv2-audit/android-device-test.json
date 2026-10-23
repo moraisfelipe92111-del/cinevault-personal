@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-23",
+  "baseCommit": "0811feb82724a06614b151b7fbf9f252e4a82fb5",
+  "stage": "device_apk_build_prepared_pending_ci_and_real_device_validation",
+  "candidate": {
+    "version": "1.3.3",
+    "build": 16,
+    "appId": "com.cinevault.pessoal",
+    "visibleBrand": "CineVault",
+    "purpose": "Test the integrated personal SQLite bootstrap, durable writes and backups on an existing Android installation.",
+    "signing": "Reuse the existing CINEVAULT_DEBUG_KEYSTORE_B64 secret; verify the final APK with apksigner and compare its certificate to that key before upload.",
+    "distribution": "GitHub Actions test artifact only; no store submission, public release or latest.json update.",
+    "installedAppChangedByPreparation": false
+  },
+  "validatedIntegration": {
+    "commit": "0811feb82724a06614b151b7fbf9f252e4a82fb5",
+    "runId": "39796669086",
+    "attempt": 1,
+    "webTests": 276,
+    "nativeControllerTests": 33,
+    "androidChecks": 28,
+    "iosSimulatorChecks": 28,
+    "nativeProtocol": 6,
+    "distinctAppProcessesPerPlatform": 5,
+    "finalCommittedPersonalRevision": 3,
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39796669086"
+  },
+  "buildControls": [
+    "Use the lockfile, Node 24.21.0, JDK 21 and the same pinned native dependencies.",
+    "Derive native versionName and versionCode from LOCAL_RELEASE and reject inconsistent package metadata.",
+    "Keep the existing package identity and temporary test signing key; do not substitute a store signing key.",
+    "Reject audit HTML or the synthetic probe script in the device APK.",
+    "Verify the packaged native SQLite plugin, ARM64 library and real persistence bootstrap.",
+    "Deliver only the APK, SHA-256, public verification metadata and a short test guide. Never upload keystore material.",
+    "The audit branch starts this build only for a commit marked [device-test], or a manual workflow invocation."
+  ],
+  "realDeviceChecklist": [
+    "Before installation, export a fresh backup from the currently installed app and keep earlier backups.",
+    "Record representative personal data and preferences for comparison without uploading private values.",
+    "Install as an update; if Android refuses the update, stop without uninstalling or clearing data.",
+    "Confirm version 1.3.3/build16 and compare personal data after the first native migration.",
+    "Save a favorite, watched entry and note; close and reopen the app, then check those changes.",
+    "Check queue, watch journal and preferences, including offline access.",
+    "Export the new complete raw backup and keep it outside the app before guided restoration/recovery tests."
+  ],
+  "remainingGates": [
+    "Apply this preparation on the audit worktree and pass the actual signed-APK GitHub job.",
+    "Compare the resulting commit, APK hash, native package/version and signer before installation.",
+    "Complete real Android data-preservation, save/reopen and backup/recovery checks.",
+    "Prepare a separate signed iOS build and validate it on an iPhone before store submission.",
+    "Keep the broader Sintonema brand, audiovisual catalogue and production-store requirements in their existing roadmap."
+  ]
+}
