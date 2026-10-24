@@ -2,14 +2,18 @@
   "schemaVersion": 1,
   "updatedAt": "2026-10-24",
   "baseCommit": "2349a0b069a138a951e1e1ba7e9472ec81a3033e",
-  "stage": "native_media_storage_and_backup_integrated_pending_native_ci",
+  "stage": "native_media_storage_and_backup_approved_pending_physical_candidate",
   "nativeStorage": {
     "schemaVersion": 2,
     "database": "cinevault_personal",
     "pluginDatabaseVersionUnchanged": 1,
     "legacyKeysPreserved": 6,
     "progressSlots": 1,
-    "mutableTables": ["cv_media_revision", "cv_media_value", "cv_media_value_chunk"],
+    "mutableTables": [
+      "cv_media_revision",
+      "cv_media_value",
+      "cv_media_value_chunk"
+    ],
     "upgradeOrigin": "Keep the existing v1 mutable state frozen at its last acknowledged revision and verify it against the original raw snapshot. Never reconstruct completed v2 data from that origin automatically.",
     "upgradeLease": "Create v2 tables and seven values inside a verified v1 no-op write lease. Commit or roll back through that same lease; old values are not rewritten.",
     "authority": "Reserve an independent version-2 authority receipt before upgrade; confirm after durable read-back and before exposing the UI. A reserved upgrade can recover the same origin. Completed authority blocks missing-v2 fallback.",
@@ -28,16 +32,43 @@
     "browserLimit": "The browser retains the coordinated legacy adapter for now. It can import an audiovisual envelope with empty progress but refuses nonempty progress without touching existing values. Browser progress support is a separate integration task."
   },
   "nativeValidation": {
-    "status": "pending",
+    "status": "approved",
     "protocol": 7,
     "checksPerPlatform": 40,
     "distinctProcessesPerPlatform": 8,
     "verifiedInterruptionsPerPlatform": 4,
     "finalPersonalRevision": 3,
     "finalMediaRevision": 3,
-    "sourceCommit": null,
-    "runId": null,
-    "pendingDeviceBuildBlocked": true
+    "sourceCommit": "f2824ab5b0dab0dbaa74fc1c2e9e5d5afd4048d2",
+    "runId": "40128785503",
+    "pendingDeviceBuildBlocked": false,
+    "runAttempt": 2,
+    "platformEvidence": {
+      "android": {
+        "jobId": 120980578232,
+        "reportAttempt": 1,
+        "originalJobId": 120976179672,
+        "status": "passed",
+        "checks": 40,
+        "distinctProcesses": 8,
+        "verifiedInterruptions": 4,
+        "personalRevision": 3,
+        "mediaRevision": 3,
+        "transactionOpen": false
+      },
+      "ios": {
+        "jobId": 120980576877,
+        "reportAttempt": 2,
+        "status": "passed",
+        "checks": 40,
+        "distinctProcesses": 8,
+        "verifiedInterruptions": 4,
+        "personalRevision": 3,
+        "mediaRevision": 3,
+        "transactionOpen": false
+      }
+    },
+    "attemptNote": "The successful Android and web reports from attempt 1 were retained when only the failed iOS job was rerun. iOS passed protocol 7 in attempt 2; the run concluded successfully."
   },
   "releaseGates": [
     "Apply the package on the expected audit branch and verify its exact commit and files.",

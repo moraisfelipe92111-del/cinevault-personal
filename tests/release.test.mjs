@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { parseRelease, newerThanInstalled, LOCAL_RELEASE, fetchLatestRelease } from '../src/release.ts'
 const GOOD={version:'1.3.0',build:13,title:'Novidades no CineVault',notes:['Nova experiência'],required:false,sha256:'a'.repeat(64),url:'https://github.com/moraisfelipe92111-del/cinevault-personal/releases/download/v1.3.0/CineVault-1.3.0.apk'}
 const fakeFetch=content=>async()=>({ok:true,text:async()=>JSON.stringify(content)})
-test('v1.3.3 uses monotonic build16',()=>{assert.equal(LOCAL_RELEASE.build,16);assert.equal(LOCAL_RELEASE.version,'1.3.3')})
+test('v1.3.4 uses monotonic build17',()=>{assert.equal(LOCAL_RELEASE.build,17);assert.equal(LOCAL_RELEASE.version,'1.3.4')})
 test('official version with hash is accepted',()=>assert.equal(parseRelease(GOOD)?.sha256,'a'.repeat(64)))
 test('same or older build is not an update',()=>{assert.equal(newerThanInstalled(parseRelease({...GOOD,build:12})),false);assert.equal(newerThanInstalled(parseRelease({...GOOD,build:13}),13),false)})
 test('blocks untrusted domains',()=>assert.equal(parseRelease({...GOOD,url:'https://attacker.example/CineVault.apk'}),null))

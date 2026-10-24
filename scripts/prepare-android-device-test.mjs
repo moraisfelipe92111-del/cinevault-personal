@@ -16,13 +16,16 @@ const lock = read('package-lock.json')
 const sqlite = read('node_modules/@capacitor-community/sqlite/package.json')
 const nativeValidation = read('planning/cv2-audit/media-persistence.json').nativeValidation
 if (nativeValidation?.status !== 'approved' || nativeValidation.protocol !== 7 || nativeValidation.checksPerPlatform !== 40 ||
+    nativeValidation.distinctProcessesPerPlatform !== 8 || nativeValidation.verifiedInterruptionsPerPlatform !== 4 ||
+    nativeValidation.finalPersonalRevision !== 3 || nativeValidation.finalMediaRevision !== 3 ||
+    nativeValidation.pendingDeviceBuildBlocked !== false ||
     !/^[a-f0-9]{40}$/.test(nativeValidation.sourceCommit || '') || !/^[1-9][0-9]*$/.test(String(nativeValidation.runId || ''))) {
   throw Error('A nova persistencia precisa da aprovacao nativa do protocolo 7 antes de gerar um APK de teste.')
 }
 if (pkg.version !== LOCAL_RELEASE.version || lock.version !== pkg.version ||
     lock.packages[''].version !== pkg.version ||
     !/^\d+\.\d+\.\d+$/.test(LOCAL_RELEASE.version) ||
-    !Number.isSafeInteger(LOCAL_RELEASE.build) || LOCAL_RELEASE.build <= 15 ||
+    !Number.isSafeInteger(LOCAL_RELEASE.build) || LOCAL_RELEASE.build <= 16 ||
     sqlite.version !== '8.1.1') throw Error('Versoes do aplicativo ou SQLite divergentes.')
 
 const appId = 'com.cinevault.pessoal'

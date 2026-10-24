@@ -19,9 +19,12 @@ class DeviceApkTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.apk = self.root / 'candidate.apk'
-        self.meta = {'appId': device.APP, 'purpose': 'android_device_test', 'version': '1.3.3',
-                     'build': 16, 'sourceCommit': 'a' * 40, 'sqlitePlugin': '8.1.1'}
-        self.badging = "package: name='com.cinevault.pessoal' versionCode='16' versionName='1.3.3'\ntargetSdkVersion:'36'\n"
+        self.meta = {'appId': device.APP, 'purpose': 'android_device_test', 'version': '1.3.4',
+                     'build': 17, 'sourceCommit': 'a' * 40, 'sqlitePlugin': '8.1.1',
+                     'sourceRef': 'refs/heads/cv2-auditoria-00', 'validatedIntegrationCommit': 'c' * 40,
+                     'validatedNativeRun': '40128785503', 'nativePersonalSchema': 2,
+                     'nativeProtocol': 7, 'nativeChecksPerPlatform': 40}
+        self.badging = "package: name='com.cinevault.pessoal' versionCode='17' versionName='1.3.4'\ntargetSdkVersion:'36'\n"
         self.signer = 'b' * 64
         self.cert = 'Signer #1 certificate SHA-256 digest: ' + self.signer + '\n'
         self.payload = {
@@ -73,8 +76,8 @@ class DeviceApkTests(unittest.TestCase):
                 self.payload = original
 
     def test_wrong_package_build_version_and_sdk_are_refused(self):
-        for old, new in [('com.cinevault.pessoal', 'com.example.other'), ("versionCode='16'", "versionCode='15'"),
-                         ("versionName='1.3.3'", "versionName='1.3.2'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")]:
+        for old, new in [('com.cinevault.pessoal', 'com.example.other'), ("versionCode='17'", "versionCode='16'"),
+                         ("versionName='1.3.4'", "versionName='1.3.3'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")]:
             with self.subTest(old=old), self.assertRaises(ValueError):
                 self.verify(badging=self.badging.replace(old, new))
 
@@ -97,8 +100,11 @@ class DeviceApkTests(unittest.TestCase):
             self.verify()
 
     def test_invalid_or_old_metadata_is_refused(self):
-        for change in [{'build': 15}, {'build': True}, {'sourceCommit': 'not-a-commit'}, {'purpose': 'native_audit'},
-                       {'version': '1.3.3\ninvalid'}, {'appId': 'com.example.other'}, {'sqlitePlugin': '7.0.0'}]:
+        for change in [{'build': 16}, {'build': 15}, {'build': True}, {'sourceCommit': 'not-a-commit'}, {'purpose': 'native_audit'},
+                       {'version': '1.3.4\ninvalid'}, {'appId': 'com.example.other'}, {'sqlitePlugin': '7.0.0'},
+                       {'validatedIntegrationCommit': None}, {'validatedNativeRun': None},
+                       {'validatedNativeRun': '0'}, {'nativePersonalSchema': 1}, {'nativePersonalSchema': True},
+                       {'nativeProtocol': 6}, {'nativeChecksPerPlatform': 28}, {'sourceRef': 'refs/heads/other'}]:
             with self.subTest(change=change), self.assertRaises(ValueError):
                 self.verify(metadata={**self.meta, **change})
 
@@ -114,10 +120,13 @@ class DeviceApkTests(unittest.TestCase):
             device.main()
         out = self.root / 'delivery'
         report = json.loads((out / 'device-test-report.json').read_text())
-        apk = out / 'Sintonema-teste-1.3.3-build16.apk'
+        apk = out / 'Sintonema-teste-1.3.4-build17.apk'
         self.assertEqual(apk.read_bytes(), self.apk.read_bytes())
         self.assertEqual((out / 'SHA256SUMS.txt').read_text(), report['sha256'] + '  ' + apk.name + '\n')
         self.assertIn('Nao desinstale', (out / 'LEIA-ME-TESTE.txt').read_text())
+        self.assertIn('Exportar copia completa', (out / 'LEIA-ME-TESTE.txt').read_text())
+        self.assertEqual(report['nativeProtocol'], 7)
+        self.assertEqual(report['nativePersonalSchema'], 2)
 
 
 if __name__ == '__main__':

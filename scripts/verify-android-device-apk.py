@@ -15,8 +15,14 @@ def verify(apk, badging, certificates, expected_signer, metadata):
     if (not isinstance(metadata, dict) or metadata.get('appId') != APP or
             metadata.get('purpose') != 'android_device_test' or
             not re.fullmatch(r'\d+\.\d+\.\d+', str(metadata.get('version', ''))) or
-            type(metadata.get('build')) is not int or metadata['build'] <= 15 or
+            type(metadata.get('build')) is not int or metadata['build'] <= 16 or
             not re.fullmatch(r'[a-f0-9]{40}', str(metadata.get('sourceCommit', ''))) or
+            not re.fullmatch(r'[a-f0-9]{40}', str(metadata.get('validatedIntegrationCommit', ''))) or
+            not re.fullmatch(r'[1-9][0-9]*', str(metadata.get('validatedNativeRun', ''))) or
+            metadata.get('sourceRef') not in ('refs/heads/main', 'refs/heads/cv2-auditoria-00') or
+            type(metadata.get('nativePersonalSchema')) is not int or metadata['nativePersonalSchema'] != 2 or
+            type(metadata.get('nativeProtocol')) is not int or metadata['nativeProtocol'] != 7 or
+            type(metadata.get('nativeChecksPerPlatform')) is not int or metadata['nativeChecksPerPlatform'] != 40 or
             metadata.get('sqlitePlugin') != '8.1.1'):
         raise ValueError('Identidade ou versao do teste invalida.')
     line = badging.splitlines()[0] if badging else ''
@@ -73,7 +79,7 @@ def main():
     guide = f'''Sintonema - teste Android {report['version']} (build {report['build']})
 
 Antes de instalar:
-1. Abra o CineVault atual e exporte um backup recente da biblioteca. Guarde os backups anteriores.
+1. Abra o CineVault atual e use Exportar copia completa. Guarde esse arquivo fora do aplicativo e mantenha os backups anteriores.
 2. Anote quantidades de favoritos/assistidos e confira suas notas e preferencias.
 3. Instale o APK como atualizacao. Nao desinstale nem limpe os dados do aplicativo.
 4. Se o Android recusar a atualizacao, pare e envie a mensagem de erro.
@@ -82,10 +88,13 @@ Depois de instalar:
 1. Confira a versao em Configuracoes e compare seus dados com a instalacao anterior.
 2. Altere um favorito, registre um assistido e uma nota; feche e reabra o aplicativo.
 3. Confira fila, historico e preferencias, inclusive sem conexao.
-4. Exporte a nova copia completa e mantenha esse arquivo fora do aplicativo.
+4. Use Exportar copia completa novamente e guarde o novo backup audiovisual fora do aplicativo.
 5. Envie o resultado dos testes antes de prosseguirmos com restauracao e recuperacao.
 
-Este APK testa o banco SQLite integrado. A marca visivel ainda e CineVault.
+Este APK testa a migracao audiovisual v2 e o novo backup completo. A marca visivel ainda e CineVault.
+O catalogo continua com 1000 filmes; telas de series, animes e realities ainda serao integradas.
+As capas ainda dependem de internet no Android.
+Mantenha a copia completa anterior. Nao tente voltar ao build16 depois da migracao v2.
 Nao e uma publicacao na Play Store. Dados de auditoria sintetica nao estao incluidos.
 Se houver falha ao abrir, use a recuperacao oferecida e relate o erro; nao apague os dados.
 '''
