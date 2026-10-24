@@ -72,5 +72,9 @@ export function createAsyncJsonMapStorage(persistence: PersonalPersistence) {
       await persistence.restoreSnapshot(input)
       blocked.clear()
     },
+    async restoreMediaBackup(input: unknown) {
+      await persistence.restoreMediaBackup(input)
+      blocked.clear()
+    },
   })
 }

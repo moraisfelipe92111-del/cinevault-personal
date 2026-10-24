@@ -36,8 +36,13 @@ type AuthorityFilesystem = Pick<FilesystemPlugin, 'readdir' | 'readFile' | 'writ
 
 /** Write to a same-directory temporary file and rename; never delete the receipt. */
 export function createFilesystemPersonalAuthority(filesystem: AuthorityFilesystem, directory: Directory, database: string): PersonalAuthorityStore {
+  return createPersonalAuthorityStore(database, createFilesystemAuthorityIO(filesystem, directory, database))
+}
+
+/** Shared transport; receipt formats decide their own compatibility rules. */
+export function createFilesystemAuthorityIO(filesystem: AuthorityFilesystem, directory: Directory, database: string) {
   const path = database + '-authority.json'
-  return createPersonalAuthorityStore(database, {
+  return {
     async read() {
       const listing = await filesystem.readdir({directory, path: ''})
       const found = listing.files.find(file => file.name === path)
@@ -47,9 +52,9 @@ export function createFilesystemPersonalAuthority(filesystem: AuthorityFilesyste
       if (typeof file.data !== 'string') throw new Error('Marcador de armazenamento ilegível.')
       return file.data
     },
-    async write(text) {
+    async write(text: string) {
       await filesystem.writeFile({directory, path: path + '.pending', encoding: 'utf8' as Encoding, data: text})
       await filesystem.rename({directory, from: path + '.pending', to: path})
     },
-  })
+  }
 }

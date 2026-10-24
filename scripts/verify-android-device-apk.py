@@ -47,9 +47,11 @@ def verify(apk, badging, certificates, expected_signer, metadata):
         javascript = '\n'.join(archive.read(name).decode('utf-8') for name in bundles)
         if 'cinevault_personal' not in javascript or 'cinevault.personal-sqlite-authority' not in javascript:
             raise ValueError('Inicializacao SQLite real nao localizada no bundle.')
+        if 'cv_media_revision' not in javascript or 'sintonema.audiovisual-backup' not in javascript:
+            raise ValueError('Persistencia audiovisual v2 ausente do bundle.')
     return {**metadata, 'status': 'verified', 'sha256': sha256(Path(apk).read_bytes()).hexdigest(),
             'signerSha256': signer, 'nativeSqliteIncluded': True, 'auditProbeIncluded': False,
-            'realDeviceValidation': 'pending', 'storeRelease': False}
+            'nativePersonalSchema': 2, 'realDeviceValidation': 'pending', 'storeRelease': False}
 
 
 def main():

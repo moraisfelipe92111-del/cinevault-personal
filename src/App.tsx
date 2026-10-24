@@ -1,4 +1,4 @@
-import { isCompletePersonalBackup, type PersonalPersistence, type PersonalReader } from './personalPersistence'
+import { isCompletePersonalBackup, isMediaPersonalBackup, type PersonalPersistence, type PersonalReader } from './personalPersistence'
 import { readPersonalJsonModel, updatePersonalJsonModel } from './personalJsonModel'
 import { Suspense, lazy, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Search, Home, Clapperboard, Heart, Shuffle, ChartNoAxesColumn, Star, X, Check, Sparkles, ListOrdered, ListPlus, ArrowUp, ArrowDown, BookOpen, ChevronRight, Download, Upload, SlidersHorizontal, ChevronLeft, ImagePlus, RefreshCw, PauseCircle, WifiOff, HardDrive, Trash2, ShieldCheck } from 'lucide-react'
@@ -234,12 +234,13 @@ export default function App({persistence}:{persistence:PersonalPersistence}){
  const choose=()=>{setSessionRound(n=>sessionReady?n+1:0);setSessionReady(true)}
  const exportPending=()=>{const pendingFilms=films.filter(f=>!posters[f.id]);const report={generatedAt:new Date().toISOString(),total:pendingFilms.length,films:pendingFilms.map(f=>({id:f.id,title:f.title,year:f.year,reason:unresolved[f.id]||'Ainda não processado'}))};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cinevault-filmes-pendentes.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setNotice('Relatório de pendentes preparado para download.')}
  const exportCompleteBackup=async()=>{
-  try{await persistence.flush();await exportJsonBackup(persistence.captureSnapshot(),'complete');setNotice('Cópia completa preparada, incluindo preferências e dados preservados.')}
+  try{await persistence.flush();await exportJsonBackup(persistence.mediaEnabled?persistence.captureMediaBackup():persistence.captureSnapshot(),'complete');setNotice('Cópia completa preparada, incluindo acompanhamentos, preferências e dados preservados.')}
   catch{setNotice('Não foi possível preparar a cópia completa. Reabra seus dados e tente novamente.')}
  }
  const exportBackup=async()=>{
   try {
    await persistence.flush()
+   if(persistence.getMediaProgress().entries.length){setNotice('O acompanhamento audiovisual precisa da cópia completa. Use Exportar cópia completa para guardar todos os seus dados.');return}
    const currentSaved=readSaved(persistence.reader),currentPulse=readPulse(persistence.reader)
    const currentPosters=posterStorage.read<string>(POSTER_KEY),currentMeta=posterStorage.read<PosterMeta>(META_KEY),currentUnresolved=posterStorage.read<string>(UNRESOLVED_KEY)
    if(currentSaved.blocked||currentPulse.blocked||posterStorage.hasBlocked()){
@@ -256,6 +257,10 @@ export default function App({persistence}:{persistence:PersonalPersistence}){
    if(file.size>96*1024*1024)throw new Error('Arquivo de backup muito grande.')
    const raw:unknown=JSON.parse(await file.text())
    if(!window.confirm('Restaurar este backup? Os dados presentes no arquivo substituirão os correspondentes da sua biblioteca. Exporte uma cópia completa antes de continuar se quiser guardar o estado atual.'))return
+   if(isMediaPersonalBackup(raw)){
+    await posterStorage.restoreMediaBackup(raw)
+    setNotice('Cópia completa restaurada, incluindo acompanhamentos, preferências e dados preservados.');return
+   }
    if(isCompletePersonalBackup(raw)){
     await posterStorage.restoreSnapshot(raw)
     setNotice('Cópia completa restaurada. Dados não interpretados continuam preservados para revisão.');return

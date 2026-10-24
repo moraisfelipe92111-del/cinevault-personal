@@ -22,6 +22,11 @@ WRITE_CHECKS = ['personal_write_atomic_batch', 'personal_write_noop', 'personal_
                 'personal_write_interruption_rollback', 'personal_write_retry_committed']
 BOOT_CHECKS = ['native_context_owner_lock', 'bootstrap_sqlite_authority', 'bootstrap_legacy_closed',
                'session_commit_before_publish', 'session_reopen_exact_values', 'bootstrap_authority_marker']
+PERSONAL_CHECKS = MIGRATION_CHECKS + WRITE_CHECKS + BOOT_CHECKS
+MEDIA_CHECKS = ['media_upgrade_reserved_authority', 'media_upgrade_interruption_rollback', 'media_upgrade_atomic_commit',
+                'media_write_atomic_batch', 'media_write_noop', 'media_write_stale_revision_rejected', 'media_write_connection_reopen',
+                'media_process_restart', 'media_write_interruption_rollback', 'media_write_retry_committed',
+                'media_backup_atomic_restore', 'media_authority_complete']
 PHASES = {
     'ready_for_restart': (2, 2, False, None, None, CHECKS),
     'ready_for_interruption': (3, 2, True, 0, None, CHECKS + ['process_restart', 'raw_snapshot_process_restart',
@@ -29,8 +34,13 @@ PHASES = {
                                                          'uncommitted_personal_migration_prepared']),
     'ready_for_write_restart': (3, 3, False, 1, 1, MIGRATION_CHECKS + WRITE_CHECKS[:4]),
     'ready_for_write_interruption': (3, 3, True, 2, 1, MIGRATION_CHECKS + WRITE_CHECKS[:5] + ['uncommitted_personal_write_prepared']),
-    'passed': (3, 3, False, 3, 3, MIGRATION_CHECKS + WRITE_CHECKS + BOOT_CHECKS),
+    'ready_for_media_upgrade_interruption': (3, 3, True, 3, 3, PERSONAL_CHECKS + MEDIA_CHECKS[:1] + ['uncommitted_media_upgrade_prepared']),
+    'ready_for_media_restart': (3, 3, False, 3, 3, PERSONAL_CHECKS + MEDIA_CHECKS[:7]),
+    'ready_for_media_write_interruption': (3, 3, True, 3, 3, PERSONAL_CHECKS + MEDIA_CHECKS[:8] + ['uncommitted_media_write_prepared']),
+    'passed': (3, 3, False, 3, 3, PERSONAL_CHECKS + MEDIA_CHECKS),
 }
+MEDIA_REVISIONS = {'ready_for_media_upgrade_interruption': (0, None), 'ready_for_media_restart': (1, 1),
+                   'ready_for_media_write_interruption': (2, 1), 'passed': (3, 3)}
 
 
 def command(args, *, check=True, timeout=90):
@@ -44,12 +54,14 @@ def validate(report, platform, run_id, attempt, status):
     if status not in PHASES:
         raise RuntimeError('Unknown native audit phase')
     version, committed, transaction_open, revision, committed_revision, checks = PHASES[status]
+    media_revision, committed_media_revision = MEDIA_REVISIONS.get(status, (None, None))
     expected = {
-        'schemaVersion': 6, 'runId': run_id, 'attempt': attempt,
+        'schemaVersion': 7, 'runId': run_id, 'attempt': attempt,
         'platform': platform,
         'database': f'cv2_sqlite_audit_{run_id}_{attempt}_{platform}',
         'databaseVersion': version, 'committedVersion': committed,
         'personalRevision': revision, 'committedPersonalRevision': committed_revision,
+        'mediaRevision': media_revision, 'committedMediaRevision': committed_media_revision,
         'transactionOpen': transaction_open, 'status': status, 'checks': checks,
     }
     if not isinstance(report, dict) or any(key not in report or type(report[key]) is not type(value) or report[key] != value
@@ -61,7 +73,7 @@ def wait_report(read, platform, run_id, attempt, status):
     phases = list(PHASES)
     if status not in phases:
         raise RuntimeError('Unknown expected native audit phase')
-    deadline = time.monotonic() + 120
+    deadline = time.monotonic() + (240 if status.startswith('ready_for_media_') or status == 'passed' else 120)
     last = 'result not available'
     while time.monotonic() < deadline:
         raw = read()
@@ -200,17 +212,42 @@ def android(run_id, attempt):
             if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
                 raise RuntimeError('Android process did not stop during the write interruption test')
             launch_android(prefix)
+            media_upgrade = wait_report(read, 'android', run_id, attempt, 'ready_for_media_upgrade_interruption')
+            pid_media_upgrade = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
+            print('Uncommitted media upgrade prepared; force-stopping only the audit app.', flush=True)
+            command(prefix + ['shell', 'am', 'force-stop', APP])
+            if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
+                raise RuntimeError('Android process did not stop during the media upgrade interruption')
+            launch_android(prefix)
+            wait_report(read, 'android', run_id, attempt, 'ready_for_media_restart')
+            pid_media_first = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
+            command(prefix + ['shell', 'am', 'force-stop', APP])
+            if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
+                raise RuntimeError('Android process did not stop before the media restart test')
+            launch_android(prefix)
+            media_pending = wait_report(read, 'android', run_id, attempt, 'ready_for_media_write_interruption')
+            pid_media_pending = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
+            print('Uncommitted media progress and values prepared; force-stopping only the audit app.', flush=True)
+            command(prefix + ['shell', 'am', 'force-stop', APP])
+            if command(prefix + ['shell', 'pidof', APP], check=False).stdout.strip():
+                raise RuntimeError('Android process did not stop during the media write interruption')
+            launch_android(prefix)
             report = wait_report(read, 'android', run_id, attempt, 'passed')
             pid_final = command(prefix + ['shell', 'pidof', APP]).stdout.strip()
-            pids = [pid_before, pid_pending, pid_after, pid_write_pending, pid_final]
-            if any(not re.fullmatch(r'[1-9]\d*', pid) for pid in pids) or len(set(pids)) != 5:
-                raise RuntimeError('Could not verify five distinct Android processes')
+            pids = [pid_before, pid_pending, pid_after, pid_write_pending, pid_media_upgrade, pid_media_first, pid_media_pending, pid_final]
+            if any(not re.fullmatch(r'[1-9]\d*', pid) for pid in pids) or len(set(pids)) != 8:
+                raise RuntimeError('Could not verify eight distinct Android processes')
             return {**report, 'processRestart': {'before': pid_before, 'after': pid_pending},
                     'forcedInterruption': {'before': pid_pending, 'after': pid_after,
                                            'method': 'am_force_stop', 'transactionOpenConfirmed': pending['transactionOpen']},
                     'writeProcessRestart': {'before': pid_after, 'after': pid_write_pending},
-                    'writeForcedInterruption': {'before': pid_write_pending, 'after': pid_final,
+                    'writeForcedInterruption': {'before': pid_write_pending, 'after': pid_media_upgrade,
                                                 'method': 'am_force_stop', 'transactionOpenConfirmed': write_pending['transactionOpen']},
+                    'mediaUpgradeForcedInterruption': {'before': pid_media_upgrade, 'after': pid_media_first,
+                                                       'method': 'am_force_stop', 'transactionOpenConfirmed': media_upgrade['transactionOpen']},
+                    'mediaProcessRestart': {'before': pid_media_first, 'after': pid_media_pending},
+                    'mediaWriteForcedInterruption': {'before': pid_media_pending, 'after': pid_final,
+                                                     'method': 'am_force_stop', 'transactionOpenConfirmed': media_pending['transactionOpen']},
                     'phaseOne': first['status']}
         except Exception:
             android_diagnostics(prefix, log_path)
@@ -288,17 +325,33 @@ def ios(run_id, attempt):
     write_pending = wait_report(read, 'ios', run_id, attempt, 'ready_for_write_interruption')
     print('Uncommitted personal values and revision prepared; interrupting verified simulator app.', flush=True)
     interrupt_ios_audit_app(device, pid_write_pending)
+    pid_media_upgrade = launch()
+    media_upgrade = wait_report(read, 'ios', run_id, attempt, 'ready_for_media_upgrade_interruption')
+    print('Uncommitted media upgrade prepared; interrupting verified simulator app.', flush=True)
+    interrupt_ios_audit_app(device, pid_media_upgrade)
+    pid_media_first = launch()
+    wait_report(read, 'ios', run_id, attempt, 'ready_for_media_restart')
+    command(['xcrun', 'simctl', 'terminate', device, APP])
+    pid_media_pending = launch()
+    media_pending = wait_report(read, 'ios', run_id, attempt, 'ready_for_media_write_interruption')
+    print('Uncommitted media progress and values prepared; interrupting verified simulator app.', flush=True)
+    interrupt_ios_audit_app(device, pid_media_pending)
     pid_final = launch()
     report = wait_report(read, 'ios', run_id, attempt, 'passed')
-    pids = [pid_before, pid_pending, pid_after, pid_write_pending, pid_final]
-    if any(not re.fullmatch(r'[1-9]\d*', pid) for pid in pids) or len(set(pids)) != 5:
-        raise RuntimeError('Could not verify five distinct iOS processes')
+    pids = [pid_before, pid_pending, pid_after, pid_write_pending, pid_media_upgrade, pid_media_first, pid_media_pending, pid_final]
+    if any(not re.fullmatch(r'[1-9]\d*', pid) for pid in pids) or len(set(pids)) != 8:
+        raise RuntimeError('Could not verify eight distinct iOS processes')
     return {**report, 'processRestart': {'before': pid_before, 'after': pid_pending},
             'forcedInterruption': {'before': pid_pending, 'after': pid_after,
                                    'method': 'SIGKILL_verified_simulator_app', 'transactionOpenConfirmed': pending['transactionOpen']},
             'writeProcessRestart': {'before': pid_after, 'after': pid_write_pending},
-            'writeForcedInterruption': {'before': pid_write_pending, 'after': pid_final,
+            'writeForcedInterruption': {'before': pid_write_pending, 'after': pid_media_upgrade,
                                        'method': 'SIGKILL_verified_simulator_app', 'transactionOpenConfirmed': write_pending['transactionOpen']},
+            'mediaUpgradeForcedInterruption': {'before': pid_media_upgrade, 'after': pid_media_first,
+                                               'method': 'SIGKILL_verified_simulator_app', 'transactionOpenConfirmed': media_upgrade['transactionOpen']},
+            'mediaProcessRestart': {'before': pid_media_first, 'after': pid_media_pending},
+            'mediaWriteForcedInterruption': {'before': pid_media_pending, 'after': pid_final,
+                                             'method': 'SIGKILL_verified_simulator_app', 'transactionOpenConfirmed': media_pending['transactionOpen']},
             'phaseOne': first['status']}
 
 

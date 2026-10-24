@@ -2,13 +2,13 @@ import { Capacitor } from '@capacitor/core'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { personalStorage, personalStorageCoordinator } from './personalStorage.ts'
 import { createBrowserPersonalPersistence, type PersonalPersistence } from './personalPersistence.ts'
-import { createPersonalStorageBootstrap } from './personalStorageBootstrap.ts'
+import { createMediaStorageBootstrap } from './mediaStorageBootstrap.ts'
 import { acquirePersonalStorageLock } from './personalStorageLock.ts'
-import { createFilesystemPersonalAuthority } from './personalStorageAuthority.ts'
+import { createFilesystemMediaAuthority } from './mediaStorageAuthority.ts'
 
 // The display brand can change without changing this private native database.
 const DATABASE = 'cinevault_personal'
-let bootstrap: ReturnType<typeof createPersonalStorageBootstrap> | null = null
+let bootstrap: ReturnType<typeof createMediaStorageBootstrap> | null = null
 
 export type OpenPersonalStorage = Readonly<{persistence: PersonalPersistence; close(): Promise<void>}>
 
@@ -22,8 +22,8 @@ export async function openPersonalStorage(): Promise<OpenPersonalStorage> {
   try {
     // Do not load the native SQLite implementation on the browser path.
     const {CapacitorSQLite, SQLiteConnection} = await import('@capacitor-community/sqlite')
-    if (!bootstrap) bootstrap = createPersonalStorageBootstrap(personalStorageCoordinator,
-      createFilesystemPersonalAuthority(Filesystem, Directory.Data, DATABASE))
+    if (!bootstrap) bootstrap = createMediaStorageBootstrap(personalStorageCoordinator,
+      createFilesystemMediaAuthority(Filesystem, Directory.Data, DATABASE))
     const manager = new SQLiteConnection(CapacitorSQLite)
     const db = await manager.createConnection(DATABASE, false, 'no-encryption', 1, false)
     closeConnection = () => manager.closeConnection(DATABASE, false)

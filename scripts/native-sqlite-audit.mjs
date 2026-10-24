@@ -6,6 +6,9 @@ import { createPersonalSqliteMigrationRepository } from '../src/personalSqliteMi
 import { digestPersonalSqliteText } from '../src/personalSqliteEncoding.ts'
 import { createPersonalStorageBootstrap } from '../src/personalStorageBootstrap.ts'
 import { acquirePersonalStorageLock } from '../src/personalStorageLock.ts'
+import { createMediaSqliteRepository } from '../src/mediaSqlite.ts'
+import { createMediaStorageBootstrap } from '../src/mediaStorageBootstrap.ts'
+import { createMediaBackup, serializeMediaBackup } from '../src/mediaBackup.ts'
 
 export const AUDIT_CHECKS = Object.freeze([
   'parameterized_unicode_crud', 'explicit_commit', 'explicit_rollback',
@@ -24,6 +27,11 @@ const WRITE_CHECKS = ['personal_write_atomic_batch', 'personal_write_noop', 'per
   'personal_write_interruption_rollback', 'personal_write_retry_committed']
 const BOOT_CHECKS = ['native_context_owner_lock', 'bootstrap_sqlite_authority', 'bootstrap_legacy_closed',
   'session_commit_before_publish', 'session_reopen_exact_values', 'bootstrap_authority_marker']
+const PERSONAL_CHECKS = [...MIGRATION_CHECKS, ...WRITE_CHECKS, ...BOOT_CHECKS]
+const MEDIA_CHECKS = ['media_upgrade_reserved_authority', 'media_upgrade_interruption_rollback', 'media_upgrade_atomic_commit',
+  'media_write_atomic_batch', 'media_write_noop', 'media_write_stale_revision_rejected', 'media_write_connection_reopen',
+  'media_process_restart', 'media_write_interruption_rollback', 'media_write_retry_committed',
+  'media_backup_atomic_restore', 'media_authority_complete']
 const WRITE_A = [[1, '  {"history":[999999],"note":"ação 🎬"}\r\n\u0000\ud800'],
   [2, '{"999999":"future poster"}'], [5, '  {"volume":0.25,"future":true}\r\n']]
 const WRITE_B = [[1, null], [2, 'null'], [5, '']]
@@ -31,6 +39,15 @@ const SESSION_JSON = [
   {key: PERSONAL_STORAGE_KEYS[1], value: {queue: [1], history: [], notes: {1: 'sessão 🎬'}, recent: [1], dailyOffset: 2}},
   {key: PERSONAL_STORAGE_KEYS[5], value: {intro: false, sound: false, updates: false, sonic: 'signature', volume: 0.25}},
 ]
+const MEDIA_JSON = [
+  {key: PERSONAL_STORAGE_KEYS[1], value: {queue: [1, 2], history: [], notes: {1: 'audiovisual 🎬\u0000'}, recent: [2], dailyOffset: 3}},
+  {key: PERSONAL_STORAGE_KEYS[5], value: {intro: false, sound: true, updates: false, sonic: 'signature', volume: 0.5}},
+]
+const MEDIA_PROGRESS_A = {format: 'sintonema.media-progress', version: 1,
+  entries: [{key: 'tmdb:tv:42', status: 'watching', watchedEpisodes: [{season: 0, episode: 1}, {season: 1, episode: 1}]}]}
+const MEDIA_PROGRESS_B = {format: 'sintonema.media-progress', version: 1,
+  entries: [{key: 'tmdb:tv:42', status: 'paused', watchedEpisodes: [{season: 0, episode: 1}, {season: 1, episode: 1}, {season: 1, episode: 2}]}]}
+const MEDIA_WRITE_B = [[1, null], [5, '']]
 const writeBatch = values => values.map(([slot, raw]) => ({key: PERSONAL_STORAGE_KEYS[slot], raw}))
 const withWrites = (snapshot, values) => ({...snapshot, entries: snapshot.entries.map(entry =>
   writeBatch(values).find(change => change.key === entry.key) || entry)})
@@ -46,8 +63,21 @@ const PHASES = {
   ready_for_write_interruption: { databaseVersion: 3, committedVersion: 3, transactionOpen: true,
     personalRevision: 2, committedPersonalRevision: 1,
     checks: [...MIGRATION_CHECKS, ...WRITE_CHECKS.slice(0, 5), 'uncommitted_personal_write_prepared'] },
+  ready_for_media_upgrade_interruption: { databaseVersion: 3, committedVersion: 3, transactionOpen: true,
+    personalRevision: 3, committedPersonalRevision: 3, mediaRevision: 0, committedMediaRevision: null,
+    checks: [...PERSONAL_CHECKS, MEDIA_CHECKS[0], 'uncommitted_media_upgrade_prepared'] },
+  ready_for_media_restart: { databaseVersion: 3, committedVersion: 3, transactionOpen: false,
+    personalRevision: 3, committedPersonalRevision: 3, mediaRevision: 1, committedMediaRevision: 1,
+    checks: [...PERSONAL_CHECKS, ...MEDIA_CHECKS.slice(0, 7)] },
+  ready_for_media_write_interruption: { databaseVersion: 3, committedVersion: 3, transactionOpen: true,
+    personalRevision: 3, committedPersonalRevision: 3, mediaRevision: 2, committedMediaRevision: 1,
+    checks: [...PERSONAL_CHECKS, ...MEDIA_CHECKS.slice(0, 8), 'uncommitted_media_write_prepared'] },
   passed: { databaseVersion: 3, committedVersion: 3, transactionOpen: false,
-    personalRevision: 3, committedPersonalRevision: 3, checks: [...MIGRATION_CHECKS, ...WRITE_CHECKS, ...BOOT_CHECKS] },
+    personalRevision: 3, committedPersonalRevision: 3, mediaRevision: 3, committedMediaRevision: 3,
+    checks: [...PERSONAL_CHECKS, ...MEDIA_CHECKS] },
+}
+for (const phase of Object.values(PHASES)) {
+  if (!Object.hasOwn(phase, 'mediaRevision')) { phase.mediaRevision = null; phase.committedMediaRevision = null }
 }
 
 function requireValue(condition, message) {
@@ -65,18 +95,19 @@ export function validateAuditReport(report, context, status) {
   const database = auditIdentity(context)
   requireValue(Object.hasOwn(PHASES, status), 'invalid expected state')
   const expected = PHASES[status]
-  requireValue(report?.schemaVersion === 6 && report.status === status, 'unexpected report state')
+  requireValue(report?.schemaVersion === 7 && report.status === status, 'unexpected report state')
   requireValue(report.runId === context.runId && report.attempt === context.attempt &&
     report.platform === context.platform && report.database === database, 'report identity mismatch')
   requireValue(report.databaseVersion === expected.databaseVersion &&
     report.committedVersion === expected.committedVersion && report.transactionOpen === expected.transactionOpen &&
     report.personalRevision === expected.personalRevision && report.committedPersonalRevision === expected.committedPersonalRevision &&
+    report.mediaRevision === expected.mediaRevision && report.committedMediaRevision === expected.committedMediaRevision &&
     JSON.stringify(report.checks) === JSON.stringify(expected.checks), 'incomplete checks')
   return report
 }
 
 function makeReport(context, status) {
-  return {schemaVersion: 6, runId: context.runId, attempt: context.attempt,
+  return {schemaVersion: 7, runId: context.runId, attempt: context.attempt,
     platform: context.platform, database: auditIdentity(context), status, ...PHASES[status], checks: [...PHASES[status].checks]}
 }
 
@@ -144,13 +175,30 @@ async function verifyPersonalWrite(state, expected, revision, original) {
     'personal write revision or exact values changed')
 }
 
-export async function runNativeSqliteAudit({ sqlite, authority, lockManager = globalThis.navigator?.locks, previous = null, ...context }) {
+export async function runNativeSqliteAudit({ sqlite, authority, mediaAuthority, lockManager = globalThis.navigator?.locks, previous = null, ...context }) {
   const database = auditIdentity(context)
   if (previous !== null) {
     requireValue(Object.hasOwn(PHASES, previous.status) && previous.status !== 'passed', 'cannot resume this state')
     validateAuditReport(previous, context, previous.status)
   }
   const source = syntheticSource(), rawSnapshot = source.snapshot
+  const finalLegacy = withWrites(withWrites(withWrites(rawSnapshot, WRITE_A), WRITE_B),
+    SESSION_JSON.map(change => [PERSONAL_STORAGE_KEYS.indexOf(change.key), JSON.stringify(change.value)]))
+  const mediaA = createMediaBackup(withWrites(finalLegacy, MEDIA_JSON.map(change =>
+    [PERSONAL_STORAGE_KEYS.indexOf(change.key), JSON.stringify(change.value)])), MEDIA_PROGRESS_A)
+  const mediaB = createMediaBackup(withWrites(mediaA.legacy, MEDIA_WRITE_B), MEDIA_PROGRESS_B)
+  const verifyMedia = async (state, expected, revision) => {
+    requireValue(state?.schemaVersion === 2 && state.revision === revision && state.parentRevision === 3 &&
+      state.sourceSha256 === await digestPersonalSqliteText(serializePersonalStorageSnapshot(rawSnapshot)) &&
+      state.originSha256 === await digestPersonalSqliteText(serializeMediaBackup(createMediaBackup(finalLegacy))) &&
+      state.currentSha256 === await digestPersonalSqliteText(serializeMediaBackup(expected)) &&
+      serializeMediaBackup(state.backup) === serializeMediaBackup(expected), 'media revision or exact values changed')
+  }
+  const deniedLegacy = () => createPersonalStorageCoordinator(() => ({
+    getItem() { throw Error('media bootstrap must not read legacy storage') },
+    setItem() { throw Error('media bootstrap must not write legacy storage') },
+    removeItem() { throw Error('media bootstrap must not remove legacy storage') },
+  }))
   requireValue(serializePersonalStorageSnapshot(rawSnapshot).length > 2 * 1024 * 1024, 'large snapshot fixture is incomplete')
   let connected = false
   let awaitingInterruption = false
@@ -289,7 +337,7 @@ export async function runNativeSqliteAudit({ sqlite, authority, lockManager = gl
       requireValue((await db.isTransactionActive()).result === true, 'write interruption requires an open transaction')
       awaitingInterruption = true
       return makeReport(context, 'ready_for_write_interruption')
-    } else {
+    } else if (previous.status === 'ready_for_write_interruption') {
       let db = await open(3), writes = createPersonalSqliteMigrationRepository(db)
       await verifyRecovery(db)
       await verifyRawSnapshot(db, rawSnapshot)
@@ -333,6 +381,75 @@ export async function runNativeSqliteAudit({ sqlite, authority, lockManager = gl
       await verifyRawSnapshot(db, rawSnapshot)
       await verifyPersonalWrite(await createPersonalSqliteMigrationRepository(db).read(), finalSnapshot, 3, rawSnapshot)
       requireValue((await db.isTransactionActive()).result === false, 'write retry left a transaction open')
+      requireValue(mediaAuthority !== undefined, 'dedicated media authority is missing')
+      const parent = await createPersonalSqliteMigrationRepository(db).read()
+      const origin = await digestPersonalSqliteText(serializeMediaBackup(createMediaBackup(finalSnapshot)))
+      await mediaAuthority.reserve(parent.sourceSha256, origin, parent.revision)
+      const prepared = await createMediaSqliteRepository(db).prepareUpgrade(parent)
+      const marker = (await db.query('SELECT revision, origin_sha256 FROM main.cv_media_revision WHERE id = ?', [1])).values
+      requireValue(prepared.revision === 0 && marker?.length === 1 && marker[0].revision === 0 &&
+        marker[0].origin_sha256 === origin && (await mediaAuthority.read())?.mediaState === 'reserved' &&
+        (await db.isTransactionActive()).result === true, 'pending media upgrade is incomplete')
+      awaitingInterruption = true
+      return makeReport(context, 'ready_for_media_upgrade_interruption')
+    } else if (previous.status === 'ready_for_media_upgrade_interruption') {
+      let db = await open(3)
+      await verifyRecovery(db); await verifyRawSnapshot(db, rawSnapshot)
+      await verifyPersonalWrite(await createPersonalSqliteMigrationRepository(db).read(), finalLegacy, 3, rawSnapshot)
+      requireValue(await createMediaSqliteRepository(db).read() === null, 'interrupted media upgrade survived')
+      requireValue((await mediaAuthority.read())?.mediaState === 'reserved', 'media upgrade reservation was lost')
+      ownerLock = await acquirePersonalStorageLock(lockManager)
+      const legacy = deniedLegacy(), session = await createMediaStorageBootstrap(legacy, mediaAuthority).open(db)
+      requireValue(legacy.phase === 'closed' && session.mediaEnabled, 'media bootstrap did not close legacy access')
+      await verifyMedia(await createMediaSqliteRepository(db).read(), createMediaBackup(finalLegacy), 0)
+      const saving = session.updateMedia(() => ({changes: MEDIA_JSON, progress: MEDIA_PROGRESS_A}))
+      requireValue(session.getMediaProgress().entries.length === 0 && session.getStatus().version === 0 &&
+        session.getStatus().phase === 'saving', 'media session published before commit')
+      await saving
+      requireValue(serializeMediaBackup(session.captureMediaBackup()) === serializeMediaBackup(mediaA), 'media session batch differs')
+      await session.close()
+      const writes = createMediaSqliteRepository(db)
+      const request = {changes: writeBatch(MEDIA_JSON.map(change => [PERSONAL_STORAGE_KEYS.indexOf(change.key), JSON.stringify(change.value)])), progress: MEDIA_PROGRESS_A}
+      await verifyMedia(await writes.writeBatch(request, 1), mediaA, 1)
+      let staleRefused = false
+      try { await writes.writeBatch({changes: writeBatch(MEDIA_WRITE_B)}, 0) }
+      catch (error) { staleRefused = /stale media revision/.test(String(error?.message ?? error)) }
+      requireValue(staleRefused, 'stale media revision was accepted')
+      await close(); db = await open(3)
+      await verifyMedia(await createMediaSqliteRepository(db).read(), mediaA, 1)
+      await close()
+      return makeReport(context, 'ready_for_media_restart')
+    } else if (previous.status === 'ready_for_media_restart') {
+      const db = await open(3)
+      await verifyRecovery(db); await verifyRawSnapshot(db, rawSnapshot)
+      await verifyMedia(await createMediaSqliteRepository(db).read(), mediaA, 1)
+      ownerLock = await acquirePersonalStorageLock(lockManager)
+      const session = await createMediaStorageBootstrap(deniedLegacy(), mediaAuthority).open(db)
+      requireValue(serializeMediaBackup(session.captureMediaBackup()) === serializeMediaBackup(mediaA), 'media restart selected stale values')
+      await session.close()
+      const prepared = await createMediaSqliteRepository(db).prepareWrite({changes: writeBatch(MEDIA_WRITE_B), progress: MEDIA_PROGRESS_B}, 1)
+      const marker = (await db.query('SELECT revision, current_sha256 FROM main.cv_media_revision WHERE id = ?', [1])).values
+      requireValue(prepared.revision === 2 && marker?.length === 1 && marker[0].revision === 2 &&
+        marker[0].current_sha256 === prepared.currentSha256 && (await db.isTransactionActive()).result === true,
+        'pending media write revision is incomplete')
+      awaitingInterruption = true
+      return makeReport(context, 'ready_for_media_write_interruption')
+    } else {
+      const db = await open(3)
+      await verifyRecovery(db); await verifyRawSnapshot(db, rawSnapshot)
+      await verifyMedia(await createMediaSqliteRepository(db).read(), mediaA, 1)
+      ownerLock = await acquirePersonalStorageLock(lockManager)
+      const session = await createMediaStorageBootstrap(deniedLegacy(), mediaAuthority).open(db)
+      await session.restoreMediaBackup(mediaB)
+      await verifyMedia(await createMediaSqliteRepository(db).read(), mediaB, 2)
+      await session.restoreMediaBackup(mediaA)
+      await verifyMedia(await createMediaSqliteRepository(db).read(), mediaA, 3)
+      const marker = await mediaAuthority.read()
+      requireValue(marker?.version === 2 && marker.mediaState === 'complete' && marker.mediaParentRevision === 3,
+        'complete media authority is missing')
+      await session.close()
+      await verifyPersonalWrite(await createPersonalSqliteMigrationRepository(db).read(), finalLegacy, 3, rawSnapshot)
+      requireValue((await db.isTransactionActive()).result === false, 'media restore left a transaction open')
       await close()
       return makeReport(context, 'passed')
     }

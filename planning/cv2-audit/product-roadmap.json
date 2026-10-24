@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-10-24",
-  "assessedSourceCommit": "c3473280ffbcf1880fec6c4d848abfb6c543cbb6",
+  "assessedSourceCommit": "2349a0b069a138a951e1e1ba7e9472ec81a3033e",
   "brand": {
     "chosenName": "Sintonema",
     "previousName": "CineVault",
@@ -94,7 +94,7 @@
     {
       "phase": 2,
       "name": "Modelo audiovisual e backups",
-      "status": "typed_identity_progress_backup_foundation_prepared_pending_application_and_runtime_integration",
+      "status": "native_media_progress_and_complete_backups_integrated_pending_protocol7_and_device_tests",
       "exit": "Introduce typed identities, series/season/episode progress and a versioned compatibility path without changing the 1000 existing movie IDs."
     },
     {
@@ -147,6 +147,23 @@
     "progressFormat": "sintonema.media-progress v1",
     "backupFormat": "sintonema.audiovisual-backup v1",
     "nativeStorageAndUIIntegrationPending": true,
-    "evaluation": "planning/cv2-audit/audiovisual-foundation.json"
+    "evaluation": "planning/cv2-audit/audiovisual-foundation.json",
+    "appliedCommit": "2349a0b069a138a951e1e1ba7e9472ec81a3033e",
+    "ciRun": 40105484502,
+    "ciPassed": true
+  },
+  "preparedMediaPersistence": {
+    "nativeBootstrapVersion": 2,
+    "sevenSlotsOneRevision": true,
+    "oldOriginFrozen": true,
+    "typedProgressAPIIntegrated": true,
+    "completeBackupUIIntegrated": true,
+    "seriesNavigationImplemented": false,
+    "browserProgressEnabled": false,
+    "nativeAuditProtocol": 7,
+    "nativeAuditChecks": 40,
+    "nativeValidation": "pending",
+    "deviceAPKBuildBlockedPendingApproval": true,
+    "evaluation": "planning/cv2-audit/media-persistence.json"
   }
 }

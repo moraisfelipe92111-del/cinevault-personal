@@ -87,6 +87,12 @@ class RecoveryControllerTests(unittest.TestCase):
         writes = ['personal_write_atomic_batch', 'personal_write_noop', 'personal_write_stale_revision_rejected',
                   'personal_write_connection_reopen', 'personal_write_process_restart',
                   'personal_write_interruption_rollback', 'personal_write_retry_committed']
+        personal = migration + writes + ['native_context_owner_lock', 'bootstrap_sqlite_authority', 'bootstrap_legacy_closed',
+                                         'session_commit_before_publish', 'session_reopen_exact_values', 'bootstrap_authority_marker']
+        media = ['media_upgrade_reserved_authority', 'media_upgrade_interruption_rollback', 'media_upgrade_atomic_commit',
+                 'media_write_atomic_batch', 'media_write_noop', 'media_write_stale_revision_rejected', 'media_write_connection_reopen',
+                 'media_process_restart', 'media_write_interruption_rollback', 'media_write_retry_committed',
+                 'media_backup_atomic_restore', 'media_authority_complete']
         phases = {
             'ready_for_restart': (2, 2, False, None, None, runner.CHECKS),
             'ready_for_interruption': (3, 2, True, 0, None, runner.CHECKS + ['process_restart', 'raw_snapshot_process_restart',
@@ -94,13 +100,20 @@ class RecoveryControllerTests(unittest.TestCase):
                                                                          'uncommitted_personal_migration_prepared']),
             'ready_for_write_restart': (3, 3, False, 1, 1, migration + writes[:4]),
             'ready_for_write_interruption': (3, 3, True, 2, 1, migration + writes[:5] + ['uncommitted_personal_write_prepared']),
-            'passed': (3, 3, False, 3, 3, migration + writes + ['native_context_owner_lock', 'bootstrap_sqlite_authority', 'bootstrap_legacy_closed', 'session_commit_before_publish', 'session_reopen_exact_values', 'bootstrap_authority_marker']),
+            'ready_for_media_upgrade_interruption': (3, 3, True, 3, 3, personal + media[:1] + ['uncommitted_media_upgrade_prepared']),
+            'ready_for_media_restart': (3, 3, False, 3, 3, personal + media[:7]),
+            'ready_for_media_write_interruption': (3, 3, True, 3, 3, personal + media[:8] + ['uncommitted_media_write_prepared']),
+            'passed': (3, 3, False, 3, 3, personal + media),
         }
         version, committed, active, revision, committed_revision, checks = phases[status]
-        return {'schemaVersion': 6, 'runId': '123', 'attempt': '1', 'platform': 'ios',
+        media_revisions = {'ready_for_media_upgrade_interruption': (0, None), 'ready_for_media_restart': (1, 1),
+                           'ready_for_media_write_interruption': (2, 1), 'passed': (3, 3)}
+        media_revision, committed_media_revision = media_revisions.get(status, (None, None))
+        return {'schemaVersion': 7, 'runId': '123', 'attempt': '1', 'platform': 'ios',
                 'database': 'cv2_sqlite_audit_123_1_ios', 'databaseVersion': version,
                 'committedVersion': committed, 'transactionOpen': active, 'personalRevision': revision,
-                'committedPersonalRevision': committed_revision, 'status': status, 'checks': checks}
+                'committedPersonalRevision': committed_revision, 'mediaRevision': media_revision,
+                'committedMediaRevision': committed_media_revision, 'status': status, 'checks': checks}
 
     def test_pending_report_requires_uncommitted_transaction_evidence(self):
         report = self.report()
@@ -243,22 +256,27 @@ class RecoveryControllerTests(unittest.TestCase):
         collector.kill.assert_not_called()
         return result, events
 
-    def test_ios_validates_five_phases_before_the_two_verified_interruptions(self):
-        report, events, interrupts = self.drive_ios(['101', '102', '103', '104', '105'])
+    def test_ios_validates_eight_phases_before_four_verified_interruptions(self):
+        report, events, interrupts = self.drive_ios(['101', '102', '103', '104', '105', '106', '107', '108'])
         self.assertEqual([event for event in events if event[0] == 'phase'], [('phase', status) for status in runner.PHASES])
-        self.assertEqual(interrupts, [call(self.DEVICE, '102'), call(self.DEVICE, '104')])
+        self.assertEqual(interrupts, [call(self.DEVICE, '102'), call(self.DEVICE, '104'), call(self.DEVICE, '105'), call(self.DEVICE, '107')])
         self.assertEqual(events[4:7], [('phase', 'ready_for_interruption'), ('kill', '102'), ('launch', '103')])
         self.assertEqual(events[10:13], [('phase', 'ready_for_write_interruption'), ('kill', '104'), ('launch', '105')])
         self.assertEqual(report['writeProcessRestart'], {'before': '103', 'after': '104'})
         self.assertTrue(report['writeForcedInterruption']['transactionOpenConfirmed'])
+        self.assertEqual(report['mediaUpgradeForcedInterruption']['after'], '106')
+        self.assertEqual(report['mediaProcessRestart'], {'before': '106', 'after': '107'})
+        self.assertTrue(report['mediaWriteForcedInterruption']['transactionOpenConfirmed'])
 
-    def test_android_validates_five_phases_before_each_owned_app_stop(self):
-        report, events = self.drive_android(['201', '202', '203', '204', '205'])
+    def test_android_validates_eight_phases_before_each_owned_app_stop(self):
+        report, events = self.drive_android(['201', '202', '203', '204', '205', '206', '207', '208'])
         self.assertEqual([event for event in events if event[0] == 'phase'], [('phase', status) for status in runner.PHASES])
-        self.assertEqual([event for event in events if event[0] == 'stop'], [('stop', pid) for pid in ['201', '202', '203', '204']])
+        self.assertEqual([event for event in events if event[0] == 'stop'], [('stop', pid) for pid in ['201', '202', '203', '204', '205', '206', '207']])
         self.assertEqual(report['writeForcedInterruption']['before'], '204')
         self.assertEqual(report['writeForcedInterruption']['after'], '205')
         self.assertTrue(report['writeForcedInterruption']['transactionOpenConfirmed'])
+        self.assertEqual(report['mediaWriteForcedInterruption']['after'], '208')
+        self.assertTrue(report['mediaUpgradeForcedInterruption']['transactionOpenConfirmed'])
 
     def test_invalid_write_phase_cannot_authorize_the_second_interruption(self):
         error, events, interrupts = self.drive_ios(['101', '102', '103', '104', '105'], 'ready_for_write_interruption')
@@ -270,13 +288,38 @@ class RecoveryControllerTests(unittest.TestCase):
         self.assertNotIn(('launch', '205'), events)
 
     def test_reused_or_nonpositive_process_ids_cannot_produce_native_success(self):
-        for pids in [['101', '102', '103', '104', '103'], ['101', '102', '103', '104', '0']]:
+        for pids in [['101', '102', '103', '104', '105', '106', '107', '103'], ['101', '102', '103', '104', '105', '106', '107', '0']]:
             result, _, _ = self.drive_ios(pids)
             self.assertIsInstance(result, RuntimeError)
-            self.assertRegex(str(result), 'five distinct')
+            self.assertRegex(str(result), 'eight distinct')
             result, _ = self.drive_android(pids)
             self.assertIsInstance(result, RuntimeError)
-            self.assertRegex(str(result), 'five distinct')
+            self.assertRegex(str(result), 'eight distinct')
+
+    def test_media_interruption_requires_exact_uncommitted_revision_and_all_prior_checks(self):
+        for status in ['ready_for_media_upgrade_interruption', 'ready_for_media_write_interruption']:
+            report = self.report(status)
+            runner.validate(report, 'ios', '123', '1', status)
+            for change in [{'schemaVersion': 6}, {'transactionOpen': False}, {'mediaRevision': True},
+                           {'committedMediaRevision': 99}, {'checks': report['checks'][:-1]}]:
+                with self.assertRaisesRegex(RuntimeError, 'Invalid or incomplete'):
+                    runner.validate({**report, **change}, 'ios', '123', '1', status)
+            for key in ['mediaRevision', 'committedMediaRevision']:
+                incomplete = dict(report)
+                del incomplete[key]
+                with self.assertRaisesRegex(RuntimeError, 'Invalid or incomplete'):
+                    runner.validate(incomplete, 'ios', '123', '1', status)
+
+    def test_invalid_media_phases_cannot_authorize_their_process_interruptions(self):
+        pids = ['101', '102', '103', '104', '105', '106', '107', '108']
+        for status, refused_pid, allowed in [('ready_for_media_upgrade_interruption', '105', ['102', '104']),
+                                             ('ready_for_media_write_interruption', '107', ['102', '104', '105'])]:
+            error, _, interrupts = self.drive_ios(pids, status)
+            self.assertIsInstance(error, RuntimeError)
+            self.assertEqual(interrupts, [call(self.DEVICE, pid) for pid in allowed])
+            error, events = self.drive_android(pids, status)
+            self.assertIsInstance(error, RuntimeError)
+            self.assertNotIn(('stop', refused_pid), events)
 
     def test_interrupt_refuses_the_collector_process(self):
         with patch.object(runner.os, 'getpid', return_value=12345), patch.object(runner.os, 'kill') as kill:

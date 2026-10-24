@@ -10,19 +10,21 @@ import { injectNativeAudit } from '../scripts/build-native-sqlite-audit.mjs'
 import { createPersonalSqliteSnapshotRepository } from '../src/personalSqliteSnapshot.ts'
 import { createPersonalSqliteMigrationRepository } from '../src/personalSqliteMigration.ts'
 import { createPersonalAuthorityStore } from '../src/personalStorageAuthority.ts'
+import { createMediaAuthorityStore } from '../src/mediaStorageAuthority.ts'
 
 // Host SQLite checks the probe and its SQL; this is not evidence of native execution.
 const context = {runId: '123456789', attempt: '1', platform: 'android'}
 function runNativeSqliteAudit(options){
  const name=auditIdentity(options),filename=options.sqlite.root?path.join(options.sqlite.root,name+'-authority.json'):null
  let memory=null
- const authority=createPersonalAuthorityStore(name,{
+ const io={
   async read(){return filename?(fs.existsSync(filename)?fs.readFileSync(filename,'utf8'):null):memory},
-  async write(text){if(filename)fs.writeFileSync(filename,text,{flag:'wx'});else memory=text},
- })
+  async write(text){if(filename){fs.writeFileSync(filename+'.pending',text);fs.renameSync(filename+'.pending',filename)}else memory=text},
+ }
+ const authority=createPersonalAuthorityStore(name,io),mediaAuthority=createMediaAuthorityStore(name,io)
  let held=false
  const lockManager={async request(name,options,callback){if(held)return callback(null);held=true;try{return await callback({name})}finally{held=false}}}
- return runProbe({...options,authority,lockManager})
+ return runProbe({...options,authority,mediaAuthority,lockManager})
 }
 
 class HostSQLite {
@@ -57,6 +59,8 @@ class HostSQLite {
       async run(sql, values = []) {
         if (owner.broken === 'missing-recovery-marker' && /^INSERT INTO audit_recovery_schema\b/.test(sql)) return
         if (owner.broken === 'missing-personal-write-receipt' && sql.startsWith('UPDATE main.cv_personal_migration ')) return
+        if (owner.broken === 'missing-media-write-receipt' && sql.startsWith('UPDATE main.cv_media_revision ')) return
+        if (owner.broken === 'missing-media-upgrade-receipt' && sql.startsWith('INSERT INTO main.cv_media_revision ')) return
         this.db.prepare(sql).run(...values)
       },
       async query(sql, values = []) {
@@ -104,7 +108,17 @@ async function finishWritePhases(root, previous, mode = '') {
   validateAuditReport(pending, context, 'ready_for_write_interruption')
   assert.equal(manager.connections.get(pending.database).db.isTransaction, true)
   await manager.closeConnection(pending.database)
-  const result = await runNativeSqliteAudit({sqlite: new HostSQLite(root, mode), previous: pending, ...context})
+  const upgradeManager = new HostSQLite(root, mode)
+  const upgrade = await runNativeSqliteAudit({sqlite: upgradeManager, previous: pending, ...context})
+  validateAuditReport(upgrade, context, 'ready_for_media_upgrade_interruption')
+  await upgradeManager.closeConnection(upgrade.database)
+  const mediaReady = await runNativeSqliteAudit({sqlite: new HostSQLite(root, mode), previous: upgrade, ...context})
+  validateAuditReport(mediaReady, context, 'ready_for_media_restart')
+  const mediaManager = new HostSQLite(root, mode)
+  const mediaPending = await runNativeSqliteAudit({sqlite: mediaManager, previous: mediaReady, ...context})
+  validateAuditReport(mediaPending, context, 'ready_for_media_write_interruption')
+  await mediaManager.closeConnection(mediaPending.database)
+  const result = await runNativeSqliteAudit({sqlite: new HostSQLite(root, mode), previous: mediaPending, ...context})
   validateAuditReport(result, context, 'passed')
   return result
 }
@@ -117,6 +131,45 @@ async function committedWriteFixture(t) {
   validateAuditReport(previous, context, 'ready_for_write_restart')
   return {root, previous}
 }
+
+async function mediaUpgradeFixture(t) {
+  const {root,previous}=await committedWriteFixture(t),writer=new HostSQLite(root)
+  const pending=await runNativeSqliteAudit({sqlite:writer,previous,...context})
+  await writer.closeConnection(pending.database)
+  const manager=new HostSQLite(root),upgrade=await runNativeSqliteAudit({sqlite:manager,previous:pending,...context})
+  validateAuditReport(upgrade,context,'ready_for_media_upgrade_interruption')
+  return {root,manager,previous:upgrade}
+}
+
+async function mediaWriteFixture(t) {
+  const f=await mediaUpgradeFixture(t)
+  await f.manager.closeConnection(f.previous.database)
+  const previous=await runNativeSqliteAudit({sqlite:new HostSQLite(f.root),previous:f.previous,...context})
+  validateAuditReport(previous,context,'ready_for_media_restart')
+  return {root:f.root,previous}
+}
+
+test('audit refuses a media upgrade that actually committed before its alleged interruption',async t=>{
+  const f=await mediaUpgradeFixture(t)
+  await f.manager.connections.get(f.previous.database).commitTransaction()
+  await f.manager.closeConnection(f.previous.database)
+  await assert.rejects(runNativeSqliteAudit({sqlite:new HostSQLite(f.root),previous:f.previous,...context}),/interrupted media upgrade survived/)
+})
+
+test('audit refuses media progress that actually committed before its alleged write interruption',async t=>{
+  const f=await mediaWriteFixture(t),manager=new HostSQLite(f.root)
+  const pending=await runNativeSqliteAudit({sqlite:manager,previous:f.previous,...context})
+  validateAuditReport(pending,context,'ready_for_media_write_interruption')
+  await manager.connections.get(pending.database).commitTransaction()
+  await manager.closeConnection(pending.database)
+  await assert.rejects(runNativeSqliteAudit({sqlite:new HostSQLite(f.root),previous:pending,...context}),/media revision or exact values changed/)
+})
+
+test('an ignored media receipt cannot authorize interruption or publish the prepared progress',async t=>{
+  const f=await mediaWriteFixture(t),manager=new HostSQLite(f.root,'missing-media-write-receipt')
+  await assert.rejects(runNativeSqliteAudit({sqlite:manager,previous:f.previous,...context}),/state integrity mismatch|read-back mismatch/)
+  assert.equal(manager.connections.size,0)
+})
 
 test('audit accepts only bounded CI identities and native platforms', () => {
   assert.equal(auditIdentity(context), 'cv2_sqlite_audit_123456789_1_android')
@@ -159,7 +212,13 @@ test('host SQLite: interrupted schema and record writes roll back, then migratio
   assert.ok(result.checks.includes('personal_write_interruption_rollback'))
   assert.equal(result.personalRevision, 3)
   assert.equal(result.committedPersonalRevision, 3)
-  assert.equal(result.checks.length, 28)
+  assert.equal(result.checks.length, 40)
+  assert.equal(result.mediaRevision,3)
+  assert.equal(result.committedMediaRevision,3)
+  const validation=spawnSync('python3',['-B','-c',
+    "import json,runpy,sys; m=runpy.run_path('scripts/run-native-sqlite-audit.py'); m['validate'](json.load(sys.stdin),'android','123456789','1','passed')"],
+    {input:JSON.stringify(result),encoding:'utf8'})
+  assert.equal(validation.status,0,validation.stderr)
 })
 
 test('host SQLite: recovery succeeds when native execute accepts one statement per call', async t => {

@@ -26,7 +26,7 @@ class DeviceApkTests(unittest.TestCase):
         self.cert = 'Signer #1 certificate SHA-256 digest: ' + self.signer + '\n'
         self.payload = {
             'assets/public/index.html': '<div id="root"></div><script src="/assets/index.js"></script>',
-            'assets/public/assets/index.js': 'const db="cinevault_personal";const authority="cinevault.personal-sqlite-authority";',
+            'assets/public/assets/index.js': 'const db="cinevault_personal";const authority="cinevault.personal-sqlite-authority";const media="cv_media_revision";const backup="sintonema.audiovisual-backup";',
             'assets/capacitor.plugins.json': json.dumps([{'classpath': device.SQLITE}]),
             'lib/arm64-v8a/libsqlcipher.so': 'fixture only',
         }
@@ -84,6 +84,13 @@ class DeviceApkTests(unittest.TestCase):
                 self.verify(certificates=certificate)
 
     def test_unrelated_web_bundle_cannot_claim_real_sqlite_initialization(self):
+        for marker in ['cv_media_revision', 'sintonema.audiovisual-backup']:
+            original = self.payload['assets/public/assets/index.js']
+            self.payload['assets/public/assets/index.js'] = original.replace(marker, 'old-version')
+            self.pack()
+            with self.assertRaises(ValueError):
+                self.verify()
+            self.payload['assets/public/assets/index.js'] = original
         self.payload['assets/public/assets/index.js'] = 'console.log("another application")'
         self.pack()
         with self.assertRaises(ValueError):

@@ -58,7 +58,7 @@ test('migration import and construction perform no global storage, crypto or dat
   const code = `Object.defineProperty(globalThis,'localStorage',{get(){throw Error('storage touched')}}); Object.defineProperty(globalThis,'crypto',{get(){throw Error('crypto touched')}}); const m=await import(${JSON.stringify(url)}); m.createPersonalSqliteMigrationRepository(new Proxy({},{get(){throw Error('database touched')}}));`
   const result = spawnSync(process.execPath, ['--experimental-strip-types', '--input-type=module', '-e', code], {encoding: 'utf8'})
   assert.equal(result.status, 0, result.stderr)
-  for (const name of fs.readdirSync(new URL('../src', import.meta.url)).filter(name => /\.(tsx?|mjs)$/.test(name) && !['personalSqliteMigration.ts','personalStorageBootstrap.ts','personalPersistence.ts'].includes(name))) {
+  for (const name of fs.readdirSync(new URL('../src', import.meta.url)).filter(name => /\.(tsx?|mjs)$/.test(name) && !['personalSqliteMigration.ts','personalStorageBootstrap.ts','personalPersistence.ts','mediaSqlite.ts','mediaStorageBootstrap.ts'].includes(name))) {
     assert.ok(!fs.readFileSync(new URL('../src/' + name, import.meta.url), 'utf8').includes('personalSqliteMigration'), name)
   }
 })
