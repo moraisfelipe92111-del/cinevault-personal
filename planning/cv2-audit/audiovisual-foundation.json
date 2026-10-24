@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-24",
+  "baseCommit": "c3473280ffbcf1880fec6c4d848abfb6c543cbb6",
+  "stage": "foundation_prepared_pending_branch_application_and_integration",
+  "purpose": "Prepare typed audiovisual identities, catalogue indexing, explicit episode progress and a compatible backup container before importing new formats.",
+  "runtimeActivation": false,
+  "newFormatsVisibleInApp": false,
+  "identity": {
+    "key": "source:mediaType:id",
+    "sources": ["local", "tmdb"],
+    "structuralMediaTypes": ["movie", "tv"],
+    "legacyMovieNamespace": "local:movie:<unchanged numeric ID>",
+    "newImportedNamespace": "tmdb:movie:<reviewed ID> or tmdb:tv:<reviewed ID>",
+    "externalAliases": "The 983 reviewed movie links resolve to the same preserved local movie record. The 17 unlinked movies remain local without guessed IDs.",
+    "classification": "Anime, animation, documentary, reality, competition, telenovela, miniseries, short and special are reviewed classifications on one record, not duplicate catalogue identities.",
+    "canonicalResolutionGate": "Future UI and persistence integration must resolve verified aliases to the canonical catalogue key before saving edits; backup validation alone does not deduplicate unknown identities."
+  },
+  "progress": {
+    "statuses": ["want_to_watch", "watching", "completed", "paused", "abandoned"],
+    "episodeIdentity": "Parent TV identity plus explicit season and episode numbers; season zero is allowed for specials.",
+    "completion": "Episode and season completion never silently marks the entire series completed. Unknown or empty episode counts cannot prove completion.",
+    "runtime": "Film minutes and episode minutes have explicit scopes. Unknown runtime stays unknown; season and series durations are not inferred."
+  },
+  "backup": {
+    "format": "sintonema.audiovisual-backup",
+    "version": 1,
+    "contents": "An exact six-key PersonalStorageSnapshot plus a separately versioned media-progress snapshot.",
+    "compatibility": "Existing legacy/v1-v4 importers and the complete raw snapshot importer are unchanged. The new envelope is preparation only and is not accepted by the current app UI.",
+    "unknownData": "Preserve exact legacy raw strings and valid typed progress for identities absent from the current catalogue. Unsupported envelopes or new structured fields reject the whole operation, without returning a reduced replacement.",
+    "integrationGate": "Before activation, define versioned native storage and an atomic migration/export/restore path for the new progress. Do not hide progress in a legacy raw key or write reduced JSON over preserved values."
+  },
+  "preserved": {
+    "existingMovieIds": 1000,
+    "originalCuratedMovies": 317,
+    "inventedPersonalRatings": 0,
+    "sixStorageKeysChanged": false,
+    "nativeSchemaChanged": false,
+    "packageIdentityChanged": false,
+    "installedAppChanged": false,
+    "dependenciesChanged": false,
+    "releaseVersionChanged": false
+  },
+  "realDeviceEvidence": {
+    "platform": "Android physical device",
+    "version": "1.3.3/build16",
+    "sourceCommit": "c3473280ffbcf1880fec6c4d848abfb6c543cbb6",
+    "basis": "User reports in the project conversation; no personal backup or database was inspected.",
+    "2026-10-23": ["Update and startup confirmed", "Previous personal data preserved", "Favorite persisted after reopening", "Complete backup export and restore confirmed, including prior volume and removal of a test favorite"],
+    "2026-10-24": ["Basic airplane-mode library and favorite save/reopen confirmed", "Posters did not load without internet"],
+    "posterImplementation": "The existing explicit Cache Storage/service-worker downloader is web-only; availableOffline intentionally returns false on native platforms. Native poster caching is still a separate task.",
+    "remaining": ["Failure recovery and representative performance on physical devices", "iPhone physical-device validation", "Production binaries and store publication"]
+  },
+  "next": [
+    "Apply and verify this package on the audit branch.",
+    "Integrate versioned audiovisual state and backups with the durable persistence layer and recovery flow.",
+    "Prepare a small, independently verified catalogue pilot and episode metadata before expanding the app UI.",
+    "Test progress, filters, recommendations and native backup round trips before adding thousands of titles."
+  ],
+  "referencesCheckedOn": "2026-10-24",
+  "references": [
+    "https://developer.themoviedb.org/reference/movie-details",
+    "https://developer.themoviedb.org/reference/tv-series-details",
+    "https://developer.themoviedb.org/reference/tv-season-details",
+    "https://developer.themoviedb.org/reference/tv-episode-details"
+  ]
+}

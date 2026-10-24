@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-22",
-  "assessedSourceCommit": "5108f3da821d73c499be42229a8c9018f7c7f1fa",
+  "updatedAt": "2026-10-24",
+  "assessedSourceCommit": "c3473280ffbcf1880fec6c4d848abfb6c543cbb6",
   "brand": {
     "chosenName": "Sintonema",
     "previousName": "CineVault",
@@ -30,16 +30,23 @@
     "originalPersonalSelectionsPreserved": 317,
     "newMoviesWithoutInventedPersonalRatings": 683,
     "otherFormatsImported": false,
-    "personalSqliteActivatedAtStartup": false,
+    "personalSqliteActivatedAtStartup": true,
     "lastNativeAudit": {
-      "runId": 39703429975,
-      "protocol": 4,
-      "androidChecks": 15,
-      "iosSimulatorChecks": 15,
-      "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39703429975"
+      "runId": 39796669086,
+      "sourceCommit": "0811feb82724a06614b151b7fbf9f252e4a82fb5",
+      "protocol": 6,
+      "androidChecks": 28,
+      "iosSimulatorChecks": 28,
+      "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39796669086"
     },
     "iosRealDeviceAndAppStoreReleaseValidated": false,
-    "affiliateProgramApproved": false
+    "affiliateProgramApproved": false,
+    "androidPhysicalDevice": {
+      "sourceCommit": "c3473280ffbcf1880fec6c4d848abfb6c543cbb6",
+      "version": "1.3.3/build16",
+      "evidence": "User reports: startup, data preservation, favorite save/reopen, complete backup restore and basic airplane-mode use passed. Posters did not load offline. No private data inspected.",
+      "additionalRecoveryAndPerformancePending": true
+    }
   },
   "identityAndCompatibility": [
     "Preserve all existing local movie IDs 1-1000 and their associated personal data.",
@@ -81,13 +88,13 @@
     {
       "phase": 1,
       "name": "Persistência confiável",
-      "status": "native_bootstrap_and_UI_integrated_pending_native_CI",
-      "exit": "Validate atomic mutable writes natively, then integrate migration before React startup and asynchronous durable UI writers with explicit recovery and backup preservation."
+      "status": "native_audits_passed_android_basic_restore_offline_user_confirmed_remaining_device_gates",
+      "exit": "Preserve the approved protocol-6 Android/iOS audits and user-confirmed Android basic/restore/offline evidence; complete physical-device failure recovery, representative performance and real iPhone tests before production."
     },
     {
       "phase": 2,
       "name": "Modelo audiovisual e backups",
-      "status": "planned",
+      "status": "typed_identity_progress_backup_foundation_prepared_pending_application_and_runtime_integration",
       "exit": "Introduce typed identities, series/season/episode progress and a versioned compatibility path without changing the 1000 existing movie IDs."
     },
     {
@@ -123,6 +130,23 @@
     "nextNativeProtocol": 6,
     "expectedNativeChecks": 28,
     "browserBackend": "shared localStorage",
-    "releaseGate": "native CI and real-device startup/edit/backup/recovery validation before a new APK release"
+    "releaseGate": "Real-device recovery/performance, signed iPhone testing and production store pipelines remain pending; basic Android and complete-backup restore were confirmed by the owner.",
+    "sourceCommit": "0811feb82724a06614b151b7fbf9f252e4a82fb5",
+    "testAPKDelivered": true,
+    "testAPKCommit": "c3473280ffbcf1880fec6c4d848abfb6c543cbb6",
+    "nativeCIApproved": true,
+    "validatedNativeProtocol": 6,
+    "validatedNativeChecks": 28
+  },
+  "preparedAudiovisualFoundation": {
+    "runtimeActivated": false,
+    "newTitlesImported": false,
+    "legacyNumericIdsPreserved": 1000,
+    "reviewedMovieAliases": 983,
+    "unresolvedMovieIdentities": 17,
+    "progressFormat": "sintonema.media-progress v1",
+    "backupFormat": "sintonema.audiovisual-backup v1",
+    "nativeStorageAndUIIntegrationPending": true,
+    "evaluation": "planning/cv2-audit/audiovisual-foundation.json"
   }
 }
