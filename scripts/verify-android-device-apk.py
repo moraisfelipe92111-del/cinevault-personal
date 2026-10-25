@@ -15,7 +15,7 @@ def verify(apk, badging, certificates, expected_signer, metadata):
     if (not isinstance(metadata, dict) or metadata.get('appId') != APP or
             metadata.get('purpose') != 'android_device_test' or
             not re.fullmatch(r'\d+\.\d+\.\d+', str(metadata.get('version', ''))) or
-            type(metadata.get('build')) is not int or metadata['build'] <= 16 or
+            type(metadata.get('build')) is not int or metadata['build'] <= 17 or
             not re.fullmatch(r'[a-f0-9]{40}', str(metadata.get('sourceCommit', ''))) or
             not re.fullmatch(r'[a-f0-9]{40}', str(metadata.get('validatedIntegrationCommit', ''))) or
             not re.fullmatch(r'[1-9][0-9]*', str(metadata.get('validatedNativeRun', ''))) or
@@ -55,6 +55,8 @@ def verify(apk, badging, certificates, expected_signer, metadata):
             raise ValueError('Inicializacao SQLite real nao localizada no bundle.')
         if 'cv_media_revision' not in javascript or 'sintonema.audiovisual-backup' not in javascript:
             raise ValueError('Persistencia audiovisual v2 ausente do bundle.')
+        if any(marker not in javascript for marker in ['tvmaze:tv:169', 'Séries e programas', 'Seu acompanhamento']):
+            raise ValueError('Catalogo piloto ou controles de acompanhamento ausentes do bundle.')
     return {**metadata, 'status': 'verified', 'sha256': sha256(Path(apk).read_bytes()).hexdigest(),
             'signerSha256': signer, 'nativeSqliteIncluded': True, 'auditProbeIncluded': False,
             'nativePersonalSchema': 2, 'realDeviceValidation': 'pending', 'storeRelease': False}
@@ -86,15 +88,19 @@ Antes de instalar:
 
 Depois de instalar:
 1. Confira a versao em Configuracoes e compare seus dados com a instalacao anterior.
-2. Altere um favorito, registre um assistido e uma nota; feche e reabra o aplicativo.
-3. Confira fila, historico e preferencias, inclusive sem conexao.
-4. Use Exportar copia completa novamente e guarde o novo backup audiovisual fora do aplicativo.
-5. Envie o resultado dos testes antes de prosseguirmos com restauracao e recuperacao.
+2. Confira favoritos, assistidos, fila, notas, historico e preferencias antes de editar.
+3. Abra Biblioteca > Series e programas. Confira os oito titulos e as categorias, incluindo Animes, Realities e Documentarios.
+4. Abra Breaking Bad, escolha Assistindo e marque T1/E1. Feche e reabra; confira o estado e o episodio.
+5. Troque o estado para Pausado, reabra e confira. Marcar episodio nao deve concluir toda a serie automaticamente.
+6. Teste sem conexao: catalogo e acompanhamento; marque/desmarque um episodio e reabra para conferir a gravacao.
+7. Use Exportar copia completa novamente e guarde o arquivo audiovisual fora do aplicativo.
+8. Envie o resultado antes de prosseguirmos com restauracao guiada, especiais e recuperacao. Nao apague dados para testar.
 
-Este APK testa a migracao audiovisual v2 e o novo backup completo. A marca visivel ainda e CineVault.
-O catalogo continua com 1000 filmes; telas de series, animes e realities ainda serao integradas.
-As capas ainda dependem de internet no Android.
-Mantenha a copia completa anterior. Nao tente voltar ao build16 depois da migracao v2.
+Este APK testa o piloto de series/programas sobre o SQLite e a copia completa ja integrados. A marca visivel ainda e CineVault.
+O catalogo preserva os 1000 filmes e acrescenta oito programas revisados; sem notas pessoais inventadas para eles.
+Capas ja carregadas podem continuar disponiveis no cache. Nao foi implementado download nativo permanente de todas as imagens.
+Mantenha as copias anteriores. Backups com progresso TVmaze exigem uma versao compativel; nao tente voltar a builds antigos.
+O novo primeiro acesso, ID de perfil, contas, sincronizacao e painel administrativo estao especificados, mas ainda nao implementados.
 Nao e uma publicacao na Play Store. Dados de auditoria sintetica nao estao incluidos.
 Se houver falha ao abrir, use a recuperacao oferecida e relate o erro; nao apague os dados.
 '''

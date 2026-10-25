@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-10-25",
-  "baseCommit": "2ba263c992cce1c8145f9956ef9a72c6a4264723",
-  "stage": "reviewed_series_pilot_prepared_pending_new_native_audit",
+  "baseCommit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
+  "stage": "pilot_native_approved_device_candidate_prepared",
   "nativeStorage": {
     "schemaVersion": 2,
     "database": "cinevault_personal",
@@ -35,25 +35,70 @@
     "backupCompatibility": "Existing legacy/movie backups remain accepted. New code accepts local, TMDb and TVmaze progress identities. Older builds without TVmaze support refuse a nonempty TVmaze backup before mutation; preserve the complete file and use a compatible newer app."
   },
   "nativeValidation": {
+    "status": "approved",
     "protocol": 7,
     "checksPerPlatform": 40,
     "distinctProcessesPerPlatform": 8,
     "verifiedInterruptionsPerPlatform": 4,
     "finalPersonalRevision": 3,
     "finalMediaRevision": 3,
-    "status": "pending",
-    "sourceCommit": null,
-    "runId": null,
-    "pendingDeviceBuildBlocked": true,
-    "reason": "The reviewed TVmaze namespace and new progress UI require the current source to pass protocol 7 again. The previous f2824ab approval remains historical evidence, not approval of this pilot."
+    "sourceCommit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
+    "runId": "40169636750",
+    "runAttempt": 1,
+    "pendingDeviceBuildBlocked": false,
+    "platformEvidence": {
+      "android": {
+        "jobId": 121097946195,
+        "reportAttempt": 1,
+        "status": "passed",
+        "checks": 40,
+        "distinctProcesses": 8,
+        "verifiedInterruptions": 4,
+        "personalRevision": 3,
+        "mediaRevision": 3,
+        "transactionOpen": false,
+        "pids": [
+          "1963",
+          "3901",
+          "4349",
+          "4977",
+          "5109",
+          "5594",
+          "5841",
+          "6027"
+        ]
+      },
+      "ios": {
+        "jobId": 121097946230,
+        "reportAttempt": 1,
+        "status": "passed",
+        "checks": 40,
+        "distinctProcesses": 8,
+        "verifiedInterruptions": 4,
+        "personalRevision": 3,
+        "mediaRevision": 3,
+        "transactionOpen": false,
+        "pids": [
+          "15639",
+          "15887",
+          "16106",
+          "16605",
+          "16902",
+          "17510",
+          "18519",
+          "18794"
+        ]
+      }
+    },
+    "scope": "Exact ea3a5ac pilot source; both final reports revalidated against the Python controller. Candidate changes release metadata, artifact verification and planning, not the approved app/storage graph."
   },
   "releaseGates": [
-    "Apply this exact pilot package to the expected audit branch; inspect the resulting commit and changed files.",
-    "Pass protocol 7 on the current source in the Android emulator and iOS simulator, including mixed TMDb/TVmaze progress through all eight phases and four interruptions.",
-    "Record actual current commit/run approval before preparing a separately versioned signed device-test APK. Prior f2824ab approval does not authorize this changed source.",
-    "Test the pilot UI, all statuses and explicit episodes, complete backup/restore and reopen on the physical device. The installed build17 does not include this pilot.",
-    "Integrate browser progress, reviewed episode metadata, recommendations and remaining physical recovery/performance checks in later scoped work.",
-    "Resolve commercial data/artwork rights, signed iPhone and store publication requirements separately."
+    "Apply and verify this device-candidate preparation on the exact ea3a5ac base.",
+    "Pass the actual signed-APK CI job for the candidate source, with no audit probe and the reviewed pilot/tracking UI packaged.",
+    "Compare the produced APK hash, package/version and signer before installation as an update.",
+    "Test pilot progress, complete export/restore, offline write/reopen and data preservation on the existing Android installation.",
+    "Implement the public first-access/admin specification separately, with storage and service changes tested before release.",
+    "Complete real iPhone, rights, privacy, recovery/performance and store gates."
   ],
   "previousNativeApproval": {
     "status": "approved",

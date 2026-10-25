@@ -19,17 +19,17 @@ class DeviceApkTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.apk = self.root / 'candidate.apk'
-        self.meta = {'appId': device.APP, 'purpose': 'android_device_test', 'version': '1.3.4',
-                     'build': 17, 'sourceCommit': 'a' * 40, 'sqlitePlugin': '8.1.1',
+        self.meta = {'appId': device.APP, 'purpose': 'android_device_test', 'version': '1.3.5',
+                     'build': 18, 'sourceCommit': 'a' * 40, 'sqlitePlugin': '8.1.1',
                      'sourceRef': 'refs/heads/cv2-auditoria-00', 'validatedIntegrationCommit': 'c' * 40,
-                     'validatedNativeRun': '40128785503', 'nativePersonalSchema': 2,
+                     'validatedNativeRun': '40169636750', 'nativePersonalSchema': 2,
                      'nativeProtocol': 7, 'nativeChecksPerPlatform': 40}
-        self.badging = "package: name='com.cinevault.pessoal' versionCode='17' versionName='1.3.4'\ntargetSdkVersion:'36'\n"
+        self.badging = "package: name='com.cinevault.pessoal' versionCode='18' versionName='1.3.5'\ntargetSdkVersion:'36'\n"
         self.signer = 'b' * 64
         self.cert = 'Signer #1 certificate SHA-256 digest: ' + self.signer + '\n'
         self.payload = {
             'assets/public/index.html': '<div id="root"></div><script src="/assets/index.js"></script>',
-            'assets/public/assets/index.js': 'const db="cinevault_personal";const authority="cinevault.personal-sqlite-authority";const media="cv_media_revision";const backup="sintonema.audiovisual-backup";',
+            'assets/public/assets/index.js': 'const db="cinevault_personal";const authority="cinevault.personal-sqlite-authority";const media="cv_media_revision";const backup="sintonema.audiovisual-backup";const pilot="tvmaze:tv:169";const navigation="Séries e programas";const tracking="Seu acompanhamento";',
             'assets/capacitor.plugins.json': json.dumps([{'classpath': device.SQLITE}]),
             'lib/arm64-v8a/libsqlcipher.so': 'fixture only',
         }
@@ -76,8 +76,8 @@ class DeviceApkTests(unittest.TestCase):
                 self.payload = original
 
     def test_wrong_package_build_version_and_sdk_are_refused(self):
-        for old, new in [('com.cinevault.pessoal', 'com.example.other'), ("versionCode='17'", "versionCode='16'"),
-                         ("versionName='1.3.4'", "versionName='1.3.3'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")]:
+        for old, new in [('com.cinevault.pessoal', 'com.example.other'), ("versionCode='18'", "versionCode='16'"),
+                         ("versionName='1.3.5'", "versionName='1.3.3'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")]:
             with self.subTest(old=old), self.assertRaises(ValueError):
                 self.verify(badging=self.badging.replace(old, new))
 
@@ -99,8 +99,18 @@ class DeviceApkTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.verify()
 
+    def test_pilot_identity_and_tracking_controls_must_be_packaged(self):
+        original = self.payload['assets/public/assets/index.js']
+        for marker in ['tvmaze:tv:169', 'Séries e programas', 'Seu acompanhamento']:
+            with self.subTest(marker=marker):
+                self.payload['assets/public/assets/index.js'] = original.replace(marker, 'absent-pilot')
+                self.pack()
+                with self.assertRaises(ValueError):
+                    self.verify()
+        self.payload['assets/public/assets/index.js'] = original
+
     def test_invalid_or_old_metadata_is_refused(self):
-        for change in [{'build': 16}, {'build': 15}, {'build': True}, {'sourceCommit': 'not-a-commit'}, {'purpose': 'native_audit'},
+        for change in [{'build': 17}, {'build': 16}, {'build': 15}, {'build': True}, {'sourceCommit': 'not-a-commit'}, {'purpose': 'native_audit'},
                        {'version': '1.3.4\ninvalid'}, {'appId': 'com.example.other'}, {'sqlitePlugin': '7.0.0'},
                        {'validatedIntegrationCommit': None}, {'validatedNativeRun': None},
                        {'validatedNativeRun': '0'}, {'nativePersonalSchema': 1}, {'nativePersonalSchema': True},
@@ -120,7 +130,7 @@ class DeviceApkTests(unittest.TestCase):
             device.main()
         out = self.root / 'delivery'
         report = json.loads((out / 'device-test-report.json').read_text())
-        apk = out / 'Sintonema-teste-1.3.4-build17.apk'
+        apk = out / 'Sintonema-teste-1.3.5-build18.apk'
         self.assertEqual(apk.read_bytes(), self.apk.read_bytes())
         self.assertEqual((out / 'SHA256SUMS.txt').read_text(), report['sha256'] + '  ' + apk.name + '\n')
         self.assertIn('Nao desinstale', (out / 'LEIA-ME-TESTE.txt').read_text())

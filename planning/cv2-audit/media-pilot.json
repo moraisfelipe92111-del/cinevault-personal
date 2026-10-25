@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "updatedAt": "2026-10-25",
   "baseCommit": "2ba263c992cce1c8145f9956ef9a72c6a4264723",
-  "stage": "prepared_pending_application_native_audit_and_new_device_candidate",
+  "stage": "applied_native_approved_device_candidate_prepared",
   "scope": {
     "stableMovies": 1000,
     "originalPersonalSelectionsPreserved": 317,
@@ -107,7 +107,7 @@
     "browser": "Browse pilot with disabled progress controls; browser typed progress remains pending."
   },
   "validation": {
-    "localUnitTests": "16 focused pilot tests passed; full existing and new suites required by guarded installer and CI",
+    "localUnitTests": "364 JavaScript and43 Python passed in current-source CI; candidate verification is a separate preparation",
     "typecheckAndBuild": "passed",
     "focusedLint": "passed",
     "uiSmoke": "passed; actual App/MediaExplorer with synthetic persistence, network-blocked images, mobile and desktop; host SQLite tested separately",
@@ -115,15 +115,28 @@
     "checksPerPlatform": 40,
     "processesPerPlatform": 8,
     "interruptionsPerPlatform": 4,
-    "nativeStatus": "pending_current_source",
+    "nativeStatus": "approved",
     "nativeFixture": "Both TMDb and TVmaze entries traverse existing progress write/restart/interruption/restore phases.",
-    "deviceBuildBlocked": true
+    "deviceBuildBlocked": false,
+    "sourceCommit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
+    "runId": "40169636750",
+    "runAttempt": 1,
+    "webJobId": 121097675262,
+    "androidJobId": 121097946195,
+    "iosJobId": 121097946230
   },
   "next": [
-    "Apply and verify the exact audit-branch commit.",
-    "Approve current-source web, Android and iOS protocol7 reports.",
-    "Prepare a separately versioned signed Android test APK after approval.",
-    "Test pilot progress and complete restore on the physical device.",
-    "Add browser typed progress, reviewed episode catalogue and wider recommendations in scoped follow-ups."
-  ]
+    "Apply candidate preparation and verify its exact commit/files.",
+    "Pass and inspect the signed device-test artifact; compare hash/version/signer.",
+    "Test the eight-title pilot and complete progress restore on the physical Android.",
+    "Implement the public first-access/admin specification and browser progress as separate scoped work."
+  ],
+  "appliedCommit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
+  "candidatePreparation": {
+    "version": "1.3.5",
+    "build": 18,
+    "newAPKGenerated": false,
+    "installedCandidateRemains": "1.3.4/build17 until signed build delivery and owner installation",
+    "appAndStorageImplementationUnchangedExceptReleaseMetadata": true
+  }
 }

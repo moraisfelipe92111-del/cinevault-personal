@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-10-25",
-  "assessedSourceCommit": "2ba263c992cce1c8145f9956ef9a72c6a4264723",
+  "assessedSourceCommit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
   "brand": {
     "chosenName": "Sintonema",
     "previousName": "CineVault",
@@ -29,19 +29,19 @@
     "stableMovieIds": 1000,
     "originalPersonalSelectionsPreserved": 317,
     "newMoviesWithoutInventedPersonalRatings": 683,
-    "otherFormatsImported": false,
+    "otherFormatsImported": true,
     "personalSqliteActivatedAtStartup": true,
     "lastNativeAudit": {
-      "runId": 40128785503,
-      "sourceCommit": "f2824ab5b0dab0dbaa74fc1c2e9e5d5afd4048d2",
+      "runId": 40169636750,
+      "sourceCommit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
       "protocol": 7,
       "androidChecks": 40,
       "iosSimulatorChecks": 40,
       "distinctProcessesPerPlatform": 8,
       "verifiedInterruptionsPerPlatform": 4,
-      "runAttempt": 2,
-      "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/40128785503",
-      "scope": "Approved storage before the new TVmaze pilot. New source approval is pending."
+      "runAttempt": 1,
+      "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/40169636750",
+      "scope": "Current-source pilot SQLite audit; physical pilot UI remains pending."
     },
     "iosRealDeviceAndAppStoreReleaseValidated": false,
     "affiliateProgramApproved": false,
@@ -53,7 +53,8 @@
       "posters": "Cached covers observed offline; permanent full-catalogue download not established.",
       "additionalRecoveryAndPerformancePending": true
     },
-    "otherFormatsPrepared": 8
+    "otherFormatsPrepared": 8,
+    "otherFormatsScope": "Eight programmes applied to source; installed build17 predates the pilot."
   },
   "identityAndCompatibility": [
     "Preserve all existing local movie IDs 1-1000 and their associated personal data.",
@@ -107,7 +108,7 @@
     {
       "phase": 3,
       "name": "Piloto de catálogo variado",
-      "status": "eight_reviewed_tvmaze_programmes_and_tracking_ui_prepared_pending_application_and_native_audit",
+      "status": "eight_programme_pilot_applied_and_native_approved_pending_physical_candidate",
       "exit": "Validate identities, categories, explicit episodes, complete backup compatibility and actual-device UI before recommendation integration and catalogue growth."
     },
     {
@@ -172,8 +173,8 @@
     "browserProgressEnabled": false,
     "nativeAuditProtocol": 7,
     "nativeAuditChecks": 40,
-    "nativeValidation": "pending_for_pilot_source; f2824ab_previous_storage_approved",
-    "deviceAPKBuildBlockedPendingApproval": true,
+    "nativeValidation": "approved_for_ea3a5ac",
+    "deviceAPKBuildBlockedPendingApproval": false,
     "evaluation": "planning/cv2-audit/media-persistence.json"
   },
   "preparedMediaPilot": {
@@ -184,9 +185,29 @@
     "tracking": "Five explicit states and manually chosen season/episode, in the acknowledged native persistence queue",
     "recommendationsEnabled": false,
     "browserProgressEnabled": false,
-    "appliedCommit": null,
-    "nativeApproval": null,
+    "appliedCommit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
+    "nativeApproval": {
+      "runId": "40169636750",
+      "attempt": 1,
+      "androidChecks": 40,
+      "iosChecks": 40
+    },
     "newAPKGenerated": false,
-    "currentInstalledCandidate": "1.3.4/build17, without the pilot"
+    "currentInstalledCandidate": "1.3.4/build17, without the pilot",
+    "candidatePreparation": "1.3.5/build18"
+  },
+  "publicAccessAndAdministration": {
+    "specification": "planning/cv2-audit/public-first-access-admin-spec.md",
+    "status": "specified_not_implemented",
+    "consumerAccess": "Local use without registration; one library in initial scope.",
+    "consumerIdentifier": "No new UUID without a concrete use case; existing SQLite authority is not a consumer identity.",
+    "optionalAccount": "Future explicit benefit such as sync/recovery; not created automatically.",
+    "administration": "Separate protected owner panel for reviewed catalogue publication and operation.",
+    "backend": "Logical boundaries specified; contracts, provider, hosting/cost and implementation pending.",
+    "firstAccessUIImplemented": false,
+    "consumerIdentityImplemented": false,
+    "adminImplemented": false,
+    "backendProvisioned": false,
+    "acceptanceCriteria": "AC-01..08, AD-01..06 and OP-01..03 in the specification"
   }
 }

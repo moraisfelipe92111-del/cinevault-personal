@@ -25,7 +25,7 @@ if (nativeValidation?.status !== 'approved' || nativeValidation.protocol !== 7 |
 if (pkg.version !== LOCAL_RELEASE.version || lock.version !== pkg.version ||
     lock.packages[''].version !== pkg.version ||
     !/^\d+\.\d+\.\d+$/.test(LOCAL_RELEASE.version) ||
-    !Number.isSafeInteger(LOCAL_RELEASE.build) || LOCAL_RELEASE.build <= 16 ||
+    !Number.isSafeInteger(LOCAL_RELEASE.build) || LOCAL_RELEASE.build <= 17 ||
     sqlite.version !== '8.1.1') throw Error('Versoes do aplicativo ou SQLite divergentes.')
 
 const appId = 'com.cinevault.pessoal'

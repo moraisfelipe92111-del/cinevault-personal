@@ -1,5 +1,5 @@
 /** Manifests signed off by the publisher; every APK must also pass native SHA-256 and signer checks. */
-export const LOCAL_RELEASE = { version: '1.3.4', build: 17 } as const
+export const LOCAL_RELEASE = { version: '1.3.5', build: 18 } as const
 export const RELEASE_MANIFEST_URL = 'https://raw.githubusercontent.com/moraisfelipe92111-del/cinevault-personal/main/releases/latest.json'
 const OWNER='moraisfelipe92111-del', REPO='cinevault-personal'
 const BASE=`/${OWNER}/${REPO}/releases/download/`

@@ -1,24 +1,24 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-24",
-  "baseCommit": "f2824ab5b0dab0dbaa74fc1c2e9e5d5afd4048d2",
-  "stage": "device_apk_build_prepared_pending_ci_and_real_device_validation",
+  "updatedAt": "2026-10-25",
+  "baseCommit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
+  "stage": "pilot_device_apk_prepared_pending_actual_ci_and_physical_tests",
   "candidate": {
-    "version": "1.3.4",
-    "build": 17,
+    "version": "1.3.5",
+    "build": 18,
     "appId": "com.cinevault.pessoal",
     "visibleBrand": "CineVault",
-    "purpose": "Validate the v1-to-v2 native storage upgrade, existing data preservation and the complete audiovisual backup on the existing Android installation.",
+    "purpose": "Validate the approved eight-programme pilot, explicit episode/status edits and complete audiovisual backup on the existing Android installation. App and storage code match approved ea3a5ac except release metadata.",
     "signing": "Reuse the existing CINEVAULT_DEBUG_KEYSTORE_B64 secret; verify the final APK with apksigner and compare its certificate to that key before upload.",
     "distribution": "GitHub Actions test artifact only; no store submission, public release or latest.json update.",
     "installedAppChangedByPreparation": false,
     "nativePersonalSchema": 2
   },
   "validatedIntegration": {
-    "commit": "f2824ab5b0dab0dbaa74fc1c2e9e5d5afd4048d2",
-    "runId": "40128785503",
-    "attempt": 2,
-    "webTests": 346,
+    "commit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
+    "runId": "40169636750",
+    "attempt": 1,
+    "webTests": 364,
     "nativeControllerTests": 43,
     "androidChecks": 40,
     "iosSimulatorChecks": 40,
@@ -28,35 +28,36 @@
     "finalCommittedPersonalRevision": 3,
     "finalCommittedMediaRevision": 3,
     "androidReportAttempt": 1,
-    "iosReportAttempt": 2,
-    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/40128785503"
+    "iosReportAttempt": 1,
+    "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/40169636750"
   },
   "buildControls": [
     "Use the lockfile, Node 24.21.0, JDK 21 and the same pinned native dependencies.",
     "Derive native versionName and versionCode from LOCAL_RELEASE and reject inconsistent package metadata.",
-    "Require the approved protocol-7 receipt for source f2824ab and run 40128785503 before changing Gradle; refuse old build16 or missing native provenance.",
+    "Require approved protocol7 provenance for ea3a5ac/40169636750 before changing Gradle; refuse build17 or lower and missing approval.",
     "Keep the existing package identity and temporary test signing key; do not substitute a store signing key.",
     "Reject audit HTML or the synthetic probe script in the device APK.",
     "Verify the packaged native SQLite plugin, ARM64 library and real persistence bootstrap.",
+    "Verify the reviewed TVmaze pilot identity and series tracking controls in the packaged JavaScript, not just generic SQLite markers.",
     "Deliver only the APK, SHA-256, public verification metadata and a short test guide. Never upload keystore material.",
     "The audit branch starts this build only for a commit marked [device-test], or a manual workflow invocation."
   ],
   "realDeviceChecklist": [
-    "Before installation, use Exportar copia completa in the installed 1.3.3/build16 app and keep that file and earlier backups outside the app.",
-    "Record representative favorites, watched entries, notes, queue and preferences for comparison without uploading private values.",
-    "Install as an update; if Android refuses the update, stop without uninstalling or clearing data.",
-    "Confirm version 1.3.4/build17 and compare existing data and preferences after the audiovisual storage upgrade.",
-    "Save a favorite, watched entry and note; close and reopen the app, then check those changes.",
-    "Check queue, watch journal and preferences, including offline access. Native offline posters remain unavailable.",
-    "Export the new complete sintonema.audiovisual-backup copy and keep it outside the app before guided restoration/recovery tests.",
-    "Keep the old complete backup for rollback support. Do not install build16 over build17: the v2 authority receipt deliberately rejects stale v1 database access.",
-    "This candidate keeps the 1000-film catalogue and does not yet expose new series/anime/reality navigation or progress controls."
+    "Before installing, export a fresh complete backup from build17 and retain earlier copies outside the app.",
+    "Record representative data without sending private backup values. Install as an update; stop if Android refuses, without uninstalling or clearing storage.",
+    "Confirm1.3.5/build18, old film data and preferences.",
+    "Open Biblioteca → Séries e programas; inspect eight titles, categories and search.",
+    "Set Breaking Bad to Assistindo and mark T1/E1; close/reopen and verify. Then pause/reopen and verify without automatic series completion.",
+    "Test catalogue and new progress writes/reopen offline. Previously loaded images may be cached; permanent full-cover downloads are not implemented.",
+    "Export a new complete audiovisual backup outside the app before guided restore tests.",
+    "Preserve old backups; TVmaze progress needs a compatible version and must not be silently reduced by older code.",
+    "First-access/identity/admin/backend are specified separately and not implemented by this APK."
   ],
   "remainingGates": [
-    "Apply this preparation on the audit worktree and pass the actual signed-APK GitHub job.",
-    "Compare the resulting commit, APK hash, native package/version and signer before installation.",
-    "Complete real Android data-preservation, save/reopen and backup/recovery checks.",
-    "Prepare a separate signed iOS build and validate it on an iPhone before store submission.",
-    "Keep the broader Sintonema brand, audiovisual catalogue and production-store requirements in their existing roadmap."
+    "Apply this package and inspect the real signed-APK CI result.",
+    "Verify commit, APK hash, package/version and signer before updating.",
+    "Complete physical pilot progress/reopen, complete backup restore and further recovery/performance tests.",
+    "Implement public first access, admin and catalogue service separately according to the product specification.",
+    "Finish signed iPhone and store requirements before production."
   ]
 }
