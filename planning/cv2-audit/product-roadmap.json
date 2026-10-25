@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-10-25",
-  "assessedSourceCommit": "ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8",
+  "assessedSourceCommit": "ae1255f1974c23712bc7c3544c9607c3feebf8cd",
   "brand": {
     "chosenName": "Sintonema",
     "previousName": "CineVault",
@@ -41,20 +41,20 @@
       "verifiedInterruptionsPerPlatform": 4,
       "runAttempt": 1,
       "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/40169636750",
-      "scope": "Current-source pilot SQLite audit; physical pilot UI remains pending."
+      "scope": "Exact ea3a5ac pilot audit; new public-access code is locally tested, unchanged native storage awaits any final candidate checks."
     },
     "iosRealDeviceAndAppStoreReleaseValidated": false,
     "affiliateProgramApproved": false,
     "androidPhysicalDevice": {
-      "sourceCommit": "2ba263c992cce1c8145f9956ef9a72c6a4264723",
-      "version": "1.3.4/build17",
-      "evidence": "Owner reports upgrade/open, old data, new writes/reopen, complete backup export/restore and offline library with displayed posters. No private file or database inspected.",
-      "offlineWriteAndReopenForBuild17": "not explicitly confirmed",
-      "posters": "Cached covers observed offline; permanent full-catalogue download not established.",
+      "sourceCommit": "ae1255f1974c23712bc7c3544c9607c3feebf8cd",
+      "version": "1.3.5/build18",
+      "evidence": "Owner confirms update with old data retained and Breaking Bad watching/T1E1 retained after reopening. User report only; no private file or database inspected.",
+      "fullTVmazeBackupRestore": "deferred by the owner on 2026-10-25, not marked passed",
+      "offlineWriteAndReopenForBuild18": "pending",
       "additionalRecoveryAndPerformancePending": true
     },
     "otherFormatsPrepared": 8,
-    "otherFormatsScope": "Eight programmes applied to source; installed build17 predates the pilot."
+    "otherFormatsScope": "Eight programmes in build18; one basic physical episode save/reopen confirmed by owner. Remaining device tests deferred, not certified."
   },
   "identityAndCompatibility": [
     "Preserve all existing local movie IDs 1-1000 and their associated personal data.",
@@ -108,7 +108,7 @@
     {
       "phase": 3,
       "name": "Piloto de catálogo variado",
-      "status": "eight_programme_pilot_applied_and_native_approved_pending_physical_candidate",
+      "status": "pilot_build18_basic_physical_progress_confirmed_remaining_manual_cases_deferred",
       "exit": "Validate identities, categories, explicit episodes, complete backup compatibility and actual-device UI before recommendation integration and catalogue growth."
     },
     {
@@ -192,22 +192,32 @@
       "androidChecks": 40,
       "iosChecks": 40
     },
-    "newAPKGenerated": false,
-    "currentInstalledCandidate": "1.3.4/build17, without the pilot",
-    "candidatePreparation": "1.3.5/build18"
+    "newAPKGenerated": true,
+    "currentInstalledCandidate": "1.3.5/build18, basic update and T1E1 reopen user-confirmed",
+    "candidatePreparation": "ae1255f1974c23712bc7c3544c9607c3feebf8cd"
   },
   "publicAccessAndAdministration": {
     "specification": "planning/cv2-audit/public-first-access-admin-spec.md",
-    "status": "specified_not_implemented",
+    "status": "guest_first_access_prepared_locally_admin_backend_pending",
     "consumerAccess": "Local use without registration; one library in initial scope.",
     "consumerIdentifier": "No new UUID without a concrete use case; existing SQLite authority is not a consumer identity.",
     "optionalAccount": "Future explicit benefit such as sync/recovery; not created automatically.",
     "administration": "Separate protected owner panel for reviewed catalogue publication and operation.",
     "backend": "Logical boundaries specified; contracts, provider, hosting/cost and implementation pending.",
-    "firstAccessUIImplemented": false,
+    "firstAccessUIImplemented": true,
     "consumerIdentityImplemented": false,
     "adminImplemented": false,
     "backendProvisioned": false,
-    "acceptanceCriteria": "AC-01..08, AD-01..06 and OP-01..03 in the specification"
+    "acceptanceCriteria": "AC-01..08, AD-01..06 and OP-01..03 in the specification",
+    "implementationEvidence": "planning/cv2-audit/public-access.json",
+    "preferences": "Version 1 publicAccess inside cinevault.experience.v1; existing atomic writes and complete raw backups; no new DB schema or consumer identifier.",
+    "remoteApplication": "Pending guarded package execution by owner; not yet in the installed APK."
+  },
+  "deliveryPolicy": {
+    "updatedAt": "2026-10-25",
+    "ownerInstruction": "Continue without another manual backup this time; minimize completion time per stage.",
+    "execution": "Batch cohesive implementation and automated checks; reuse unchanged-source evidence; collect native/APK/device checks at meaningful release boundaries rather than every UI change.",
+    "manualCases": "Deferred cases remain pending, never marked passed without evidence. Existing tests and required release checks remain enabled.",
+    "noAutomaticNewAPK": true
   }
 }

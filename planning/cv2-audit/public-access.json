@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "preparedAt": "2026-10-25",
+  "sourceBase": "ae1255f1974c23712bc7c3544c9607c3feebf8cd",
+  "status": "implemented_locally_pending_guarded_application_and_ci",
+  "scope": [
+    "Guest welcome after confirmed storage bootstrap",
+    "Restore from welcome using the same durable import path as the library",
+    "Optional versioned format choices and skip",
+    "Editable home discovery shortcuts without hiding the rest of the catalogue",
+    "Existing library bypass without writes",
+    "Local-data and recovery explanation in My list"
+  ],
+  "storageContract": {
+    "key": "cinevault.experience.v1",
+    "optionalField": "publicAccess",
+    "fieldVersion": 1,
+    "completedValue": true,
+    "formats": [
+      "movies",
+      "series",
+      "anime",
+      "reality",
+      "documentary"
+    ],
+    "envelopeKeys": [
+      "version",
+      "completed",
+      "formats"
+    ],
+    "completion": "Writes only after an explicit action, in the existing acknowledged persistence queue; all-absent state is checked again inside the queued transformation.",
+    "existingLibrary": "Any present raw key, including empty, malformed and unknown text, or any typed progress skips onboarding. A read failure is not treated as absence.",
+    "backup": "Existing complete raw snapshot/audiovisual backup carries the field without a format change. Exact restored raw data is not rewritten just to mark onboarding complete.",
+    "emptyRestore": "A fully absent restored snapshot enters the library for that session; reopening may invite first access again because the restored copy contains no completion record.",
+    "unknownFields": "Unsupported versions, future fields and reduced projections remain guarded; neither onboarding nor settings normalize them into defaults.",
+    "downgrade": "Earlier preference decoders see the extra field as a guarded projection and cannot silently overwrite it; no downgrade requested.",
+    "nativeSchemaVersion": 2,
+    "nativeStorageChanged": false,
+    "storageKeysChanged": false,
+    "consumerIdIntroduced": false
+  },
+  "localVerification": {
+    "nodeTests": 373,
+    "pythonTests": 44,
+    "typeScriptAndBuild": "passed",
+    "uiScenarios": 13,
+    "uiScope": "Actual React components, synthetic in-memory persistence, all external requests blocked; host SQLite tests separately prove reopen, raw backup restoration and frozen origin.",
+    "nativeAudit": "No new native audit claimed; existing storage/schema/package/dependencies unchanged. Final APK verification and physical tests remain release gates."
+  },
+  "deliberatelyPending": [
+    "Brand rollout",
+    "Local-data reset with coherent authority handling",
+    "Full public recommendation personalization",
+    "Administrative panel/server authentication",
+    "Catalogue publication backend and infrastructure",
+    "Accounts and synchronization",
+    "Browser typed-series persistence",
+    "Final native/store release validation"
+  ],
+  "ownerManualTestDecision": {
+    "date": "2026-10-25",
+    "test": "Complete export/restore with TVmaze progress on build18",
+    "state": "deferred_by_owner_not_passed",
+    "nextAction": "Continue implementation without requesting a new backup now"
+  },
+  "delivery": {
+    "newAPK": false,
+    "versionBuildChanged": false,
+    "messageMarker": "No device-test or native-audit marker for this UI delivery; web CI still runs all tests and builds."
+  }
+}

@@ -25,7 +25,7 @@ test('snapshot covers exactly the six audited keys, including experience prefere
   const baseline = JSON.parse(fs.readFileSync(new URL('../planning/cv2-audit/persistence-baseline.json', import.meta.url)))
   assert.deepEqual(keys, baseline.personalStorage.map(entry => entry.key))
   assert.equal(keys.length, 6)
-  const sources = ['App.tsx', 'pulse.ts', 'experience.tsx'].map(name =>
+  const sources = ['App.tsx', 'pulse.ts', 'experience.tsx', 'experiencePreferences.ts'].map(name =>
     fs.readFileSync(new URL('../src/' + name, import.meta.url), 'utf8')).join('\n')
   const current = [...sources.matchAll(/['"](cinevault\.[^'"\s]+)['"]/g)].map(match => match[1])
   assert.deepEqual(new Set(current), new Set(keys))

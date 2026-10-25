@@ -2,7 +2,7 @@
 
 Data: 25/10/2026. Base: `ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8`.
 
-Status: especificação para implementação em entregas posteriores. O pacote atual registra estas decisões e prepara o APK de teste do piloto já aprovado. Não implementa onboarding novo, painel, conta, identificador de consumidor, backend ou sincronização.
+Status em 25/10/2026: primeiro acesso sem cadastro, restauração e preferências opcionais implementados localmente na entrega public-access, ainda aguardando aplicação e CI. Painel, conta, identificador de consumidor, backend e sincronização permanecem pendentes. A seção de persistência registra o contrato concreto desta entrega.
 
 ## Recorte inicial
 
@@ -39,7 +39,7 @@ Permissões devem surgir no contexto da função correspondente. A região inici
 
 ### Persistência da jornada
 
-Estado de onboarding e novos gostos públicos ainda não têm armazenamento definido. Antes da implementação, projetar a evolução de schema/backup e seus testes. Não reutilizar o sinal de animação de abertura como consentimento de conta, nem acrescentar campos às preferências por serialização que reduza dados desconhecidos. O código atual protege seis valores brutos, preferências e progresso tipado; os 1.000 IDs locais continuam estáveis.
+O primeiro acesso e os formatos de exploração usam o campo opcional `publicAccess: {version: 1, completed: true, formats: [...]}` dentro de `cinevault.experience.v1`. O campo só é gravado por uma ação explícita e pela fila de confirmação existente. Nenhuma chave ou tabela nova é criada para a jornada; a cópia completa já inclui o valor bruto. O indicador de animação não é usado como conclusão do primeiro acesso. Preferências antigas continuam sem esse campo; conteúdo desconhecido ou de versão futura não pode ser reduzido e sobrescrito. Um snapshot restaurado inteiramente ausente não recebe marcação adicional: abre a biblioteca nessa sessão e pode oferecer boas-vindas na próxima abertura. Os 1.000 IDs locais e a origem congelada permanecem intactos. Os formatos escolhem atalhos de exploração, não fingem compor um modelo pessoal de recomendação.
 
 O controle de redefinição será uma ação explícita, com confirmação e oferta de cópia. Não será chamado automaticamente quando o banco, a autoridade ou a leitura falhar. Deverá abranger de forma coerente os dados/recibos locais correspondentes e explicar que arquivos exportados fora do app não são apagados por esse controle.
 
@@ -85,7 +85,7 @@ O painel precisa de autorização no servidor, isolamento de ambientes, proteç�
 
 ## Critérios de aceite para as entregas futuras
 
-Os critérios estão especificados, não executados como funcionalidades novas neste pacote.
+Os critérios continuam sendo a referência do produto completo. AC-01/02/03/05/07 têm implementação e testes locais nos fluxos descritos em public-access.json; isso não certifica o futuro APK, a implantação administrativa ou todos os casos físicos. AC-04/06 mantêm as evidências anteriores no alcance registrado; AC-08 e todos os critérios administrativos/operacionais ainda exigem implementação ou validação própria.
 
 | ID | Cenário | Resultado obrigatório |
 | --- | --- | --- |
@@ -110,7 +110,7 @@ Os critérios estão especificados, não executados como funcionalidades novas n
 ## Ordem de implementação
 
 1. Revisar este contrato de produto junto do plano mestre e preservar a base nativa aprovada.
-2. Testar o candidato 1.3.5/build18 do piloto no Android: oito títulos, estados/episódios, reabertura e cópia completa. Essa versão ainda não implementa a jornada nova nem o painel.
+2. Teste básico do build18 confirmado por relato: atualização, dados preservados e T1/E1 após reabrir. Felipe adiou a nova cópia/restauração manual para avançar; o caso segue pendente e não bloqueia esta implementação. O APK instalado ainda não contém a jornada nova.
 3. Escolher contratos/infraestrutura e implementar autenticação administrativa e publicação mínima do catálogo com validação/reversão.
-4. Implementar a jornada pública e preferências com evolução de armazenamento/backup testada, recomendações e marca; concluir testes físicos, direitos e publicação.
+4. Aplicar e aprovar a jornada pública preparada; reunir recomendações, marca e demais melhorias em candidatos completos. Concluir os testes de lançamento, direitos e distribuição nos marcos correspondentes.
 5. Desenvolver conta/sincronização e módulos comerciais em entregas próprias quando os benefícios, custos e condições estiverem definidos.

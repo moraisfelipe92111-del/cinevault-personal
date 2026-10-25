@@ -4,22 +4,12 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'reac
 import { BellRing, Check, ChevronRight, Download, Eye, Film, Headphones, RotateCw, Settings2, ShieldCheck, Sparkles, Volume2, VolumeX, X } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { fetchLatestRelease, LOCAL_RELEASE, type Release } from './release'
-import { playBrandAudio, stopBrandAudio, type SonicStyle } from './sonic'
+import { playBrandAudio, stopBrandAudio } from './sonic'
 import { beginNativeUpdate, currentInstalledBuild, nativeUpdateAvailable } from './nativeUpdater'
 import './experience.css'
 
-const PREF_KEY='cinevault.experience.v1'
-type Preferences={intro:boolean,sound:boolean,updates:boolean,sonic:SonicStyle,volume:number}
-const defaults:Preferences={intro:true,sound:true,updates:true,sonic:'signature',volume:.60}
-function decodePreferences(parsed:unknown):Preferences {
- return parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?{
- intro:(parsed as Partial<Preferences>).intro!==false,
- sound:(parsed as Partial<Preferences>).sound!==false,
- updates:(parsed as Partial<Preferences>).updates!==false,
- sonic:(['signature','noir','impacto'] as string[]).includes(String((parsed as Partial<Preferences>).sonic)) ? (parsed as Preferences).sonic : (parsed as Preferences).sonic==='aura'?'noir':'signature',
- volume:typeof (parsed as Partial<Preferences>).volume==='number' && Number.isFinite((parsed as Preferences).volume)?Math.min(1,Math.max(.15,(parsed as Preferences).volume)):.65
- }:defaults
-}
+import {EXPERIENCE_KEY as PREF_KEY, EXPERIENCE_DEFAULTS as defaults, decodeExperiencePreferences as decodePreferences, type ExperiencePreferences as Preferences} from './experiencePreferences'
+
 /** Playback may fail under browser autoplay policy, never block startup. */
 export const playBrandTone = playBrandAudio
 

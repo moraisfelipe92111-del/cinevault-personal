@@ -15,9 +15,9 @@ function Poster({item}:{item:PilotItem}) {
   return <div className="cv-media-poster">{!failed ? <img loading="lazy" decoding="async" src={item.posterUrl} alt={`Pôster de ${item.media.title}`} onError={()=>setFailed(true)}/> : <><Clapperboard size={30}/><span>{item.media.title}</span></>}</div>
 }
 
-export default function MediaExplorer({persistence,notify}:{persistence:PersonalPersistence;notify:(message:string)=>void}) {
+export default function MediaExplorer({persistence,notify,initialFilter='Todos'}:{persistence:PersonalPersistence;notify:(message:string)=>void;initialFilter?:PilotFilter}) {
   const state=useSyncExternalStore(persistence.subscribe,persistence.getStatus,persistence.getStatus)
-  const [query,setQuery]=useState(''),[filter,setFilter]=useState<PilotFilter>('Todos'),[selected,setSelected]=useState<PilotItem|null>(null)
+  const [query,setQuery]=useState(''),[filter,setFilter]=useState<PilotFilter>(initialFilter),[selected,setSelected]=useState<PilotItem|null>(null)
   const [season,setSeason]=useState('1'),[episode,setEpisode]=useState('1'),[busy,setBusy]=useState(false)
   const deferred=useDeferredValue(query), progress=persistence.getMediaProgress()
   const visible=useMemo(()=>filterPilot(catalog,deferred,filter,progress),[deferred,filter,progress])
