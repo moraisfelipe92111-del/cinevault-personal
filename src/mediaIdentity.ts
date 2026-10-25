@@ -1,5 +1,5 @@
 /** Typed identities are additive: the existing movie IDs keep their namespace. */
-export type MediaSource = 'local' | 'tmdb'
+export type MediaSource = 'local' | 'tmdb' | 'tvmaze'
 export type MediaType = 'movie' | 'tv'
 export type MediaKey = `${MediaSource}:${MediaType}:${number}`
 export type MediaIdentity = Readonly<{ source: MediaSource; mediaType: MediaType; id: number }>
@@ -10,7 +10,7 @@ function positiveInteger(value: unknown): value is number {
 }
 
 export function mediaKey(source: MediaSource, mediaType: MediaType, id: number): MediaKey {
-  if ((source !== 'local' && source !== 'tmdb') || (mediaType !== 'movie' && mediaType !== 'tv') || !positiveInteger(id)) {
+  if ((source !== 'local' && source !== 'tmdb' && source !== 'tvmaze') || (mediaType !== 'movie' && mediaType !== 'tv') || !positiveInteger(id)) {
     throw new Error('Identidade audiovisual inválida')
   }
   return `${source}:${mediaType}:${id}`
@@ -19,7 +19,7 @@ export function mediaKey(source: MediaSource, mediaType: MediaType, id: number):
 /** Refuse coercion and alternate spellings: one identity has one serialized key. */
 export function parseMediaKey(value: unknown): MediaIdentity {
   if (typeof value !== 'string') throw new Error('Identidade audiovisual inválida')
-  const match = /^(local|tmdb):(movie|tv):([1-9][0-9]*)$/.exec(value)
+  const match = /^(local|tmdb|tvmaze):(movie|tv):([1-9][0-9]*)$/.exec(value)
   if (!match || !positiveInteger(Number(match[3]))) throw new Error('Identidade audiovisual inválida')
   const source = match[1] as MediaSource, mediaType = match[2] as MediaType, id = Number(match[3])
   if (mediaKey(source, mediaType, id) !== value) throw new Error('Identidade audiovisual inválida')

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-24",
-  "assessedSourceCommit": "2349a0b069a138a951e1e1ba7e9472ec81a3033e",
+  "updatedAt": "2026-10-25",
+  "assessedSourceCommit": "2ba263c992cce1c8145f9956ef9a72c6a4264723",
   "brand": {
     "chosenName": "Sintonema",
     "previousName": "CineVault",
@@ -32,21 +32,28 @@
     "otherFormatsImported": false,
     "personalSqliteActivatedAtStartup": true,
     "lastNativeAudit": {
-      "runId": 39796669086,
-      "sourceCommit": "0811feb82724a06614b151b7fbf9f252e4a82fb5",
-      "protocol": 6,
-      "androidChecks": 28,
-      "iosSimulatorChecks": 28,
-      "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/39796669086"
+      "runId": 40128785503,
+      "sourceCommit": "f2824ab5b0dab0dbaa74fc1c2e9e5d5afd4048d2",
+      "protocol": 7,
+      "androidChecks": 40,
+      "iosSimulatorChecks": 40,
+      "distinctProcessesPerPlatform": 8,
+      "verifiedInterruptionsPerPlatform": 4,
+      "runAttempt": 2,
+      "url": "https://github.com/moraisfelipe92111-del/cinevault-personal/actions/runs/40128785503",
+      "scope": "Approved storage before the new TVmaze pilot. New source approval is pending."
     },
     "iosRealDeviceAndAppStoreReleaseValidated": false,
     "affiliateProgramApproved": false,
     "androidPhysicalDevice": {
-      "sourceCommit": "c3473280ffbcf1880fec6c4d848abfb6c543cbb6",
-      "version": "1.3.3/build16",
-      "evidence": "User reports: startup, data preservation, favorite save/reopen, complete backup restore and basic airplane-mode use passed. Posters did not load offline. No private data inspected.",
+      "sourceCommit": "2ba263c992cce1c8145f9956ef9a72c6a4264723",
+      "version": "1.3.4/build17",
+      "evidence": "Owner reports upgrade/open, old data, new writes/reopen, complete backup export/restore and offline library with displayed posters. No private file or database inspected.",
+      "offlineWriteAndReopenForBuild17": "not explicitly confirmed",
+      "posters": "Cached covers observed offline; permanent full-catalogue download not established.",
       "additionalRecoveryAndPerformancePending": true
-    }
+    },
+    "otherFormatsPrepared": 8
   },
   "identityAndCompatibility": [
     "Preserve all existing local movie IDs 1-1000 and their associated personal data.",
@@ -88,20 +95,20 @@
     {
       "phase": 1,
       "name": "Persistência confiável",
-      "status": "native_audits_passed_android_basic_restore_offline_user_confirmed_remaining_device_gates",
-      "exit": "Preserve the approved protocol-6 Android/iOS audits and user-confirmed Android basic/restore/offline evidence; complete physical-device failure recovery, representative performance and real iPhone tests before production."
+      "status": "native_audits_passed_build17_basic_restore_and_offline_read_user_confirmed_remaining_device_gates",
+      "exit": "Preserve protocol-7 Android/iOS and build17 owner-reported evidence; complete physical recovery, representative performance and real iPhone testing before production."
     },
     {
       "phase": 2,
       "name": "Modelo audiovisual e backups",
-      "status": "native_media_progress_and_complete_backups_integrated_pending_protocol7_and_device_tests",
+      "status": "native_v2_storage_approved_and_basic_android_backup_restore_confirmed_browser_progress_pending",
       "exit": "Introduce typed identities, series/season/episode progress and a versioned compatibility path without changing the 1000 existing movie IDs."
     },
     {
       "phase": 3,
       "name": "Piloto de catálogo variado",
-      "status": "planned",
-      "exit": "Import a small verified pilot across formats, check identities and metadata, and validate progress and recommendations before adding thousands."
+      "status": "eight_reviewed_tvmaze_programmes_and_tracking_ui_prepared_pending_application_and_native_audit",
+      "exit": "Validate identities, categories, explicit episodes, complete backup compatibility and actual-device UI before recommendation integration and catalogue growth."
     },
     {
       "phase": 4,
@@ -127,30 +134,33 @@
     "sourceBase": "5108f3da821d73c499be42229a8c9018f7c7f1fa",
     "nativeStartupEnabledInCode": true,
     "newAPKPublished": false,
-    "nextNativeProtocol": 6,
-    "expectedNativeChecks": 28,
+    "nextNativeProtocol": 7,
+    "expectedNativeChecks": 40,
     "browserBackend": "shared localStorage",
     "releaseGate": "Real-device recovery/performance, signed iPhone testing and production store pipelines remain pending; basic Android and complete-backup restore were confirmed by the owner.",
     "sourceCommit": "0811feb82724a06614b151b7fbf9f252e4a82fb5",
     "testAPKDelivered": true,
-    "testAPKCommit": "c3473280ffbcf1880fec6c4d848abfb6c543cbb6",
+    "testAPKCommit": "2ba263c992cce1c8145f9956ef9a72c6a4264723",
     "nativeCIApproved": true,
-    "validatedNativeProtocol": 6,
-    "validatedNativeChecks": 28
+    "validatedNativeProtocol": 7,
+    "validatedNativeChecks": 40,
+    "scope": "Historical integration milestones; the current media-pilot source requires a fresh native audit."
   },
   "preparedAudiovisualFoundation": {
-    "runtimeActivated": false,
+    "runtimeActivated": true,
     "newTitlesImported": false,
     "legacyNumericIdsPreserved": 1000,
     "reviewedMovieAliases": 983,
     "unresolvedMovieIdentities": 17,
     "progressFormat": "sintonema.media-progress v1",
     "backupFormat": "sintonema.audiovisual-backup v1",
-    "nativeStorageAndUIIntegrationPending": true,
+    "nativeStorageAndUIIntegrationPending": false,
     "evaluation": "planning/cv2-audit/audiovisual-foundation.json",
     "appliedCommit": "2349a0b069a138a951e1e1ba7e9472ec81a3033e",
     "ciRun": 40105484502,
-    "ciPassed": true
+    "ciPassed": true,
+    "newTitlesPrepared": 8,
+    "remainingIntegration": "Browser typed progress and wider catalogue/recommendations remain pending; new pilot needs application and native/device validation."
   },
   "preparedMediaPersistence": {
     "nativeBootstrapVersion": 2,
@@ -158,12 +168,25 @@
     "oldOriginFrozen": true,
     "typedProgressAPIIntegrated": true,
     "completeBackupUIIntegrated": true,
-    "seriesNavigationImplemented": false,
+    "seriesNavigationImplemented": true,
     "browserProgressEnabled": false,
     "nativeAuditProtocol": 7,
     "nativeAuditChecks": 40,
-    "nativeValidation": "pending",
+    "nativeValidation": "pending_for_pilot_source; f2824ab_previous_storage_approved",
     "deviceAPKBuildBlockedPendingApproval": true,
     "evaluation": "planning/cv2-audit/media-persistence.json"
+  },
+  "preparedMediaPilot": {
+    "evaluation": "planning/cv2-audit/media-pilot.json",
+    "reviewedTitles": 8,
+    "source": "TVmaze",
+    "ui": "Biblioteca → Séries e programas; lazy loaded",
+    "tracking": "Five explicit states and manually chosen season/episode, in the acknowledged native persistence queue",
+    "recommendationsEnabled": false,
+    "browserProgressEnabled": false,
+    "appliedCommit": null,
+    "nativeApproval": null,
+    "newAPKGenerated": false,
+    "currentInstalledCandidate": "1.3.4/build17, without the pilot"
   }
 }

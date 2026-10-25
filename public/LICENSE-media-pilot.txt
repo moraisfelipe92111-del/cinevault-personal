@@ -1,0 +1,16 @@
+Sintonema audiovisual pilot data
+
+Source: TVmaze contributors, https://www.tvmaze.com/
+Source documentation: https://www.tvmaze.com/api#licensing
+License: Creative Commons Attribution-ShareAlike 4.0 International
+https://creativecommons.org/licenses/by-sa/4.0/
+
+The reviewed pilot catalogue in src/mediaPilotData.json derives title identities,
+years, programme classifications and poster links from the TVmaze show pages
+listed in each entry. Portuguese descriptions and category selections were
+adapted for this pilot. This adapted data file is distributed under CC BY-SA 4.0.
+The source links and licence are also available in the application.
+
+Artwork remains attributable to its respective copyright holders. The licence
+notice for catalogue data does not grant rights to full episodes, films, logos
+or third-party artwork. No streaming offers or affiliate relationship are claimed.

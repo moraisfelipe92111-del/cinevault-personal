@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-25",
+  "baseCommit": "2ba263c992cce1c8145f9956ef9a72c6a4264723",
+  "stage": "prepared_pending_application_native_audit_and_new_device_candidate",
+  "scope": {
+    "stableMovies": 1000,
+    "originalPersonalSelectionsPreserved": 317,
+    "newProgrammes": 8,
+    "navigation": "Biblioteca → Filmes / Séries e programas; existing five bottom-navigation items retained",
+    "categories": [
+      "Ficção",
+      "Animes",
+      "Realities",
+      "Documentários",
+      "Acompanhando"
+    ],
+    "recommendationsChanged": false,
+    "brandRenamed": false,
+    "packageIdChanged": false,
+    "schemaChanged": false,
+    "versionChanged": false,
+    "newAPKGenerated": false
+  },
+  "reviewedRecords": [
+    {
+      "key": "tvmaze:tv:169",
+      "title": "Breaking Bad",
+      "year": 2008,
+      "sourceUrl": "https://www.tvmaze.com/shows/169/breaking-bad",
+      "reviewedAt": "2026-10-25"
+    },
+    {
+      "key": "tvmaze:tv:161",
+      "title": "Dexter",
+      "year": 2006,
+      "sourceUrl": "https://www.tvmaze.com/shows/161/dexter",
+      "reviewedAt": "2026-10-25"
+    },
+    {
+      "key": "tvmaze:tv:269",
+      "title": "Peaky Blinders",
+      "year": 2013,
+      "sourceUrl": "https://www.tvmaze.com/shows/269/peaky-blinders",
+      "reviewedAt": "2026-10-25"
+    },
+    {
+      "key": "tvmaze:tv:26856",
+      "title": "You",
+      "year": 2018,
+      "sourceUrl": "https://www.tvmaze.com/shows/26856/you",
+      "reviewedAt": "2026-10-25"
+    },
+    {
+      "key": "tvmaze:tv:64632",
+      "title": "Solo Leveling",
+      "year": 2024,
+      "sourceUrl": "https://www.tvmaze.com/shows/64632/solo-leveling",
+      "reviewedAt": "2026-10-25"
+    },
+    {
+      "key": "tvmaze:tv:17779",
+      "title": "MasterChef Brasil",
+      "year": 2014,
+      "sourceUrl": "https://www.tvmaze.com/shows/17779/masterchef-brasil",
+      "reviewedAt": "2026-10-25"
+    },
+    {
+      "key": "tvmaze:tv:114",
+      "title": "Survivor",
+      "year": 2000,
+      "sourceUrl": "https://www.tvmaze.com/shows/114/survivor",
+      "reviewedAt": "2026-10-25"
+    },
+    {
+      "key": "tvmaze:tv:22036",
+      "title": "Planet Earth II",
+      "year": 2016,
+      "sourceUrl": "https://www.tvmaze.com/shows/22036/planet-earth-ii",
+      "reviewedAt": "2026-10-25"
+    }
+  ],
+  "dataProvenance": {
+    "source": "TVmaze",
+    "reference": "https://www.tvmaze.com/api",
+    "metadataLicense": "CC-BY-SA-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "Per-title source links, visible footer and public/LICENSE-media-pilot.txt",
+    "adaptation": "Portuguese summaries paraphrased, classifications selected, missing runtime left null; no personal scores invented.",
+    "artwork": "Poster URLs are credited to the source; individual artwork rights and the full catalogue commercial licensing remain a production review. CC BY-SA for metadata is not a blanket artwork rights clearance.",
+    "tmdbAliases": "None guessed. TVmaze IDs never reused as TMDb IDs.",
+    "ambiguity": "Solo Leveling uses the 2024 animation 64632, not the separate live-action project."
+  },
+  "tracking": {
+    "states": [
+      "want_to_watch",
+      "watching",
+      "completed",
+      "paused",
+      "abandoned"
+    ],
+    "episodes": "Explicit integer season/episode; zero season for specials. No fetched counts or invented season completeness.",
+    "storage": "Existing seven-slot schema2/CAS revision, immutable original and acknowledged queue. Unknown identities retained.",
+    "completion": "Episode marks do not complete a programme automatically.",
+    "backup": "Existing complete audiovisual backup includes raw values/preferences and all typed progress.",
+    "compatibility": "Old movie/complete backups remain importable. Older app builds without the TVmaze namespace refuse new nonempty TVmaze progress before mutation.",
+    "browser": "Browse pilot with disabled progress controls; browser typed progress remains pending."
+  },
+  "validation": {
+    "localUnitTests": "16 focused pilot tests passed; full existing and new suites required by guarded installer and CI",
+    "typecheckAndBuild": "passed",
+    "focusedLint": "passed",
+    "uiSmoke": "passed; actual App/MediaExplorer with synthetic persistence, network-blocked images, mobile and desktop; host SQLite tested separately",
+    "nativeProtocol": 7,
+    "checksPerPlatform": 40,
+    "processesPerPlatform": 8,
+    "interruptionsPerPlatform": 4,
+    "nativeStatus": "pending_current_source",
+    "nativeFixture": "Both TMDb and TVmaze entries traverse existing progress write/restart/interruption/restore phases.",
+    "deviceBuildBlocked": true
+  },
+  "next": [
+    "Apply and verify the exact audit-branch commit.",
+    "Approve current-source web, Android and iOS protocol7 reports.",
+    "Prepare a separately versioned signed Android test APK after approval.",
+    "Test pilot progress and complete restore on the physical device.",
+    "Add browser typed progress, reviewed episode catalogue and wider recommendations in scoped follow-ups."
+  ]
+}

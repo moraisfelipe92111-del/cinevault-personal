@@ -1,0 +1,140 @@
+{
+  "format": "sintonema.media-pilot",
+  "version": 1,
+  "source": "TVmaze",
+  "license": "CC-BY-SA-4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "reviewedAt": "2026-10-25",
+  "entries": [
+    {
+      "media": {
+        "key": "tvmaze:tv:169",
+        "aliases": [],
+        "title": "Breaking Bad",
+        "year": 2008,
+        "classifications": [],
+        "runtimeMinutes": null,
+        "runtimeScope": "episode",
+        "legacyMovieId": null
+      },
+      "sourceUrl": "https://www.tvmaze.com/shows/169/breaking-bad",
+      "posterUrl": "https://static.tvmaze.com/uploads/images/medium_portrait/501/1253519.jpg",
+      "summary": "Um professor de química entra no crime e transforma sua vida em uma disputa por poder e sobrevivência."
+    },
+    {
+      "media": {
+        "key": "tvmaze:tv:161",
+        "aliases": [],
+        "title": "Dexter",
+        "year": 2006,
+        "classifications": [],
+        "runtimeMinutes": null,
+        "runtimeScope": "episode",
+        "legacyMovieId": null
+      },
+      "sourceUrl": "https://www.tvmaze.com/shows/161/dexter",
+      "posterUrl": "https://static.tvmaze.com/uploads/images/medium_portrait/498/1246067.jpg",
+      "summary": "Um perito de Miami tenta conciliar seu trabalho na polícia com uma vida secreta de violência e regras próprias."
+    },
+    {
+      "media": {
+        "key": "tvmaze:tv:269",
+        "aliases": [],
+        "title": "Peaky Blinders",
+        "year": 2013,
+        "classifications": [],
+        "runtimeMinutes": null,
+        "runtimeScope": "episode",
+        "legacyMovieId": null
+      },
+      "sourceUrl": "https://www.tvmaze.com/shows/269/peaky-blinders",
+      "posterUrl": "https://static.tvmaze.com/uploads/images/medium_portrait/48/122213.jpg",
+      "summary": "Uma família de gângsteres disputa influência nas ruas de Birmingham em uma história de crime, ambição e poder."
+    },
+    {
+      "media": {
+        "key": "tvmaze:tv:26856",
+        "aliases": [],
+        "title": "You",
+        "year": 2018,
+        "classifications": [],
+        "runtimeMinutes": null,
+        "runtimeScope": "episode",
+        "legacyMovieId": null
+      },
+      "sourceUrl": "https://www.tvmaze.com/shows/26856/you",
+      "posterUrl": "https://static.tvmaze.com/uploads/images/medium_portrait/564/1412472.jpg",
+      "summary": "A obsessão de um homem por pessoas que deseja conhecer alimenta uma trama de manipulação e perigo."
+    },
+    {
+      "media": {
+        "key": "tvmaze:tv:64632",
+        "aliases": [],
+        "title": "Solo Leveling",
+        "year": 2024,
+        "classifications": [
+          "anime",
+          "animation"
+        ],
+        "runtimeMinutes": null,
+        "runtimeScope": "episode",
+        "legacyMovieId": null
+      },
+      "sourceUrl": "https://www.tvmaze.com/shows/64632/solo-leveling",
+      "posterUrl": "https://static.tvmaze.com/uploads/images/medium_portrait/497/1244908.jpg",
+      "summary": "Sung Jinwoo enfrenta monstros e descobre uma forma de desenvolver suas habilidades após uma missão que muda sua vida."
+    },
+    {
+      "media": {
+        "key": "tvmaze:tv:17779",
+        "aliases": [],
+        "title": "MasterChef Brasil",
+        "year": 2014,
+        "classifications": [
+          "reality"
+        ],
+        "runtimeMinutes": null,
+        "runtimeScope": "episode",
+        "legacyMovieId": null
+      },
+      "sourceUrl": "https://www.tvmaze.com/shows/17779/masterchef-brasil",
+      "posterUrl": "https://static.tvmaze.com/uploads/images/medium_portrait/60/150030.jpg",
+      "summary": "Reality brasileiro dedicado à culinária."
+    },
+    {
+      "media": {
+        "key": "tvmaze:tv:114",
+        "aliases": [],
+        "title": "Survivor",
+        "year": 2000,
+        "classifications": [
+          "reality",
+          "competition"
+        ],
+        "runtimeMinutes": null,
+        "runtimeScope": "episode",
+        "legacyMovieId": null
+      },
+      "sourceUrl": "https://www.tvmaze.com/shows/114/survivor",
+      "posterUrl": "https://static.tvmaze.com/uploads/images/medium_portrait/641/1603530.jpg",
+      "summary": "Participantes enfrentam desafios e disputam a permanência em uma competição de estratégia e sobrevivência."
+    },
+    {
+      "media": {
+        "key": "tvmaze:tv:22036",
+        "aliases": [],
+        "title": "Planet Earth II",
+        "year": 2016,
+        "classifications": [
+          "documentary"
+        ],
+        "runtimeMinutes": null,
+        "runtimeScope": "episode",
+        "legacyMovieId": null
+      },
+      "sourceUrl": "https://www.tvmaze.com/shows/22036/planet-earth-ii",
+      "posterUrl": "https://static.tvmaze.com/uploads/images/medium_portrait/87/219457.jpg",
+      "summary": "Uma viagem documental pelos habitats da Terra e pelos desafios que seus animais enfrentam para sobreviver."
+    }
+  ]
+}

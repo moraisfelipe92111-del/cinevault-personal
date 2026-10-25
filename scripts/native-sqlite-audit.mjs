@@ -44,9 +44,11 @@ const MEDIA_JSON = [
   {key: PERSONAL_STORAGE_KEYS[5], value: {intro: false, sound: true, updates: false, sonic: 'signature', volume: 0.5}},
 ]
 const MEDIA_PROGRESS_A = {format: 'sintonema.media-progress', version: 1,
-  entries: [{key: 'tmdb:tv:42', status: 'watching', watchedEpisodes: [{season: 0, episode: 1}, {season: 1, episode: 1}]}]}
+  entries: [{key: 'tmdb:tv:42', status: 'watching', watchedEpisodes: [{season: 0, episode: 1}, {season: 1, episode: 1}]},
+    {key: 'tvmaze:tv:169', status: 'watching', watchedEpisodes: [{season: 1, episode: 1}]}]}
 const MEDIA_PROGRESS_B = {format: 'sintonema.media-progress', version: 1,
-  entries: [{key: 'tmdb:tv:42', status: 'paused', watchedEpisodes: [{season: 0, episode: 1}, {season: 1, episode: 1}, {season: 1, episode: 2}]}]}
+  entries: [{key: 'tmdb:tv:42', status: 'paused', watchedEpisodes: [{season: 0, episode: 1}, {season: 1, episode: 1}, {season: 1, episode: 2}]},
+    {key: 'tvmaze:tv:169', status: 'paused', watchedEpisodes: [{season: 1, episode: 1}, {season: 1, episode: 2}]}]}
 const MEDIA_WRITE_B = [[1, null], [5, '']]
 const writeBatch = values => values.map(([slot, raw]) => ({key: PERSONAL_STORAGE_KEYS[slot], raw}))
 const withWrites = (snapshot, values) => ({...snapshot, entries: snapshot.entries.map(entry =>
