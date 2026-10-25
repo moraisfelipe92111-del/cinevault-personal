@@ -1,0 +1,5 @@
+/config.php
+/config.local.php
+/sessions/
+*.sql.gz
+*.backup

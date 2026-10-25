@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "preparedAt": "2026-10-25",
   "sourceBase": "ae1255f1974c23712bc7c3544c9607c3feebf8cd",
-  "status": "implemented_locally_pending_guarded_application_and_ci",
+  "status": "applied_and_web_ci_approved",
   "scope": [
     "Guest welcome after confirmed storage bootstrap",
     "Restore from welcome using the same durable import path as the library",
@@ -67,5 +67,18 @@
     "newAPK": false,
     "versionBuildChanged": false,
     "messageMarker": "No device-test or native-audit marker for this UI delivery; web CI still runs all tests and builds."
+  },
+  "application": {
+    "commit": "8a9a04e4749bc1b9eb2e62e6bcf5325ff555ddd1",
+    "parent": "ae1255f1974c23712bc7c3544c9607c3feebf8cd",
+    "exactManifestFiles": 14,
+    "webRun": 40204536575,
+    "webJob": 121202545251,
+    "nodeTests": 373,
+    "pythonTests": 44,
+    "typeScriptAndBuild": "passed",
+    "sourcePreserved": true,
+    "nativeAudits": "intentionally skipped for this UI package",
+    "newAPK": false
   }
 }

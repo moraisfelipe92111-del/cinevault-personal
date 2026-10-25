@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-10-25",
-  "assessedSourceCommit": "ae1255f1974c23712bc7c3544c9607c3feebf8cd",
+  "assessedSourceCommit": "8a9a04e4749bc1b9eb2e62e6bcf5325ff555ddd1",
   "brand": {
     "chosenName": "Sintonema",
     "previousName": "CineVault",
@@ -54,7 +54,16 @@
       "additionalRecoveryAndPerformancePending": true
     },
     "otherFormatsPrepared": 8,
-    "otherFormatsScope": "Eight programmes in build18; one basic physical episode save/reopen confirmed by owner. Remaining device tests deferred, not certified."
+    "otherFormatsScope": "Eight programmes in build18; one basic physical episode save/reopen confirmed by owner. Remaining device tests deferred, not certified.",
+    "currentWebValidation": {
+      "sourceCommit": "8a9a04e4749bc1b9eb2e62e6bcf5325ff555ddd1",
+      "run": 40204536575,
+      "job": 121202545251,
+      "nodeTests": 373,
+      "pythonTests": 44,
+      "build": "passed",
+      "scope": "Applied guest-first-access code, no new installed APK."
+    }
   },
   "identityAndCompatibility": [
     "Preserve all existing local movie IDs 1-1000 and their associated personal data.",
@@ -198,7 +207,7 @@
   },
   "publicAccessAndAdministration": {
     "specification": "planning/cv2-audit/public-first-access-admin-spec.md",
-    "status": "guest_first_access_prepared_locally_admin_backend_pending",
+    "status": "guest_first_access_applied_admin_backend_prepared_locally",
     "consumerAccess": "Local use without registration; one library in initial scope.",
     "consumerIdentifier": "No new UUID without a concrete use case; existing SQLite authority is not a consumer identity.",
     "optionalAccount": "Future explicit benefit such as sync/recovery; not created automatically.",
@@ -206,18 +215,22 @@
     "backend": "Logical boundaries specified; contracts, provider, hosting/cost and implementation pending.",
     "firstAccessUIImplemented": true,
     "consumerIdentityImplemented": false,
-    "adminImplemented": false,
+    "adminImplemented": true,
     "backendProvisioned": false,
     "acceptanceCriteria": "AC-01..08, AD-01..06 and OP-01..03 in the specification",
     "implementationEvidence": "planning/cv2-audit/public-access.json",
     "preferences": "Version 1 publicAccess inside cinevault.experience.v1; existing atomic writes and complete raw backups; no new DB schema or consumer identifier.",
-    "remoteApplication": "Pending guarded package execution by owner; not yet in the installed APK."
+    "remoteApplication": "First access applied in 8a9a04e; web run 40204536575 passed 373 JavaScript, 44 Python and build. Installed APK still build18.",
+    "adminImplementationScope": "Initial PHP/MySQL owner panel implemented/tested locally; guarded package application, CI and real-host deployment pending.",
+    "hostingPreference": "Owner selected reuse of the existing hosting on 2026-10-25; PHP/MySQL with dedicated subdomain/database, actual plan/resources/paths still to verify.",
+    "backendEvaluation": "planning/cv2-audit/admin-backend.json"
   },
   "deliveryPolicy": {
     "updatedAt": "2026-10-25",
     "ownerInstruction": "Continue without another manual backup this time; minimize completion time per stage.",
     "execution": "Batch cohesive implementation and automated checks; reuse unchanged-source evidence; collect native/APK/device checks at meaningful release boundaries rather than every UI change.",
     "manualCases": "Deferred cases remain pending, never marked passed without evidence. Existing tests and required release checks remain enabled.",
-    "noAutomaticNewAPK": true
+    "noAutomaticNewAPK": true,
+    "backendPackage": "Termux checks immutable base, exact file scope and hashes then pushes; backend runs real PHP/MySQL and HTTP checks locally and in a dedicated CI workflow. Existing app CI remains enabled; app outputs are byte-identical to approved base."
   }
 }

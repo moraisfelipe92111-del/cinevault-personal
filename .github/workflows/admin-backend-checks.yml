@@ -1,0 +1,60 @@
+name: Sintonema - painel e backend
+
+on:
+  push:
+    branches: [cv2-auditoria-00]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sintonema-admin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: PHP, MariaDB e API administrativa
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    services:
+      database:
+        image: mariadb:11.4.13
+        env:
+          MARIADB_ROOT_PASSWORD: sintonema_ci_fixture
+          MARIADB_DATABASE: sintonema_test_admin
+        ports: [3306:3306]
+        options: >-
+          --health-cmd="mariadb-admin ping --protocol=tcp -h 127.0.0.1 -uroot -psintonema_ci_fixture --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      SINTONEMA_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=sintonema_test_admin;charset=utf8mb4
+      SINTONEMA_TEST_DATABASE: sintonema_test_admin
+      SINTONEMA_TEST_DB_USER: root
+      SINTONEMA_TEST_DB_PASSWORD: sintonema_ci_fixture
+      SINTONEMA_PHP: php8.3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24.21.0'
+      - name: Preparar PHP e extensões do backend
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends php8.3-cli php8.3-mysql
+          php8.3 -v
+          php8.3 -r 'if (!extension_loaded("sodium") || !extension_loaded("pdo_mysql") || !defined("PASSWORD_ARGON2ID")) exit(1);'
+      - name: Conferir sintaxe PHP e JavaScript
+        run: |
+          find backend -name '*.php' -print0 | xargs -0 -n1 php8.3 -l
+          node --check backend/public/admin.mjs
+      - name: Testar regras, autenticação e transações no MariaDB
+        run: php8.3 backend/tests/run.php
+      - name: Testar a API HTTP real
+        run: node --test backend/tests/http.test.mjs
+      - name: Confirmar preservação dos arquivos versionados
+        run: git diff --exit-code

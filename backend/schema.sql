@@ -1,0 +1,11 @@
+CREATE TABLE sn_owner (id INT PRIMARY KEY, username VARCHAR(64) NOT NULL UNIQUE, password_hash VARCHAR(255) NOT NULL, totp_secret VARCHAR(256) NOT NULL, last_totp_step BIGINT NOT NULL DEFAULT -1, session_epoch BIGINT NOT NULL, active TINYINT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE sn_recovery_codes (code_hash CHAR(64) PRIMARY KEY, used_at BIGINT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE sn_login_limits (bucket CHAR(64) PRIMARY KEY, failures INT NOT NULL, reset_at BIGINT NOT NULL, INDEX sn_limits_expiry (reset_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE sn_drafts (id BIGINT PRIMARY KEY AUTO_INCREMENT, revision BIGINT NOT NULL, title VARCHAR(120) NOT NULL, payload LONGTEXT NOT NULL, digest CHAR(64) NOT NULL, item_count INT NOT NULL, updated_at BIGINT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE sn_reviews (id BIGINT PRIMARY KEY AUTO_INCREMENT, draft_id BIGINT NOT NULL, draft_revision BIGINT NOT NULL, digest CHAR(64) NOT NULL, actor VARCHAR(64) NOT NULL, reviewed_at BIGINT NOT NULL, UNIQUE KEY sn_review_revision (draft_id,draft_revision), FOREIGN KEY (draft_id) REFERENCES sn_drafts(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE sn_releases (id BIGINT PRIMARY KEY AUTO_INCREMENT, review_id BIGINT NOT NULL, payload LONGTEXT NOT NULL, digest CHAR(64) NOT NULL, item_count INT NOT NULL, actor VARCHAR(64) NOT NULL, created_at BIGINT NOT NULL, FOREIGN KEY (review_id) REFERENCES sn_reviews(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE sn_head (id INT PRIMARY KEY, generation BIGINT NOT NULL, release_id BIGINT NULL, FOREIGN KEY (release_id) REFERENCES sn_releases(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+INSERT INTO sn_head (id,generation,release_id) VALUES (1,0,NULL);
+CREATE TABLE sn_audit (id BIGINT PRIMARY KEY AUTO_INCREMENT, event_type VARCHAR(40) NOT NULL, actor VARCHAR(64) NOT NULL, reference_id BIGINT NULL, created_at BIGINT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE sn_meta (id INT PRIMARY KEY, schema_version INT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+INSERT INTO sn_meta (id,schema_version) VALUES (1,1);

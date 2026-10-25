@@ -2,7 +2,7 @@
 
 Data: 25/10/2026. Base: `ea3a5ac75a7bc31caf955bc9f2dead890d3d84b8`.
 
-Status em 25/10/2026: primeiro acesso sem cadastro, restauração e preferências opcionais implementados localmente na entrega public-access, ainda aguardando aplicação e CI. Painel, conta, identificador de consumidor, backend e sincronização permanecem pendentes. A seção de persistência registra o contrato concreto desta entrega.
+Status em 25/10/2026: primeiro acesso aplicado em 8a9a04e e aprovado na web, execução 40204536575 (373 testes JavaScript, 44 Python, TypeScript/build). Painel inicial e backend PHP/MySQL foram implementados/testados localmente na entrega admin-backend, pendentes de aplicação, CI e implantação. Conta de consumidor, identificador de consumidor e sincronização continuam pendentes. O APK instalado permanece no build18.
 
 ## Recorte inicial
 
@@ -81,11 +81,11 @@ O mecanismo de publicação aceita dados/configuração validados, não código 
 
 Contratos a detalhar na implementação: versão/schema do catálogo; identidade por fonte/tipo; origem e atualização; integridade do conteúdo; URLs permitidas; versão mínima do cliente; tratamento de falhas e limites de tamanho. O cliente mantém uma base utilizável e a última versão válida se o servidor falhar. Remover uma obra da publicação não autoriza descartar silenciosamente progresso preservado sem correspondência.
 
-O painel precisa de autorização no servidor, isolamento de ambientes, proteção de sessões e proteção contra requisições indevidas conforme o mecanismo escolhido. Backend, armazenamento central, domínio/hospedagem, orçamento, contratos concretos de API e solução de autenticação ainda precisam ser escolhidos; esta especificação não contrata nem provisiona serviços.
+O painel precisa de autorização no servidor, isolamento de ambientes, proteção de sessões e proteção contra requisições indevidas conforme o mecanismo escolhido. Felipe selecionou reaproveitar a hospedagem atual. A entrega admin-backend implementa PHP/MySQL, autenticação do proprietário e contrato de publicação complementar descritos em backend/README.md. Plano, recursos reais, SSH, diretórios, subdomínio, SSL, banco dedicado e implantação ainda precisam ser conferidos; nenhum serviço foi contratado/provisionado nem outro aplicativo alterado.
 
 ## Critérios de aceite para as entregas futuras
 
-Os critérios continuam sendo a referência do produto completo. AC-01/02/03/05/07 têm implementação e testes locais nos fluxos descritos em public-access.json; isso não certifica o futuro APK, a implantação administrativa ou todos os casos físicos. AC-04/06 mantêm as evidências anteriores no alcance registrado; AC-08 e todos os critérios administrativos/operacionais ainda exigem implementação ou validação própria.
+Os critérios continuam sendo a referência do produto completo. AC-01/02/03/05/07 têm implementação e testes locais nos fluxos descritos em public-access.json; isso não certifica o futuro APK, a implantação administrativa ou todos os casos físicos. AC-04/06 mantêm as evidências anteriores no alcance registrado; AC-08 continua pendente. AD-01–06 têm implementação e testes locais na entrega admin-backend, dentro do alcance descrito; exigem aplicação, CI e validação na hospedagem. OP-02 (restauração administrativa) e os demais marcos operacionais/clientes permanecem pendentes.
 
 | ID | Cenário | Resultado obrigatório |
 | --- | --- | --- |

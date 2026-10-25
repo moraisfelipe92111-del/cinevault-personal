@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "preparedAt": "2026-10-25",
+  "sourceBase": "8a9a04e4749bc1b9eb2e62e6bcf5325ff555ddd1",
+  "status": "implemented_and_locally_tested_pending_application_ci_and_deployment",
+  "hosting": {
+    "ownerDecision": "Reuse current hosting",
+    "target": "PHP 8.3+ current patch, PDO MySQL, Sodium, Argon2id; own HTTPS subdomain, dedicated database and private config/session directory",
+    "providerPlanVerified": false,
+    "provisioned": false,
+    "otherApplicationModified": false
+  },
+  "implemented": [
+    "Owner password plus TOTP or single-use recovery code",
+    "Private CLI provisioning/recovery, session rotation/expiry/global revocation",
+    "CSRF and Origin gates before protected-body parsing, host-only production cookie",
+    "Durable bounded HMAC attempt buckets; no raw-address attempt database",
+    "Structured title editor and candidate imports into private drafts",
+    "Content-bound review, immutable releases and atomic head publication/rollback",
+    "Public supplement endpoint with canonical UTF-8 content, SHA-256 and ETag",
+    "Import preparation for 1000 unchanged local identities and eight programmes, never automatic publication"
+  ],
+  "personalDataBoundary": "No consumer accounts, profiles, favorites, notes or personal-progress routes/tables; no app uploads or new consumer ID.",
+  "catalogueContract": {
+    "format": "sintonema.catalogue v1",
+    "mode": "supplement",
+    "publicationFormat": "sintonema.catalogue-publication v1",
+    "legacyIds": 1000,
+    "limits": "10000 items, 4 MiB",
+    "rights": "Explicit owner review required; flags do not create or automatically verify third-party licences.",
+    "reviewedLegacyAliases": 983
+  },
+  "localValidation": {
+    "phpCases": 21,
+    "httpTests": 10,
+    "uiFlows": 10,
+    "database": "MariaDB 10.11.14 real InnoDB, synthetic private fixtures",
+    "php": "8.3.6 distro build for isolated local tests; live hosting must use an updated supported patch",
+    "scenarios": [
+      "RFC 6238 vectors and replay refusal",
+      "MFA/recovery, durable limits, timeout and revocation",
+      "foreign transactions and real row-lock timeout",
+      "1000 identity registry and 1008 candidate validation",
+      "unreviewed/stale/corrupt catalogue refusal",
+      "observer sees previous publication before commit",
+      "late audit failure rolls back and lost commit acknowledgement reopens actual durable state",
+      "HTTP authorization/CSRF/Origin/host gates and no private values in public output",
+      "actual UI file inputs, structured forms, pending acknowledgement and rollback",
+      "private CLI readiness and refused repeated initialization"
+    ]
+  },
+  "ci": {
+    "workflow": ".github/workflows/admin-backend-checks.yml",
+    "targetMariaDB": "11.4.13 official image",
+    "status": "pending_application"
+  },
+  "applicationBoundary": {
+    "runtimeChanged": false,
+    "databaseSchemaChanged": false,
+    "versionBuildChanged": false,
+    "packageIdentityChanged": false,
+    "dependenciesChanged": false,
+    "compiledFilesByteIdenticalToApprovedBase": 34,
+    "remoteCatalogueConsumedByApp": false,
+    "newAPK": false
+  },
+  "pending": [
+    "Guarded application and CI",
+    "Actual hosting plan, SSH, private paths, database credentials, subdomain and HTTPS setup",
+    "Owner MFA enrolment and recovery exercise on hosting",
+    "Administrative database backup/restore and current-patch checks",
+    "Availability, quotas, public-read cache/load testing and retention inventory",
+    "Client catalogue integration and store release gates"
+  ]
+}
